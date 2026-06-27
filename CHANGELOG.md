@@ -1,12 +1,14 @@
 # Changelog
 
-## 7.25.0
-- Removed the region selector from the homepage player search; searches now run across all regions automatically.
-- Expanded old-name and unranked profile discovery through deeper alias lookup and BH ID fallback.
-- Added a new Clans section with discovered official guild rankings, member counts, weekly points, XP, recruiting status, and a detailed roster modal with Leader, Officer, and Member roles.
-- Added official guild endpoints and background clan discovery/caching.
-- Reworked legend image loading with parallel image sources, shorter timeouts, async decoding, smooth fades, and reliable fallbacks.
-- Updated public asset versions and Node package metadata to 7.25.0.
+## 7.26.0
+- Added a complete local portrait pack for all 68 supplied legends, normalized to transparent 256×256 images with consistent centering and sizing.
+- Made local portraits the primary source, with official/API artwork retained as automatic fallbacks for future legends.
+- Improved old-name discovery for unranked and no-placement accounts, including valid one-character current aliases returned by alias search.
+- Simplified top clan cards to focus on lifetime XP and moved complete clan information into a dedicated smooth clan page.
+- Sorted top clans by lifetime XP and normalized the roster hierarchy as Recruit → Member → Officer → Leader.
+- Enforced one Leader per clan display while preferring the official Brawlhalla guild roster whenever it is available.
+- Added clear Current ELO and Peak ELO values to player search results and retained both values in the full player profile.
+- Updated public asset versions and Node package metadata to 7.26.0.
 
 ## 7.23.0
 - Rebranded the complete site identity to **PeakHalla** with a new angular PH logo.

@@ -217,7 +217,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await fetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.25'
+          'User-Agent': 'PeakHalla/7.26'
         },
         signal: controller.signal
       });
@@ -259,7 +259,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.25'
+        'User-Agent': 'PeakHalla/7.26'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -311,7 +311,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             Accept: 'application/json',
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.25'
+            'User-Agent': 'PeakHalla/7.26'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -439,8 +439,8 @@ async function getCorehallaPlayerAliases(playerId, forceFresh = false) {
   for (const payload of payloads) {
     const raw = Array.isArray(payload) ? payload : (payload?.aliases || payload?.data || []);
     for (const item of raw) {
-      const name = sanitizePlayerName(typeof item === 'string' ? item : item?.alias || item?.name);
-      if (isPlausiblePlayerName(name)) aliases.push(name);
+      const name = cleanAliasForSearch(typeof item === 'string' ? item : item?.alias || item?.name);
+      if (name) aliases.push(name);
     }
   }
   return [...new Set(aliases)];
@@ -498,26 +498,28 @@ async function searchCorehallaAliases(alias, page = 1, forceFresh = false) {
 
 async function searchCorehallaAliasesBroad(alias, maxPages = 8, forceFresh = false) {
   const needle = normalizeName(alias);
-  const pages = Array.from({ length: Math.max(1, maxPages) }, (_, index) => index + 1);
-  const pageRows = await Promise.all(
-    pages.map((page) => searchCorehallaAliases(alias, page, forceFresh).catch(() => []))
+  let firstPage = await searchCorehallaAliases(alias, 1, false).catch(() => []);
+  if (!firstPage.length && forceFresh) firstPage = await searchCorehallaAliases(alias, 1, true).catch(() => []);
+
+  const hasStrongMatch = firstPage.some((item) =>
+    normalizeName(item.name) === needle || (item.aliases || []).some((name) => normalizeName(name) === needle)
   );
+  const extraPages = hasStrongMatch ? [] : Array.from({ length: Math.max(0, Math.min(maxPages, 5) - 1) }, (_, index) => index + 2);
+  const extraRows = extraPages.length
+    ? (await Promise.all(extraPages.map((page) => searchCorehallaAliases(alias, page, forceFresh).catch(() => [])))).flat()
+    : [];
+
   const merged = new Map();
-  for (const item of pageRows.flat()) {
+  for (const item of [...firstPage, ...extraRows]) {
     const current = merged.get(Number(item.id));
-    if (!current) {
-      merged.set(Number(item.id), { ...item, aliases: [...item.aliases] });
-    } else {
+    if (!current) merged.set(Number(item.id), { ...item, aliases: [...item.aliases] });
+    else {
       current.aliases = [...new Set([...(current.aliases || []), ...(item.aliases || [])])];
       if ((!current.name || /^Player \d+$/.test(current.name)) && item.name) current.name = item.name;
     }
   }
   return [...merged.values()].sort((a, b) => {
-    const score = (item) => Math.max(
-      aliasScore(item.name, needle),
-      ...(item.aliases || []).map((name) => aliasScore(name, needle)),
-      0
-    );
+    const score = (item) => Math.max(aliasScore(item.name, needle), ...(item.aliases || []).map((name) => aliasScore(name, needle)), 0);
     return score(b) - score(a);
   });
 }
@@ -863,10 +865,11 @@ function legendImageCandidates(name) {
   const clean = String(name || '').trim();
   const slug = legendSlug(clean);
   if (!clean || !slug) return [];
-  const version = '7.25.0';
-  // Same-origin proxy endpoints are more reliable than direct wiki images:
-  // no CORS/referrer failures and the browser gets a stable cacheable URL.
+  const version = '7.26.0';
+  // User-supplied local portraits are the fastest and most consistent source.
+  // The API proxy remains a fallback for future legends not yet in the pack.
   return [
+    `/assets/legends/${encodeURIComponent(slug)}.webp?v=${version}`,
     `/api/legend-image/${encodeURIComponent(clean)}?v=${version}`,
     `/api/legend-art/${encodeURIComponent(clean)}?v=${version}`
   ];
@@ -906,7 +909,7 @@ async function fetchLegendArtwork(name) {
       const response = await fetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.25',
+          'User-Agent': 'PeakHalla/7.26',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -942,7 +945,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await fetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.25'
+        'User-Agent': 'PeakHalla/7.26'
       },
       signal: controller.signal
     });
@@ -983,10 +986,39 @@ const GUILD_ROLE_ORDER = Object.freeze({ Recruit: 0, Member: 1, Officer: 2, Lead
 
 function canonicalGuildRole(value) {
   const key = normalizeName(value).replace(/[^a-z]/g, '');
-  if (key.includes('leader') || key === 'owner') return 'Leader';
-  if (key.includes('officer') || key.includes('admin')) return 'Officer';
+  if (['leader', 'owner', 'founder'].includes(key)) return 'Leader';
+  if (['officer', 'admin', 'administrator', 'coleader', 'coowner', 'moderator'].includes(key)) return 'Officer';
   if (key.includes('recruit')) return 'Recruit';
   return 'Member';
+}
+
+function enforceGuildRoleIntegrity(members = []) {
+  const clean = members.map((member) => ({ ...member, rank: canonicalGuildRole(member.rank) }));
+  const leaders = clean.filter((member) => member.rank === 'Leader')
+    .sort((a, b) => {
+      const aJoin = Number(a.join_date || Number.MAX_SAFE_INTEGER);
+      const bJoin = Number(b.join_date || Number.MAX_SAFE_INTEGER);
+      return aJoin - bJoin || Number(b.xp || 0) - Number(a.xp || 0);
+    });
+  if (leaders.length > 1) {
+    const keepId = Number(leaders[0].brawlhalla_id);
+    for (const member of clean) {
+      if (member.rank === 'Leader' && Number(member.brawlhalla_id) !== keepId) member.rank = 'Officer';
+    }
+  } else if (!leaders.length && clean.length) {
+    const leader = [...clean].sort((a, b) => {
+      const aJoin = Number(a.join_date || Number.MAX_SAFE_INTEGER);
+      const bJoin = Number(b.join_date || Number.MAX_SAFE_INTEGER);
+      return aJoin - bJoin || Number(b.xp || 0) - Number(a.xp || 0);
+    })[0];
+    leader.rank = 'Leader';
+  }
+  return clean.sort((a, b) =>
+    (GUILD_ROLE_ORDER[a.rank] ?? 1) - (GUILD_ROLE_ORDER[b.rank] ?? 1)
+    || Number(b.guild_points || 0) - Number(a.guild_points || 0)
+    || Number(b.xp || 0) - Number(a.xp || 0)
+    || a.name.localeCompare(b.name)
+  );
 }
 
 function normalizeGuildStats(payload = {}) {
@@ -1032,21 +1064,15 @@ function normalizeGuildMembers(payload = {}) {
   const rows = Array.isArray(payload)
     ? payload
     : (payload?.guild_members || payload?.members || payload?.clan || payload?.guild?.members || payload?.guild?.clan || []);
-  return rows.map((item) => ({
+  const members = rows.map((item) => ({
     brawlhalla_id: Number(item?.brawlhalla_id ?? item?.player_id ?? item?.playerId ?? item?.id ?? 0),
     name: sanitizePlayerName(item?.name ?? item?.alias ?? `Player ${item?.brawlhalla_id || item?.id || ''}`),
     rank: canonicalGuildRole(item?.rank ?? item?.role),
     join_date: Number(item?.join_date ?? item?.joined ?? 0) || null,
     xp: Number(item?.xp ?? item?.personal_xp ?? 0),
     guild_points: Number(item?.guild_points ?? item?.personal_points ?? 0)
-  })).filter((item) => Number.isSafeInteger(item.brawlhalla_id) && item.brawlhalla_id > 0)
-    // Requested visual hierarchy: lowest role first, Leader last.
-    .sort((a, b) =>
-      (GUILD_ROLE_ORDER[a.rank] ?? 1) - (GUILD_ROLE_ORDER[b.rank] ?? 1)
-      || Number(b.guild_points || 0) - Number(a.guild_points || 0)
-      || Number(b.xp || 0) - Number(a.xp || 0)
-      || a.name.localeCompare(b.name)
-    );
+  })).filter((item) => Number.isSafeInteger(item.brawlhalla_id) && item.brawlhalla_id > 0);
+  return enforceGuildRoleIntegrity(members);
 }
 
 async function getPlayerGuild(playerId, ttlMs = 10 * 60_000) {
@@ -1060,7 +1086,7 @@ async function getGuildStats(guildId, ttlMs = GUILD_CACHE_TTL_MS) {
 }
 
 async function getGuildMembers(guildId, ttlMs = 10 * 60_000) {
-  const payload = await apiFetch(`/guild/members?guild_id=${encodeURIComponent(guildId)}`, ttlMs).catch(() => null);
+  const payload = await apiFetch(`/guild/members?guild_id=${encodeURIComponent(guildId)}`, ttlMs);
   return normalizeGuildMembers(payload);
 }
 
@@ -1428,7 +1454,7 @@ function buildLifetimeLegendStats(lifetimeLegends = [], rankedLegends = [], lege
         games: numberOrZero(ranked.games),
         wins: numberOrZero(ranked.wins),
         rating: numberOrNull(ranked.rating),
-        peak_rating: numberOrNull(ranked.peak_rating),
+        peak_rating: numberOrNull(ranked.best_rating ?? ranked.peak_rating),
         tier: ranked.tier || null
       }
     };
@@ -1752,8 +1778,9 @@ function mergeKnownNameEntries(currentName, coreAliases = [], localEntries = [])
   const seen = new Set();
   const push = (entry, source, index = 0) => {
     const name = sanitizePlayerName(typeof entry === 'string' ? entry : entry?.name);
-    if (!isPlausiblePlayerName(name)) return;
     const key = normalizeName(name);
+    const isCurrent = key === normalizeName(currentName);
+    if (!(isCurrent ? Boolean(cleanAliasForSearch(name)) : isPlausiblePlayerName(name))) return;
     if (seen.has(key)) return;
     seen.add(key);
     merged.push({
@@ -2316,7 +2343,7 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.25.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.26.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
@@ -2335,14 +2362,15 @@ app.get('/api/suggestions', async (req, res, next) => {
 
     const numericId = query.replace(/^#/, '');
     const quickLocalMatches = /^\d+$/.test(numericId) ? [] : await findAliasMatches(query, 7).catch(() => []);
-    if (quickLocalMatches.length) {
-      const localCandidates = quickLocalMatches.map((item) => ({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] }));
+    const exactLocalMatches = quickLocalMatches.filter((item) => (item.names || []).some((name) => normalizeName(name?.name) === normalizeName(query)));
+    if (exactLocalMatches.length) {
+      const localCandidates = exactLocalMatches.map((item) => ({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] }));
       const localProfiles = (await mapWithConcurrency(localCandidates, 7, (item) => buildProfileSearchRanking(item, query, { quick: true }))).filter(Boolean);
       if (localProfiles.length) return res.json({ rankings: localProfiles.slice(0, 7), local_alias_hit: true });
     }
     const [official, coreMatches, localMatches, esportsMatch] = await Promise.all([
       /^\d+$/.test(numericId) ? Promise.resolve({ rankings: [] }) : settleWithin(fetchMatches(query), 1600, { rankings: [] }),
-      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 4, true), 4500, []),
+      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 4, true), 8000, []),
       findAliasMatches(query, 8).catch(() => []),
       /^\d+$/.test(numericId) ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 2600, null)
     ]);
@@ -2375,7 +2403,7 @@ app.get('/api/search', async (req, res, next) => {
     const numericId = query.replace(/^#/, '');
     const [official, coreMatches, localMatches, esportsMatch] = await Promise.all([
       /^\d+$/.test(numericId) ? Promise.resolve({ rankings: [], total_pages: 0 }) : settleWithin(apiFetch(`/leaderboard/ranked?${params}`), 3500, { rankings: [], total_pages: 0 }),
-      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 6, true), 7000, []),
+      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 5, true), 11000, []),
       findAliasMatches(query, 12).catch(() => []),
       /^\d+$/.test(numericId) ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 3500, null)
     ]);
@@ -2431,21 +2459,26 @@ app.get('/api/clans/:id', async (req, res, next) => {
     if (!guildId) return res.status(400).json({ error: 'Invalid guild ID.' });
     const [officialGuild, officialMembers, legacy, cached] = await Promise.all([
       getGuildStats(guildId, 5 * 60_000),
-      getGuildMembers(guildId, 5 * 60_000),
-      getCorehallaClanStats(guildId, true),
+      getGuildMembers(guildId, 5 * 60_000).catch(() => null),
+      getCorehallaClanStats(guildId, false),
       readGuildCache()
     ]);
-    const members = (officialMembers?.length ? officialMembers : legacy?.members || [])
-      .sort((a, b) => (GUILD_ROLE_ORDER[a.rank] ?? 1) - (GUILD_ROLE_ORDER[b.rank] ?? 1) || Number(b.xp || 0) - Number(a.xp || 0));
+    const officialRosterAvailable = Array.isArray(officialMembers);
+    const members = enforceGuildRoleIntegrity(officialRosterAvailable ? officialMembers : (legacy?.members || []));
     const cachedGuild = cached.guilds.find((item) => Number(item.guild_id) === guildId);
     const guild = mergeGuilds(legacy?.guild, cachedGuild, officialGuild);
     if (!guild) return res.status(404).json({ error: 'Clan not found.' });
-    const fullGuild = { ...guild, member_count: guild.member_count || members.length };
+    const fullGuild = {
+      ...guild,
+      member_count: officialRosterAvailable ? members.length : (guild.member_count ?? members.length)
+    };
     await rememberGuild(fullGuild).catch(() => null);
     res.json({
       guild: fullGuild,
       members,
-      role_order: ['Recruit', 'Member', 'Officer', 'Leader']
+      members_source: officialRosterAvailable ? 'official-brawlhalla' : 'fallback-cache',
+      role_order: ['Recruit', 'Member', 'Officer', 'Leader'],
+      role_integrity: { leader_count: members.filter((member) => member.rank === 'Leader').length }
     });
   } catch (error) { next(error); }
 });
@@ -3060,6 +3093,7 @@ app.get('/api/player/:id', async (req, res, next) => {
         return {
           ...legend,
           name,
+          peak_rating: numberOrNull(legend.best_rating ?? legend.peak_rating),
           image_url: legendImageUrl(name),
           image_candidates: legendImageCandidates(name),
           weapon_one: staticLegend.weapon_one || '—',
@@ -3093,7 +3127,7 @@ app.get('/api/player/:id', async (req, res, next) => {
       lifetime_wins: numberOrZero(lifetime?.wins),
       lifetime_win_rate: calculateWinRate(lifetime?.wins, lifetime?.games),
       rating: numberOrNull(ranked?.rating),
-      peak_rating: numberOrNull(ranked?.peak_rating),
+      peak_rating: numberOrNull(ranked?.best_rating ?? ranked?.peak_rating),
       tier: ranked?.tier || 'Unranked',
       region: ranked?.region || '—',
       global_rank: numberOrNull(ranked?.global_rank),
