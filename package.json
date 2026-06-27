@@ -1,6 +1,6 @@
 {
   "name": "peakhalla-brawlhalla-tracker",
-  "version": "7.27.0",
+  "version": "7.28.0",
   "private": true,
   "description": "PeakHalla Brawlhalla tracker with player XP, levels, aliases, unranked search, Arena Wall, ranked activity, clans, resilient legend images and esports data.",
   "main": "server.js",

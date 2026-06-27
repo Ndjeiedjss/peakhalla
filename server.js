@@ -217,7 +217,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await fetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.27'
+          'User-Agent': 'PeakHalla/7.28'
         },
         signal: controller.signal
       });
@@ -259,7 +259,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.27'
+        'User-Agent': 'PeakHalla/7.28'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -298,7 +298,13 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
 
   const task = (async () => {
     const normalizedInput = { ...input };
-    if (normalizedInput.page !== undefined) normalizedInput.page = Number(normalizedInput.page) || 1;
+    // Corehalla's tRPC numericLiteralValidator accepts numeric values as strings only.
+    // Sending page/playerId/clanId as numbers makes alias searches fail validation silently.
+    for (const key of ['page', 'playerId', 'clanId', 'guildId']) {
+      if (normalizedInput[key] !== undefined && normalizedInput[key] !== null && normalizedInput[key] !== '') {
+        normalizedInput[key] = String(normalizedInput[key]);
+      }
+    }
     const cacheBust = forceFresh ? `&_=${Date.now()}` : '';
     const attempts = [
       {
@@ -332,7 +338,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             ...(attempt.body ? { 'Content-Type': 'application/json' } : {}),
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.27'
+            'User-Agent': 'PeakHalla/7.28'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -888,7 +894,7 @@ function legendImageCandidates(name) {
   const clean = String(name || '').trim();
   const slug = legendSlug(clean);
   if (!clean || !slug) return [];
-  const version = '7.27.0';
+  const version = '7.28.0';
   // User-supplied local portraits are the fastest and most consistent source.
   // The API proxy remains a fallback for future legends not yet in the pack.
   return [
@@ -932,7 +938,7 @@ async function fetchLegendArtwork(name) {
       const response = await fetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.27',
+          'User-Agent': 'PeakHalla/7.28',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -968,7 +974,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await fetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.27'
+        'User-Agent': 'PeakHalla/7.28'
       },
       signal: controller.signal
     });
@@ -1740,13 +1746,46 @@ async function buildAliasRanking(match, context) {
 }
 
 
+function compactAliasKey(value) {
+  return sanitizePlayerName(value).toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+}
+
 function aliasScore(name, query) {
   const candidate = normalizeName(name);
   const needle = normalizeName(query);
-  if (candidate === needle) return 1000;
-  if (candidate.startsWith(needle)) return 850 - Math.max(0, candidate.length - needle.length);
-  if (candidate.includes(needle)) return 700 - candidate.indexOf(needle);
+  const compactCandidate = compactAliasKey(name);
+  const compactNeedle = compactAliasKey(query);
+  if (candidate === needle || (compactNeedle && compactCandidate === compactNeedle)) return 1000;
+  if (candidate.startsWith(needle) || (compactNeedle && compactCandidate.startsWith(compactNeedle))) {
+    return 850 - Math.max(0, compactCandidate.length - compactNeedle.length);
+  }
+  if (candidate.includes(needle) || (compactNeedle && compactCandidate.includes(compactNeedle))) {
+    return 700 - Math.max(0, compactCandidate.indexOf(compactNeedle));
+  }
   return 0;
+}
+
+function searchRankingScore(ranking, query) {
+  const needle = normalizeName(query);
+  let best = Number(ranking?.search_score || 0);
+  for (const player of ranking?.players || []) {
+    const current = normalizeName(player?.username);
+    if (current === needle || compactAliasKey(player?.username) === compactAliasKey(query)) best = Math.max(best, 1800);
+    else best = Math.max(best, aliasScore(player?.username, query));
+    for (const alias of player?.matched_aliases || []) {
+      const normalizedAlias = normalizeName(alias);
+      if (normalizedAlias === needle || compactAliasKey(alias) === compactAliasKey(query)) best = Math.max(best, 2200);
+      else best = Math.max(best, 1200 + aliasScore(alias, query));
+    }
+  }
+  return best;
+}
+
+function sortSearchRankings(rankings, query) {
+  return [...rankings].sort((a, b) =>
+    searchRankingScore(b, query) - searchRankingScore(a, query) ||
+    Number(b?.rating || 0) - Number(a?.rating || 0)
+  );
 }
 
 async function buildProfileSearchRanking(candidate, query, options = {}) {
@@ -2366,7 +2405,7 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.27.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.28.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
@@ -2408,7 +2447,12 @@ app.get('/api/suggestions', async (req, res, next) => {
     for (const item of localMatches) if (!existingIds.has(Number(item.id))) candidates.push({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] });
     const uniqueCandidates = [...new Map(candidates.map((item) => [Number(item.id), item])).values()].slice(0, 7);
     const profiles = (await mapWithConcurrency(uniqueCandidates, 6, (item) => buildProfileSearchRanking(item, query, { quick: true }))).filter(Boolean);
-    res.json({ rankings: [...rankings, ...profiles].slice(0, 12) });
+    const combined = sortSearchRankings([...profiles, ...rankings], query);
+    res.json({
+      rankings: combined.slice(0, 12),
+      alias_lookup: coreMatches.length > 0,
+      exact_alias_hit: combined.some((ranking) => searchRankingScore(ranking, query) >= 2200)
+    });
   } catch (error) {
     next(error);
   }
@@ -2449,10 +2493,13 @@ app.get('/api/search', async (req, res, next) => {
     const profiles = (await mapWithConcurrency(uniqueCandidates, 8, (item) => buildProfileSearchRanking(item, query, { quick: true }))).filter(Boolean)
       .sort((a, b) => Number(b.search_score || 0) - Number(a.search_score || 0));
 
+    const combined = sortSearchRankings([...profiles, ...officialRankings], query);
     res.json({
-      rankings: [...officialRankings, ...profiles].slice(0, 24),
+      rankings: combined.slice(0, 24),
       total_pages: official?.total_pages || 0,
-      includes_unranked_profiles: profiles.length > 0
+      includes_unranked_profiles: profiles.length > 0,
+      alias_lookup: coreMatches.length > 0,
+      exact_alias_hit: combined.some((ranking) => searchRankingScore(ranking, query) >= 2200)
     });
   } catch (error) {
     next(error);
