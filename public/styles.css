@@ -1575,3 +1575,9 @@ body.arena-profile-open { overflow: hidden; }
 
 .fighter-alias-match { margin-top: 7px; padding: 5px 8px; width: fit-content; max-width: 100%; color: #cdbdff; border: 1px solid rgba(139,92,246,.22); border-radius: 999px; background: rgba(139,92,246,.08); font-size: 9px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fighter-alias-match b { color: #f0eaff; font-weight: 800; }
+
+
+/* v7.21 — browser Back/Forward cache safety */
+html:not(.is-navigating) body.page-leaving {
+  will-change: opacity, transform, filter;
+}

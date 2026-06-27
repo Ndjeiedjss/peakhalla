@@ -186,7 +186,7 @@ function readPlayerBrowserCache(id) {
   try {
     const all = JSON.parse(localStorage.getItem(PLAYER_BROWSER_CACHE_KEY) || '{}');
     const entry = all[String(id)];
-    if (!entry?.data || Date.now() - Number(entry.saved_at || 0) > 7 * 24 * 60 * 60_000) return null;
+    if (!entry?.data || Date.now() - Number(entry.saved_at || 0) > 30 * 24 * 60 * 60_000) return null;
     return entry.data;
   } catch { return null; }
 }
@@ -302,7 +302,7 @@ function setupPlayerPrefetch(container, selector, datasetKey) {
     button.addEventListener('focus', () => warm(button), { once: true });
     button.addEventListener('touchstart', () => warm(button), { once: true, passive: true });
   }
-  window.setTimeout(() => buttons.slice(0, 3).forEach(warm), 0);
+  window.setTimeout(() => buttons.slice(0, 3).forEach(warm), 250);
 }
 
 function playerCard(item, player) {
@@ -728,7 +728,7 @@ async function loadPlayer(id, options = {}) {
     if (options.autoVerify !== false && !manualRefresh && !backgroundRefresh) {
       window.clearTimeout(state.playerAutoRefreshTimer);
       const refreshInBackground = () => loadPlayer(id, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
-      state.playerAutoRefreshTimer = window.setTimeout(refreshInBackground, renderedInstantData ? 0 : 80);
+      state.playerAutoRefreshTimer = window.setTimeout(refreshInBackground, renderedInstantData ? 450 : 700);
     }
     return data;
   } catch (error) {
@@ -1697,6 +1697,30 @@ if (isLiveQueuePage) setupLiveQueuePage();
 if (isArenaPage) setupArenaPage();
 applyLanguage();
 requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('page-entering')));
+function resetBrowserNavigationState() {
+  const body = document.body;
+  if (!body) return;
+  body.classList.remove('page-leaving');
+  body.style.removeProperty('opacity');
+  body.style.removeProperty('transform');
+  body.style.removeProperty('filter');
+  body.style.removeProperty('pointer-events');
+  closeRankedMenu?.();
+  closeQueueMenu?.();
+}
+
+// Browsers can restore a page from the back/forward cache with the old
+// page-leaving class still applied. Clear it immediately so Back/Forward
+// never returns to a black, non-interactive screen.
+window.addEventListener('pageshow', () => {
+  resetBrowserNavigationState();
+  requestAnimationFrame(resetBrowserNavigationState);
+});
+window.addEventListener('popstate', resetBrowserNavigationState);
+window.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') resetBrowserNavigationState();
+});
+
 const pageParams = new URLSearchParams(location.search);
 const playerFromUrl = pageParams.get('player');
 const rankedFromUrl = pageParams.get('ranked');
