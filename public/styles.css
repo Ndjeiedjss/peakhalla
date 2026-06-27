@@ -1878,7 +1878,7 @@ html:not(.is-navigating) body.page-leaving {
 }
 
 
-/* PeakHalla v7.25 — dedicated clan profiles and reliable legend portraits */
+/* PeakHalla v7.26 — dedicated clan profiles and reliable legend portraits */
 body.clan-page-mode main > section:not(#clan-page) { display: none !important; }
 body.clan-page-mode #clan-page { display: block !important; }
 body.clan-page-mode footer { display: none !important; }
@@ -2216,4 +2216,75 @@ body.clan-page-mode .site-header nav a[href="/#clans"] {
 }
 @media (prefers-reduced-motion: reduce) {
   .clan-page-hero, .clan-page-stats article, .clan-role-step, .clan-member-card { animation: none !important; opacity: 1; transform: none; }
+}
+
+
+/* v7.26 — local portrait pack, XP-first clans, and clearer ELO cards */
+.legend-image-shell {
+  place-items: center !important;
+}
+.legend-image-shell img,
+.fighter-portrait img,
+.profile-portrait img,
+.row-portrait img,
+.legend-icon img,
+.mini-portrait img,
+.lifetime-legend-portrait img,
+.teammate-portrait img,
+.suggestion-portrait img {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  image-rendering: auto;
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,.26));
+}
+.profile-portrait { place-items: center; padding: 14px; }
+.profile-portrait .legend-image-shell { width: min(100%, 230px); height: min(100%, 230px); }
+.fighter-portrait, .row-portrait, .legend-icon, .mini-portrait, .lifetime-legend-portrait, .teammate-portrait, .suggestion-portrait {
+  place-items: center;
+}
+.lifetime-legend-portrait .legend-image-shell { width: 94%; height: 94%; }
+.row-portrait .legend-image-shell, .suggestion-portrait .legend-image-shell { width: 92%; height: 92%; }
+
+.fighter-metrics {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 8px;
+}
+.fighter-metrics > span { min-width: 0; }
+.fighter-metrics b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.clan-card-xp-only {
+  grid-template-columns: 58px minmax(0,1fr) minmax(170px,240px) 28px;
+  align-items: center;
+}
+.clan-card-xp {
+  min-height: 68px;
+  padding: 12px 18px;
+  display: grid;
+  align-content: center;
+  justify-items: end;
+  gap: 7px;
+  border: 1px solid rgba(139,92,246,.22);
+  border-radius: 15px;
+  background: radial-gradient(circle at 85% 0, rgba(167,139,250,.18), transparent 48%), rgba(139,92,246,.055);
+}
+.clan-card-xp small { color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.clan-card-xp b { color: #d8c9ff; font: 800 clamp(17px,2vw,24px)/1 var(--display); }
+.clan-page-stats { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.clan-page-stats article:first-child { border-color: rgba(139,92,246,.48); background: linear-gradient(145deg, rgba(139,92,246,.18), rgba(255,255,255,.025)); }
+.clan-role-step.leader small::after { content: ' max'; margin-inline-start: 4px; color: #8f819e; font-size: 7px; font-weight: 700; text-transform: uppercase; }
+
+@media (max-width: 900px) {
+  .clan-card-xp-only { grid-template-columns: 52px minmax(0,1fr) 150px 24px; }
+  .clan-page-stats { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 620px) {
+  .fighter-metrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .clan-card-xp-only { grid-template-columns: 44px minmax(0,1fr) 20px; }
+  .clan-card-xp { grid-column: 2 / -1; min-height: 58px; justify-items: start; margin-top: 4px; }
+  .profile-portrait { padding: 8px; }
 }

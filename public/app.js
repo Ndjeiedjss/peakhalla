@@ -13,7 +13,7 @@ const translations = {
     aboutTitle: 'Built like a real stats site.', aboutText: 'Official ranked data, main legends based on lifetime games, daily Elo snapshots, and a competitive section for esports fans.',
     madeBy: 'Made by <strong>Nad</strong>', followText: 'Brawlhalla clips and tracker updates.', disclaimer: 'Unofficial community project. Not affiliated with Ubisoft or Blue Mammoth Games.', footerMade: 'Made by', footerTagline: 'Brawlhalla statistics', rightsReserved: 'All rights reserved.',
     searching: 'Searching all known player profiles…', loadingPlayer: 'Loading player profile…', fetchError: 'Could not load the data right now.',
-    noSearchResults: 'No profile matched that name yet. Check the spelling or search by BH ID.', oldNameMatch: 'Old name match', result: 'result', results: 'results', seasonalPeak: 'Season peak', currentElo: 'Current ELO', peakElo: 'Season peak', rankedOverview: 'Ranked overview', offPeak: 'off peak', atPeak: 'at season peak', globalRank: 'Global rank', rankedGames: 'Ranked games', rankedWins: 'Ranked wins',
+    noSearchResults: 'No profile matched that name yet. Check the spelling or search by BH ID.', oldNameMatch: 'Old name match', result: 'result', results: 'results', seasonalPeak: 'Season peak', currentElo: 'Current ELO', peakElo: 'Peak ELO', rankedOverview: 'Ranked overview', offPeak: 'off peak', atPeak: 'at season peak', globalRank: 'Global rank', rankedGames: 'Ranked games', rankedWins: 'Ranked wins',
     accountLevel: 'Account level', accountXP: 'Account XP', xpProgress: 'XP progress', gameTime: 'Online match time', mainWeapons: 'Main weapons', topLegends: 'Main legends', regionRank: 'Region rank', totalGames: 'Total games', totalWins: 'Total wins', overallWinRate: 'Overall win rate', liveOfficialData: 'Live player data', corehallaStats: 'Corehalla-compatible stats', currentAlias: 'Current name', previousAliases: 'Previous names', refreshLiveStats: 'Refresh live stats', refreshingLiveStats: 'Refreshing official stats…', notReported: 'Not reported by API', statsAccuracyNote: 'Account XP and legend levels are checked against fresh Brawlhalla and Corehalla data. PeakHalla keeps the highest reported progression value so older data cannot replace newer levels.', legendLevelLimit: 'Some legend XP and levels may be unavailable if that legend has not been played since Patch 9.07.',
     fullPlayerStats: 'Full player stats', officialLifetimeData: 'Official lifetime data', allLegendStats: 'Every legend · lifetime stats', searchLegends: 'Search legends', legendSearchPlaceholder: 'Legend or weapon', show: 'Show', playedOnly: 'Played only', allLegends: 'All legends', sortBy: 'Sort by', level: 'Level', xp: 'XP', losses: 'Losses', damageDealt: 'Damage dealt', damageTaken: 'Damage taken', kos: 'KOs', falls: 'Falls', kdRatio: 'K/D ratio', damageRatio: 'Damage ratio', suicides: 'Suicides', teamKOs: 'Team KOs', unarmedDamage: 'Unarmed damage', thrownDamage: 'Thrown-item damage', gadgetDamage: 'Gadget damage', gadgetKOs: 'Gadget KOs', unarmedKOs: 'Unarmed KOs', bombDamage: 'Bomb damage', mineDamage: 'Mine damage', spikeballDamage: 'Spikeball damage', sidekickDamage: 'Sidekick damage', snowballHits: 'Snowball hits', bombKOs: 'Bomb KOs', mineKOs: 'Mine KOs', sidekickKOs: 'Sidekick KOs', snowballKOs: 'Snowball KOs', spikeballKOs: 'Spikeball KOs', matchTime: 'Match time', seasonRanked: 'Current season ranked', lifetimeCombat: 'Lifetime combat', weaponBreakdown: 'Weapon breakdown', noLifetimeStats: 'No legends matched these filters.', legendsTotal: 'legends', playedLegends: 'played',
     legendUsed: 'legend used', legendsUsed: 'legends used', noRankedLegends: 'No ranked legend games found.', nameSeen: 'name recorded', namesSeen: 'names recorded', currentName: 'Current', previousName: 'Previous',
@@ -104,7 +104,7 @@ function normalize(value) { return String(value || '').trim().toLowerCase(); }
 const INVALID_HISTORY_NAMES = new Set(['menu','home','profile','club','meta','events','overview','details','matches','ranked','legends','weapons','settings','search','share','stats','statistics','account','player','players','main','history','identity','known names','about','help','contact','privacy','terms','followers','following','social','socials']);
 function validHistoryName(value) {
   const clean = String(value || '').normalize('NFKC').replace(/[\u0000-\u001F\u007F]/g, '').replace(/\s+/g, ' ').trim();
-  if (clean.length < 2 || clean.length > 32) return false;
+  if (clean.length < 1 || clean.length > 32) return false;
   if (INVALID_HISTORY_NAMES.has(normalize(clean))) return false;
   if (!/[\p{L}\p{N}]/u.test(clean)) return false;
   if (/\b(function|return|const|let|var|undefined|null|document|window|onclick|classname)\b/i.test(clean)) return false;
@@ -380,7 +380,7 @@ function playerCard(item, player) {
       <h3>${escapeHtml(player.username || 'Unknown')}</h3>
       ${matchLine}
       <span class="fighter-main">${escapeHtml(mainLegend ? `${t('main')}: ${mainLegend.name}` : t('unknownLegend'))}</span>
-      <span class="fighter-metrics"><span>RANK<b>${rank}</b></span><span>ELO<b>${number(item.rating)}</b></span><span>${escapeHtml(t('wins'))}<b>${number(item.wins)}</b></span></span>
+      <span class="fighter-metrics"><span>RANK<b>${rank}</b></span><span>${escapeHtml(t('currentElo'))}<b>${number(item.rating)}</b></span><span>${escapeHtml(t('peakElo'))}<b>${number(item.best_rating ?? item.peak_rating)}</b></span><span>${escapeHtml(t('wins'))}<b>${number(item.wins)}</b></span></span>
     </span>
   </button>`;
 }
@@ -892,11 +892,10 @@ function clanDate(timestamp) {
 }
 
 function clanCard(guild, index) {
-  const tags = (guild.tags || []).slice(0, 3).map((tag) => `<span>${escapeHtml(tag)}</span>`).join('');
-  return `<button class="clan-card" type="button" data-clan-id="${Number(guild.guild_id)}" style="--clan-delay:${Math.min(index, 15) * 42}ms">
+  return `<button class="clan-card clan-card-xp-only" type="button" data-clan-id="${Number(guild.guild_id)}" style="--clan-delay:${Math.min(index, 15) * 42}ms">
     <span class="clan-rank">${guild.rank ? `#${number(guild.rank)}` : '—'}</span>
-    <span class="clan-card-copy"><span class="clan-name-line"><strong>${escapeHtml(guild.name || `Clan ${guild.guild_id}`)}</strong>${guild.is_recruiting ? `<em class="open">${escapeHtml(t('clanRecruiting'))}</em>` : ''}</span><small>ID ${number(guild.guild_id)}${guild.notice ? ` · ${escapeHtml(guild.notice)}` : ''}</small><span class="clan-tags">${tags}</span></span>
-    <span class="clan-card-metrics"><span class="clan-xp-highlight"><small>${escapeHtml(t('clanXp'))}</small><b>${number(guild.xp, '0')}</b></span><span><small>${escapeHtml(t('clanMembers'))}</small><b>${number(guild.member_count, '—')}</b></span><span><small>${escapeHtml(t('clanPoints'))}</small><b>${number(guild.guild_points, '0')}</b></span></span>
+    <span class="clan-card-copy"><span class="clan-name-line"><strong>${escapeHtml(guild.name || `Clan ${guild.guild_id}`)}</strong>${guild.is_recruiting ? `<em class="open">${escapeHtml(t('clanRecruiting'))}</em>` : ''}</span><small>ID ${number(guild.guild_id)}</small></span>
+    <span class="clan-card-xp"><small>${escapeHtml(t('clanXp'))}</small><b>${number(guild.xp, '0')}</b></span>
     <span class="clan-arrow">→</span>
   </button>`;
 }
@@ -979,9 +978,11 @@ function renderClanPage(data = {}) {
   document.title = `${guild.name || 'Clan'} — PeakHalla`;
   els.clanPageStats.innerHTML = [
     [t('clanXp'), number(guild.xp, '0')],
-    [t('clanMembers'), number(guild.member_count || members.length, '0')],
+    [t('clanRank'), guild.rank ? `#${number(guild.rank)}` : '—'],
+    [t('clanMembers'), number(guild.member_count ?? members.length, '0')],
     [t('clanPoints'), number(guild.guild_points, '0')],
-    [t('clanRank'), guild.rank ? `#${number(guild.rank)}` : '—']
+    ['Legacy XP', number(guild.legacy_xp, '0')],
+    ['Created', guild.create_date ? clanDate(guild.create_date) : '—']
   ].map(([label, value], index) => `<article style="--stat-delay:${index * 60}ms"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></article>`).join('');
 
   const counts = members.reduce((acc, member) => {
