@@ -1,0 +1,14 @@
+PeakHalla v7.23 — Google SEO Hotfix
+
+Upload these files to the GitHub repository as follows:
+
+public/index.html
+public/robots.txt
+public/sitemap.xml
+
+In GitHub, open the public folder, choose Add file > Upload files, then upload the three files and Commit changes.
+Railway will deploy automatically.
+
+After the deployment is Active, verify:
+https://peakhalla-tracker-production.up.railway.app/robots.txt
+https://peakhalla-tracker-production.up.railway.app/sitemap.xml
