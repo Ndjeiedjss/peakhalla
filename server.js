@@ -16,6 +16,7 @@ const NAMES_FILE = path.join(DATA_DIR, 'name-history.json');
 const PROFILE_CACHE_FILE = path.join(DATA_DIR, 'profile-cache.json');
 const ESPORTS_FILE = path.join(DATA_DIR, 'esports.json');
 const QUEUE_ACTIVITY_FILE = path.join(DATA_DIR, 'queue-activity.json');
+const GUILDS_FILE = path.join(DATA_DIR, 'guild-cache.json');
 const WALL_USERS_FILE = path.join(DATA_DIR, 'arena-users.json');
 const WALL_POSTS_FILE = path.join(DATA_DIR, 'arena-posts.json');
 const WALL_UPLOADS_DIR = path.join(__dirname, 'uploads', 'arena');
@@ -31,22 +32,38 @@ const imageCache = new Map();
 const fileQueues = new Map();
 const queueTrackers = new Map();
 const profileResponseCache = new Map();
-const PROFILE_RESPONSE_TTL_MS = 30 * 60_000;
-const PROFILE_DISK_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60_000;
+const PROFILE_RESPONSE_TTL_MS = 6 * 60 * 60_000;
+const PROFILE_DISK_CACHE_MAX_AGE_MS = 30 * 24 * 60 * 60_000;
 const PROFILE_DISK_CACHE_LIMIT = 200;
 
 app.disable('x-powered-by');
+app.set('etag', 'strong');
 app.use(express.json({ limit: '8mb' }));
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/') || /\.(?:js|css|html)$/.test(req.path)) {
+  const isApi = req.path.startsWith('/api/');
+  const isHtml = req.path === '/' || req.path.endsWith('.html') || req.path.startsWith('/player/') || req.path === '/queue' || req.path === '/arena';
+  const isVersionedAsset = /\.(?:js|css|svg|png|webp|jpg|jpeg|gif|ico)$/i.test(req.path);
+  if (isApi || isHtml) {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
+  } else if (isVersionedAsset) {
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
   }
   next();
 });
-app.use(express.static(path.join(__dirname, 'public'), { etag: false, lastModified: false }));
-app.use('/uploads/arena', express.static(WALL_UPLOADS_DIR, { etag: true, maxAge: '7d', immutable: true }));
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: true,
+  lastModified: true,
+  maxAge: '1y',
+  immutable: true,
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    }
+  }
+}));
+app.use('/uploads/arena', express.static(WALL_UPLOADS_DIR, { etag: true, maxAge: '30d', immutable: true }));
 
 app.get('/player/:id', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -196,7 +213,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await fetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.19'
+          'User-Agent': 'PeakHalla/7.24'
         },
         signal: controller.signal
       });
@@ -238,7 +255,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.19'
+        'User-Agent': 'PeakHalla/7.24'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -290,7 +307,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             Accept: 'application/json',
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.19'
+            'User-Agent': 'PeakHalla/7.24'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -573,7 +590,7 @@ async function htmlFetch(url, ttlMs = 15 * 60_000) {
   if (cached && cached.expiresAt > now) return cached.value;
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12_000);
+  const timeout = setTimeout(() => controller.abort(), 5_000);
   try {
     const response = await fetch(url, {
       headers: {
@@ -788,10 +805,10 @@ function legendImageCandidates(name) {
   if (!clean || !slug) return [];
   const wikiName = legendWikiName(clean);
   return [
-    `/api/legend-art/${encodeURIComponent(clean)}`,
     `/api/legend-image/${encodeURIComponent(clean)}`,
-    `https://brawlhalla.wiki.gg/wiki/Special:Redirect/file/${encodeURIComponent(`Official Artwork ${wikiName}.png`)}`,
     `https://brawlhalla.wiki.gg/wiki/Special:Redirect/file/${encodeURIComponent(`Legends Portrait ${wikiName}.png`)}`,
+    `https://brawlhalla.wiki.gg/wiki/Special:Redirect/file/${encodeURIComponent(`Official Artwork ${wikiName}.png`)}`,
+    `/api/legend-art/${encodeURIComponent(clean)}`,
     `https://brawlhalla.wiki.gg/wiki/Special:Redirect/file/${encodeURIComponent(`${wikiName}.png`)}`
   ];
 }
@@ -816,12 +833,12 @@ async function fetchLegendArtwork(name) {
 
   for (const url of urls) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12_000);
+    const timeout = setTimeout(() => controller.abort(), 5_000);
     try {
       const response = await fetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'Nad-BH-Tracker/6.9',
+          'User-Agent': 'PeakHalla/7.24',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -857,7 +874,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await fetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'Nad-BH-Tracker/5.9'
+        'User-Agent': 'PeakHalla/7.24'
       },
       signal: controller.signal
     });
@@ -886,6 +903,134 @@ async function fetchOfficialLegendImage(name) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+
+
+const GUILD_CACHE_TTL_MS = 30 * 60_000;
+const GUILD_DISCOVERY_LIMIT = 72;
+let guildRefreshPromise = null;
+
+function normalizeGuildStats(payload = {}) {
+  const guild = payload?.guild || payload || {};
+  const id = Number(guild.guild_id ?? guild.id ?? 0);
+  if (!Number.isSafeInteger(id) || id <= 0) return null;
+  return {
+    guild_id: id,
+    name: sanitizePlayerName(guild.name ?? guild.guild_name ?? `Guild ${id}`),
+    create_date: Number(guild.create_date || 0) || null,
+    xp: Number(guild.xp || 0),
+    legacy_xp: Number(guild.legacy_xp || 0),
+    notice: String(guild.notice || '').trim().slice(0, 240),
+    tags: Array.isArray(guild.tags) ? guild.tags.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 8) : [],
+    discord_invite_code: String(guild.discord_invite_code || '').trim() || null,
+    guild_points: Number(guild.guild_points || 0),
+    rank: Number(guild.rank || 0) || null,
+    is_recruiting: Boolean(guild.is_recruiting),
+    member_count: Number(guild.member_count || 0) || null,
+    updated_at: new Date().toISOString()
+  };
+}
+
+function normalizeGuildPlayer(payload = {}) {
+  const guild = payload?.guild || payload || {};
+  const id = Number(guild.guild_id ?? guild.id ?? 0);
+  if (!Number.isSafeInteger(id) || id <= 0) return null;
+  return {
+    guild_id: id,
+    guild_name: sanitizePlayerName(guild.guild_name ?? guild.name ?? `Guild ${id}`),
+    personal_xp: Number(guild.personal_xp || 0),
+    personal_xp_this_week: Number(guild.personal_xp_this_week || 0),
+    personal_points: Number(guild.personal_points || 0),
+    join_date: Number(guild.join_date || 0) || null,
+    rank: String(guild.rank || 'Member')
+  };
+}
+
+function normalizeGuildMembers(payload = {}) {
+  const rows = Array.isArray(payload) ? payload : (payload?.guild_members || payload?.members || []);
+  const roleOrder = { Leader: 0, Officer: 1, Member: 2 };
+  return rows.map((item) => ({
+    brawlhalla_id: Number(item?.brawlhalla_id ?? item?.id ?? 0),
+    name: sanitizePlayerName(item?.name || `Player ${item?.brawlhalla_id || item?.id || ''}`),
+    rank: String(item?.rank || 'Member'),
+    join_date: Number(item?.join_date || 0) || null,
+    xp: Number(item?.xp || 0),
+    guild_points: Number(item?.guild_points || 0)
+  })).filter((item) => Number.isSafeInteger(item.brawlhalla_id) && item.brawlhalla_id > 0)
+    .sort((a, b) => (roleOrder[a.rank] ?? 9) - (roleOrder[b.rank] ?? 9) || b.guild_points - a.guild_points || b.xp - a.xp);
+}
+
+async function getPlayerGuild(playerId, ttlMs = 10 * 60_000) {
+  const payload = await apiFetch(`/player/guild?brawlhalla_id=${encodeURIComponent(playerId)}`, ttlMs).catch(() => null);
+  return normalizeGuildPlayer(payload);
+}
+
+async function getGuildStats(guildId, ttlMs = GUILD_CACHE_TTL_MS) {
+  const payload = await apiFetch(`/guild/stats?guild_id=${encodeURIComponent(guildId)}`, ttlMs).catch(() => null);
+  return normalizeGuildStats(payload);
+}
+
+async function getGuildMembers(guildId, ttlMs = 10 * 60_000) {
+  const payload = await apiFetch(`/guild/members?guild_id=${encodeURIComponent(guildId)}`, ttlMs).catch(() => null);
+  return normalizeGuildMembers(payload);
+}
+
+async function rememberGuilds(guilds = []) {
+  const valid = guilds.filter((guild) => Number(guild?.guild_id) > 0);
+  if (!valid.length) return;
+  await updateJson(GUILDS_FILE, { updated_at: null, guilds: {} }, (data) => {
+    if (!data.guilds || typeof data.guilds !== 'object') data.guilds = {};
+    const now = new Date().toISOString();
+    for (const guild of valid) {
+      data.guilds[String(guild.guild_id)] = { ...(data.guilds[String(guild.guild_id)] || {}), ...guild, updated_at: now };
+    }
+    data.updated_at = now;
+    return data;
+  });
+}
+
+async function rememberGuild(guild) {
+  return rememberGuilds(guild ? [guild] : []);
+}
+
+async function readGuildCache() {
+  const data = await readJson(GUILDS_FILE, { updated_at: null, guilds: {} });
+  const guilds = Object.values(data?.guilds || {}).filter((guild) => Number(guild?.guild_id) > 0);
+  return { updated_at: data?.updated_at || null, guilds };
+}
+
+async function refreshTopGuilds() {
+  if (guildRefreshPromise) return guildRefreshPromise;
+  guildRefreshPromise = (async () => {
+    const pages = [1, 2];
+    const boards = await Promise.all(pages.map((page) => {
+      const params = new URLSearchParams({ page: String(page), max_results: '40', game_mode: '1v1', region: 'ALL', order_by: 'rating' });
+      return apiFetch(`/leaderboard/ranked?${params}`, 5 * 60_000).catch(() => ({ rankings: [] }));
+    }));
+    const playerIds = [...new Set(boards.flatMap((board) => (board?.rankings || []).flatMap((entry) => (entry.players || []).map((player) => Number(player.id)).filter(Boolean))))]
+      .slice(0, GUILD_DISCOVERY_LIMIT);
+    const playerGuilds = (await mapWithConcurrency(playerIds, 12, (id) => getPlayerGuild(id, GUILD_CACHE_TTL_MS))).filter(Boolean);
+    const guildIds = [...new Set(playerGuilds.map((item) => Number(item.guild_id)).filter(Boolean))];
+    const guilds = (await mapWithConcurrency(guildIds, 10, (id) => getGuildStats(id, GUILD_CACHE_TTL_MS))).filter(Boolean);
+    await rememberGuilds(guilds).catch(() => null);
+    const cacheData = await readGuildCache();
+    return cacheData.guilds.sort((a, b) => (Number(a.rank || Infinity) - Number(b.rank || Infinity)) || Number(b.guild_points || 0) - Number(a.guild_points || 0) || Number(b.xp || 0) - Number(a.xp || 0));
+  })().finally(() => { guildRefreshPromise = null; });
+  return guildRefreshPromise;
+}
+
+async function topGuilds({ force = false } = {}) {
+  const cached = await readGuildCache();
+  const age = cached.updated_at ? Date.now() - new Date(cached.updated_at).getTime() : Infinity;
+  const sorted = [...cached.guilds].sort((a, b) => (Number(a.rank || Infinity) - Number(b.rank || Infinity)) || Number(b.guild_points || 0) - Number(a.guild_points || 0) || Number(b.xp || 0) - Number(a.xp || 0));
+  if (!force && sorted.length >= 6 && age < GUILD_CACHE_TTL_MS) return { guilds: sorted, updated_at: cached.updated_at, stale: false };
+  if (!force && sorted.length) {
+    refreshTopGuilds().catch(() => null);
+    return { guilds: sorted, updated_at: cached.updated_at, stale: true };
+  }
+  const guilds = await refreshTopGuilds();
+  return { guilds, updated_at: new Date().toISOString(), stale: false };
 }
 
 function calculateWinRate(wins, games) {
@@ -1993,23 +2138,27 @@ app.get('/api/legend-art/:name', async (req, res) => {
 app.get('/api/legend-image/:name', async (req, res) => {
   const name = String(req.params.name || '').trim().slice(0, 50);
   if (!name) return res.status(404).end();
-  const image = await fetchOfficialLegendImage(name);
+  const candidates = [fetchOfficialLegendImage(name), fetchLegendArtwork(name)].map((promise) => promise.then((value) => {
+    if (!value) throw new Error('Image unavailable');
+    return value;
+  }));
+  let image = null;
+  try { image = await Promise.any(candidates); } catch { image = null; }
   if (!image) return res.status(404).end();
   res.setHeader('Content-Type', image.contentType);
-  res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+  res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=2592000');
   res.send(image.buffer);
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.19.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.24.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
   try {
     const query = String(req.query.q || '').trim().slice(0, 40);
     if (query.length < 2) return res.status(400).json({ error: 'Type at least 2 letters.' });
-    const region = allowed(String(req.query.region || 'ALL').toUpperCase(),
-      ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'], 'ALL');
+    const region = 'ALL';
     const mode = allowed(String(req.query.mode || '1v1'), ['1v1', '2v2', '3v3'], '1v1');
 
     async function fetchMatches(search) {
@@ -2026,15 +2175,18 @@ app.get('/api/suggestions', async (req, res, next) => {
       const localProfiles = (await mapWithConcurrency(localCandidates, 7, (item) => buildProfileSearchRanking(item, query, { quick: true }))).filter(Boolean);
       if (localProfiles.length) return res.json({ rankings: localProfiles.slice(0, 7), local_alias_hit: true });
     }
-    const [official, coreMatches, localMatches] = await Promise.all([
+    const [official, coreMatches, localMatches, esportsMatch] = await Promise.all([
       /^\d+$/.test(numericId) ? Promise.resolve({ rankings: [] }) : settleWithin(fetchMatches(query), 1600, { rankings: [] }),
-      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliases(query, 1), 1900, []),
-      findAliasMatches(query, 8).catch(() => [])
+      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 4), 4500, []),
+      findAliasMatches(query, 8).catch(() => []),
+      /^\d+$/.test(numericId) ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 2600, null)
     ]);
     const rankings = await hydrateRankingPlayers(official?.rankings || [], 'suggestion', { includeLegends: false });
     const existingIds = new Set(rankings.flatMap((item) => (item.players || []).map((player) => Number(player.id))));
     const candidates = [];
     if (/^\d+$/.test(numericId)) candidates.push({ id: Number(numericId), name: `Player ${numericId}`, aliases: [] });
+    const esportsBhId = Number(esportsMatch?.player?.brawlhallaId ?? esportsMatch?.player?.brawlhalla_id ?? 0);
+    if (esportsBhId > 0 && !existingIds.has(esportsBhId)) candidates.push({ id: esportsBhId, name: esportsMatch?.player?.name || query, aliases: [query] });
     for (const item of coreMatches) if (!existingIds.has(Number(item.id))) candidates.push(item);
     for (const item of localMatches) if (!existingIds.has(Number(item.id))) candidates.push({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] });
     const uniqueCandidates = [...new Map(candidates.map((item) => [Number(item.id), item])).values()].slice(0, 7);
@@ -2050,8 +2202,7 @@ app.get('/api/search', async (req, res, next) => {
     const query = String(req.query.q || '').trim().slice(0, 40);
     if (query.length < 2) return res.status(400).json({ error: 'Type at least 2 letters.' });
 
-    const region = allowed(String(req.query.region || 'ME').toUpperCase(),
-      ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'], 'ME');
+    const region = 'ALL';
     const mode = allowed(String(req.query.mode || '1v1'), ['1v1', '2v2', '3v3'], '1v1');
     const params = new URLSearchParams({
       page: '1', max_results: '20', game_mode: mode, region, search: query, order_by: 'rating'
@@ -2066,10 +2217,11 @@ app.get('/api/search', async (req, res, next) => {
       if (localProfiles.length) return res.json({ rankings: localProfiles.slice(0, 12), total_pages: 0, includes_unranked_profiles: true, local_alias_hit: true });
     }
 
-    const [official, coreMatches, localMatches] = await Promise.all([
+    const [official, coreMatches, localMatches, esportsMatch] = await Promise.all([
       /^\d+$/.test(numericId) ? Promise.resolve({ rankings: [], total_pages: 0 }) : settleWithin(apiFetch(`/leaderboard/ranked?${params}`), 3500, { rankings: [], total_pages: 0 }),
-      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 2), 3800, []),
-      findAliasMatches(query, 12).catch(() => [])
+      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 6), 7000, []),
+      findAliasMatches(query, 12).catch(() => []),
+      /^\d+$/.test(numericId) ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 3500, null)
     ]);
     const hydratedOfficial = await hydrateRankingPlayers(official?.rankings || [], 'search', { includeLegends: false });
     const needle = normalizeName(query);
@@ -2080,6 +2232,8 @@ app.get('/api/search', async (req, res, next) => {
 
     const candidates = [];
     if (/^\d+$/.test(numericId)) candidates.push({ id: Number(numericId), name: `Player ${numericId}`, aliases: [] });
+    const esportsBhId = Number(esportsMatch?.player?.brawlhallaId ?? esportsMatch?.player?.brawlhalla_id ?? 0);
+    if (esportsBhId > 0 && !officialIds.has(esportsBhId)) candidates.push({ id: esportsBhId, name: esportsMatch?.player?.name || query, aliases: [query] });
     for (const item of coreMatches) if (!officialIds.has(Number(item.id))) candidates.push(item);
     for (const item of localMatches) if (!officialIds.has(Number(item.id))) candidates.push({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] });
     const uniqueCandidates = [...new Map(candidates.map((item) => [Number(item.id), item])).values()].slice(0, 12);
@@ -2094,6 +2248,32 @@ app.get('/api/search', async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+
+app.get('/api/clans/top', async (req, res, next) => {
+  try {
+    const query = normalizeName(String(req.query.q || '').slice(0, 60));
+    const limit = asInt(req.query.limit, 18, 1, 40);
+    const force = String(req.query.refresh || '') === '1';
+    const data = await topGuilds({ force });
+    const guilds = query
+      ? data.guilds.filter((guild) => normalizeName(guild.name).includes(query) || String(guild.guild_id) === query)
+      : data.guilds;
+    res.json({ guilds: guilds.slice(0, limit), updated_at: data.updated_at, stale: data.stale, discovery: 'Top guilds discovered from current all-region ranked players and ordered by official guild rank.' });
+  } catch (error) { next(error); }
+});
+
+app.get('/api/clans/:id', async (req, res, next) => {
+  try {
+    const guildId = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
+    if (!guildId) return res.status(400).json({ error: 'Invalid guild ID.' });
+    const [guild, members] = await Promise.all([getGuildStats(guildId, 5 * 60_000), getGuildMembers(guildId, 5 * 60_000)]);
+    if (!guild) return res.status(404).json({ error: 'Guild not found.' });
+    const fullGuild = { ...guild, member_count: guild.member_count || members.length };
+    await rememberGuild(fullGuild).catch(() => null);
+    res.json({ guild: fullGuild, members });
+  } catch (error) { next(error); }
 });
 
 app.get('/api/leaderboard', async (req, res, next) => {
@@ -2676,12 +2856,13 @@ app.get('/api/player/:id', async (req, res, next) => {
     const localNamesSeedPromise = fast ? peekKnownNames(id).catch(() => []) : readKnownNames(id).catch(() => []);
     const fetches = fast
       ? [
-          settleWithin(apiFetch(`/player/stats?brawlhalla_id=${id}&mode=all`, 60_000), 2200, null),
-          settleWithin(apiFetch(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`, 60_000), 2200, null),
+          settleWithin(apiFetch(`/player/stats?brawlhalla_id=${id}&mode=all`, 5 * 60_000), 1600, null),
+          settleWithin(apiFetch(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`, 5 * 60_000), 1600, null),
           settleWithin(getLegendMap(), 1600, new Map()),
           Promise.resolve(null),
           Promise.resolve([]),
-          localNamesSeedPromise
+          localNamesSeedPromise,
+          settleWithin(getPlayerGuild(id, 10 * 60_000), 1200, null)
         ]
       : [
           (forceFresh ? apiFetchFresh(`/player/stats?brawlhalla_id=${id}&mode=all`) : apiFetch(`/player/stats?brawlhalla_id=${id}&mode=all`, 60_000)).catch(() => null),
@@ -2689,9 +2870,10 @@ app.get('/api/player/:id', async (req, res, next) => {
           getLegendMap().catch(() => new Map()),
           getCorehallaPlayerStats(id, forceFresh).catch(() => null),
           getCorehallaPlayerAliases(id, forceFresh).catch(() => []),
-          localNamesSeedPromise
+          localNamesSeedPromise,
+          getPlayerGuild(id, 10 * 60_000).catch(() => null)
         ];
-    const [v1Lifetime, ranked, legendMap, coreStats, coreAliases, localNamesSeed] = await Promise.all(fetches);
+    const [v1Lifetime, ranked, legendMap, coreStats, coreAliases, localNamesSeed, playerGuild] = await Promise.all(fetches);
 
     const lifetime = mergeLifetimeStats(v1Lifetime || {}, coreStats);
     const lifetimeByLegend = new Map((lifetime?.legends || []).map((legend) => [Number(legend.legend_id), legend]));
@@ -2751,6 +2933,7 @@ app.get('/api/player/:id', async (req, res, next) => {
       lifetime_totals: lifetimeTotals,
       lifetime_legends: lifetimeLegends,
       legends: rankedLegends,
+      guild: playerGuild,
       data_quality: {
         source: coreStats ? 'Fresh Brawlhalla + fresh Corehalla progression (highest XP/level wins)' : (fast ? 'Fast Brawlhalla profile · background refresh pending' : 'Live Brawlhalla stats'),
         corehalla_enriched: Boolean(coreStats),
@@ -2767,6 +2950,10 @@ app.get('/api/player/:id', async (req, res, next) => {
       updated_at: new Date().toISOString()
     };
 
+    if (playerGuild?.guild_id) {
+      const guildSnapshot = await getGuildStats(playerGuild.guild_id, GUILD_CACHE_TTL_MS).catch(() => null);
+      if (guildSnapshot) rememberGuild(guildSnapshot).catch(() => null);
+    }
     if (fast) storeObservedNamesBatch([{ id, name: player.name }], 'profile-fast').catch(() => null);
     else await storeObservedNamesBatch([{ id, name: player.name }], 'profile');
     const history = fast ? await readSnapshotHistory(id) : await storeSnapshot(player);
@@ -2800,6 +2987,10 @@ app.use((error, _req, res, _next) => {
   res.status(status).json({ error: message });
 });
 
+function windowlessWarmGuilds() {
+  setTimeout(() => refreshTopGuilds().catch((error) => console.warn('Guild discovery warmup failed:', error.message)), 2500);
+}
+
 async function startServer() {
   try {
     await cleanAllNameHistory();
@@ -2809,6 +3000,7 @@ async function startServer() {
 
   app.listen(PORT, () => {
     console.log(`PeakHalla running on http://localhost:${PORT}`);
+    windowlessWarmGuilds();
   });
 }
 

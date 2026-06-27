@@ -1,6 +1,14 @@
 # Changelog
 
-## 7.19.0
+## 7.24.0
+- Removed the region selector from the homepage player search; searches now run across all regions automatically.
+- Expanded old-name and unranked profile discovery through deeper alias lookup and BH ID fallback.
+- Added a new Clans section with discovered official guild rankings, member counts, weekly points, XP, recruiting status, and a detailed roster modal with Leader, Officer, and Member roles.
+- Added official guild endpoints and background clan discovery/caching.
+- Reworked legend image loading with parallel image sources, shorter timeouts, async decoding, smooth fades, and reliable fallbacks.
+- Updated public asset versions and Node package metadata to 7.24.0.
+
+## 7.23.0
 - Rebranded the complete site identity to **PeakHalla** with a new angular PH logo.
 - Added compact, color-coded **W/L** badges directly beside every player name in the ranked leaderboard.
 - Added a fallback that derives losses from games minus wins when an API response omits the loss field.
