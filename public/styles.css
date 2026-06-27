@@ -77,6 +77,63 @@ nav a:hover { color: white; }
 .is-arabic .nav-dropdown-menu { text-align: right; }
 .is-arabic .nav-dropdown-menu button.selected::after { float: left; }
 .header-actions { display: flex; align-items: center; gap: 10px; }
+.donation-link {
+  position: relative;
+  height: 38px;
+  padding: 0 13px 0 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  isolation: isolate;
+  color: #f8f3ff;
+  border: 1px solid rgba(198,166,255,.30);
+  border-radius: 11px;
+  background: linear-gradient(135deg, rgba(139,92,246,.20), rgba(236,72,153,.10));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 8px 22px rgba(47,22,86,.14);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  transition: transform .45s cubic-bezier(.16,1,.3,1), border-color .35s ease, background .35s ease, box-shadow .45s ease;
+}
+.donation-link::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  background: linear-gradient(110deg, transparent 10%, rgba(255,255,255,.12) 45%, transparent 75%);
+  transform: translateX(-120%);
+}
+.donation-link:hover, .donation-link:focus-visible {
+  color: white;
+  border-color: rgba(216,194,255,.58);
+  background: linear-gradient(135deg, rgba(139,92,246,.32), rgba(236,72,153,.16));
+  box-shadow: 0 12px 30px rgba(109,59,229,.20), inset 0 1px 0 rgba(255,255,255,.08);
+  transform: translateY(-2px);
+}
+.donation-link:hover::before, .donation-link:focus-visible::before { animation: donationSheen .9s cubic-bezier(.16,1,.3,1); }
+.donation-link:active { transform: translateY(0) scale(.98); }
+.donation-link:focus-visible { outline: 2px solid #cdb9ff; outline-offset: 4px; }
+.donation-heart {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  color: #ff9ac1;
+  border: 1px solid rgba(255,154,193,.18);
+  border-radius: 7px;
+  background: rgba(255,91,153,.09);
+  font-size: 12px;
+  line-height: 1;
+  text-shadow: 0 0 14px rgba(255,105,180,.45);
+  transition: transform .5s cubic-bezier(.16,1,.3,1), color .3s ease;
+}
+.donation-link:hover .donation-heart, .donation-link:focus-visible .donation-heart { color: #ffc0da; transform: rotate(-7deg) scale(1.08); animation: donationPulse 1.35s ease-in-out infinite; }
+.donation-link > i { color: #b9a4e8; font-size: 10px; font-style: normal; transition: transform .4s cubic-bezier(.16,1,.3,1), color .3s ease; }
+.donation-link:hover > i, .donation-link:focus-visible > i { color: white; transform: translate(2px,-2px); }
+@keyframes donationSheen { from { opacity: 0; transform: translateX(-120%); } 30% { opacity: 1; } to { opacity: 0; transform: translateX(130%); } }
+@keyframes donationPulse { 0%,100% { transform: rotate(-7deg) scale(1.08); } 50% { transform: rotate(-7deg) scale(1.18); } }
 .live-pill { height: 34px; padding: 0 11px; display: flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 10px; font-weight: 700; }
 .live-pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 5px rgba(121,224,173,.08); }
 .language-toggle { height: 36px; padding: 3px; display: flex; gap: 2px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--muted); }
@@ -318,6 +375,9 @@ tr:last-child td { border-bottom: 0; }
   .shell { width: min(100% - 20px, 1180px); }
   .header-inner { height: 64px; }
   .brand small, .live-pill { display: none; }
+  .donation-link { height: 36px; padding-inline: 9px; gap: 6px; }
+  .donation-heart { width: 20px; height: 20px; }
+  .donation-link > i { display: none; }
   .hero { padding-block: 56px 40px; }
   .hero h1 { font-size: 55px; }
   .hero-copy > p { font-size: 15px; }
@@ -1580,4 +1640,18 @@ body.arena-profile-open { overflow: hidden; }
 /* v7.21 — browser Back/Forward cache safety */
 html:not(.is-navigating) body.page-leaving {
   will-change: opacity, transform, filter;
+}
+
+@media (max-width: 430px) {
+  .brand-wordmark strong { font-size: 16px; }
+  .brand-mark-wrap, .brand-logo { width: 40px; height: 40px; }
+  .donation-link { width: 38px; padding: 0; justify-content: center; }
+  .donation-link > span:not(.donation-heart) { display: none; }
+  .donation-heart { border: 0; background: transparent; }
+  .header-actions { gap: 7px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .donation-link, .donation-heart, .donation-link > i { transition: none !important; animation: none !important; }
+  .donation-link::before { display: none; }
 }
