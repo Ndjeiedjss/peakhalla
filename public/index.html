@@ -62,16 +62,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="/styles.css?v=7.23.0" as="style">
-  <link rel="preload" href="/peakhalla-mark.svg?v=7.23.0" as="image" type="image/svg+xml">
-  <link rel="stylesheet" href="/styles.css?v=7.23.0">
+  <link rel="preload" href="/styles.css?v=7.24.0" as="style">
+  <link rel="preload" href="/peakhalla-mark.svg?v=7.24.0" as="image" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css?v=7.24.0">
 </head>
 <body>
   <header class="site-header">
     <div class="shell header-inner">
       <a class="brand" href="#home" aria-label="PeakHalla home">
         <span class="brand-mark-wrap" aria-hidden="true">
-          <img class="brand-logo" src="/peakhalla-mark.svg?v=7.23.0" alt="" width="44" height="44">
+          <img class="brand-logo" src="/peakhalla-mark.svg?v=7.24.0" alt="" width="44" height="44">
           <i class="brand-sheen"></i>
         </span>
         <span class="brand-wordmark"><strong>Peak<span>Halla</span></strong><small>BRAWLHALLA TRACKER</small></span>
@@ -98,6 +98,7 @@
           </div>
         </div>
         <a href="/arena" id="arena-nav-link" data-i18n="navArena">Arena Wall</a>
+        <a href="/#clans" data-i18n="navClans">Clans</a>
         <a href="/#esports" data-i18n="navEsports">Esports</a>
         <a href="/#about" data-i18n="navAbout">About</a>
       </nav>
@@ -279,17 +280,12 @@
           <input id="player-name" type="search" minlength="2" maxlength="40" placeholder="Sandstorm" autocomplete="off" required data-i18n-placeholder="playerPlaceholder" aria-autocomplete="list" aria-controls="search-suggestions" aria-expanded="false">
           <div id="search-suggestions" class="search-suggestions" role="listbox" hidden></div>
         </label>
-        <div class="field-row">
-          <label class="field">
-            <span data-i18n="region">Region</span>
-            <select id="search-region">
-              <option value="ME">Middle East · ME</option><option value="EU">Europe · EU</option><option value="US-E">US East · US-E</option><option value="US-W">US West · US-W</option><option value="SA">Southern Africa · SA</option><option value="SEA">Southeast Asia · SEA</option><option value="BRZ">Brazil · BRZ</option><option value="AUS">Australia · AUS</option><option value="JPS">Japan · JPS</option><option value="ALL">All regions</option>
-            </select>
-          </label>
+        <div class="field-row search-mode-only">
           <label class="field">
             <span data-i18n="gameMode">Mode</span>
             <select id="search-mode"><option value="1v1">Ranked 1v1</option><option value="2v2">Ranked 2v2</option><option value="3v3">Ranked 3v3</option></select>
           </label>
+          <div class="all-regions-note"><i>◎</i><span data-i18n="boardsFeature">All regions</span></div>
         </div>
         <button type="submit" class="primary-button"><span data-i18n="searchButton">Search player</span><b>→</b></button>
         <p class="form-note" data-i18n="searchNote">Search the official ranked database by player name.</p>
@@ -392,6 +388,18 @@
       <div id="leaderboard-list" class="leaderboard-list panel"><div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div></div>
     </section>
 
+    <section id="clans" class="shell section clans-section">
+      <div class="section-heading stacked-mobile">
+        <div><span class="eyebrow">OFFICIAL GUILDS</span><h2 data-i18n="clansTitle">Top clans</h2><p class="section-copy" data-i18n="clansText">Official Brawlhalla guilds discovered from current ranked players and ordered by official guild rank.</p></div>
+        <div class="toolbar clans-toolbar">
+          <label class="compact-field clans-search-field"><span data-i18n="clanSearch">Find a clan</span><span class="leaderboard-search-box"><i>⌕</i><input id="clans-search" type="search" autocomplete="off" data-i18n-placeholder="clanSearchPlaceholder" placeholder="Clan name or guild ID"></span></label>
+          <button id="clans-refresh" class="secondary-button" type="button"><span data-i18n="refresh">Refresh</span><b>↻</b></button>
+        </div>
+      </div>
+      <div class="clans-meta-line"><span id="clans-updated" class="muted"></span><small data-i18n="clanDiscoveryNote">Top clans are discovered from ranked players and sorted using the official guild rank.</small></div>
+      <div id="clans-grid" class="clans-grid panel"><div class="clans-loading"><span></span><strong data-i18n="clanLoading">Discovering top clans…</strong></div></div>
+    </section>
+
     <section id="esports" class="shell section esports-section">
       <div class="section-heading stacked-mobile">
         <div><span class="eyebrow">COMPETITIVE</span><h2 data-i18n="esportsTitle">Esports power rankings</h2><p class="section-copy" data-i18n="esportsText">Official competitive names, medals, earnings, and a quick look at major tournament winners.</p></div>
@@ -431,6 +439,20 @@
     </section>
   </main>
 
+  <div id="clan-modal" class="clan-modal" hidden>
+    <button class="clan-modal-backdrop" type="button" data-clan-close aria-label="Close clan details"></button>
+    <section class="clan-dialog" role="dialog" aria-modal="true" aria-labelledby="clan-modal-name">
+      <header class="clan-dialog-header">
+        <div><span class="eyebrow" data-i18n="clanDetails">Clan details</span><h2 id="clan-modal-name">Clan</h2><p id="clan-modal-meta"></p></div>
+        <button class="clan-modal-close" type="button" data-clan-close aria-label="Close">×</button>
+      </header>
+      <div id="clan-modal-status" class="clan-modal-status" hidden></div>
+      <div id="clan-modal-stats" class="clan-modal-stats"></div>
+      <div class="clan-roster-heading"><div><span class="eyebrow">ROSTER</span><h3 data-i18n="clanRoster">Clan roster</h3></div><span id="clan-member-count" class="muted"></span></div>
+      <div class="table-wrap clan-table-wrap"><table class="clan-members-table"><thead><tr><th data-i18n="player">Player</th><th data-i18n="clanRole">Role</th><th data-i18n="clanPoints">Weekly points</th><th data-i18n="clanMemberXp">Member XP</th><th data-i18n="clanJoined">Joined</th></tr></thead><tbody id="clan-members-body"></tbody></table></div>
+    </section>
+  </div>
+
   <div id="esports-player-modal" class="career-modal" hidden>
     <button class="career-backdrop" type="button" data-career-close aria-label="Close tournament history"></button>
     <section class="career-dialog" role="dialog" aria-modal="true" aria-labelledby="career-player-name">
@@ -463,7 +485,7 @@
   <footer class="site-footer">
     <div class="shell site-footer-inner">
       <a class="footer-brand" href="/" aria-label="PeakHalla home">
-        <img src="/peakhalla-mark.svg?v=7.23.0" alt="" width="34" height="34">
+        <img src="/peakhalla-mark.svg?v=7.24.0" alt="" width="34" height="34">
         <span><strong>Peak<span>Halla</span></strong><small data-i18n="footerTagline">Brawlhalla statistics</small></span>
       </a>
       <div class="footer-legal">
@@ -475,7 +497,7 @@
       </a>
     </div>
   </footer>
-  <script src="/app.js?v=7.23.0" defer></script>
-  <script src="/arena-v72.js?v=7.23.0" defer></script>
+  <script src="/app.js?v=7.24.0" defer></script>
+  <script src="/arena-v72.js?v=7.24.0" defer></script>
 </body>
 </html>

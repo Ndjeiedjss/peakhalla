@@ -2,23 +2,24 @@ const $ = (selector) => document.querySelector(selector);
 
 const translations = {
   en: {
-    navLeaderboard: 'Ranked', navQueue: 'Queue', navArena: 'Arena Wall', rankedSolo: 'Solo ranked search', rankedDoubles: 'Team ranked search', rankedThrees: '3-player team search', queueSolo: 'Find solo players', queueDoubles: 'Find a ranked partner', queueThrees: 'Build a 3-player team', queueSoloLive: 'Solo ranked activity', queueDoublesLive: 'Team ranked activity', queueThreesLive: '3-player ranked activity', navEsports: 'Esports', navAbout: 'About', navDonation: 'Donation', liveData: 'LIVE DATA',
-    heroTitle: 'Track the player.<br><em>Know the main.</em>', heroText: 'Search ranked players, see their main legend, compare regions, and browse competitive rankings.',
+    navLeaderboard: 'Ranked', navQueue: 'Queue', navArena: 'Arena Wall', rankedSolo: 'Solo ranked search', rankedDoubles: 'Team ranked search', rankedThrees: '3-player team search', queueSolo: 'Find solo players', queueDoubles: 'Find a ranked partner', queueThrees: 'Build a 3-player team', queueSoloLive: 'Solo ranked activity', queueDoublesLive: 'Team ranked activity', queueThreesLive: '3-player ranked activity', navClans: 'Clans', navEsports: 'Esports', navAbout: 'About', navDonation: 'Donation', liveData: 'LIVE DATA',
+    heroTitle: 'Track the player.<br><em>Know the main.</em>', heroText: 'Search every known Brawlhalla profile across all regions, discover main legends, clans, and competitive rankings.',
     mainLegendFeature: 'Main legend', aliasFeature: 'Name history', boardsFeature: 'All regions', esportsFeature: 'Esports power rankings', findPlayer: 'Find a player',
     playerName: 'Player name, old name, or BH ID', playerPlaceholder: 'Sandstorm', region: 'Region', gameMode: 'Mode', searchButton: 'Search player',
-    searchNote: 'Search ranked and unranked profiles by name, old name, or BH ID.', searchResults: 'Search results', playerIdLabel: 'BH ID', updatedLabel: 'Updated', currentRank: 'Current rank',
+    searchNote: 'Searches all regions automatically, including unranked profiles found by name history or BH ID.', searchResults: 'Search results', playerIdLabel: 'BH ID', updatedLabel: 'Updated', currentRank: 'Current rank',
     eloProgress: 'Elo progress', last120: '120 days', firstSnapshot: 'First snapshot saved. The chart grows when the tracker sees this account again.',
     playerSummary: 'Player summary', knownNames: 'Known names', knownNamesNote: 'Previous names are loaded automatically from the fresh Corehalla alias history whenever the player page opens.',
     bestLegends: 'Ranked legends', legend: 'Legend', weapons: 'Weapons', games: 'Games', wins: 'Wins', winRate: 'Win rate', peak: 'Peak', refresh: 'Refresh',
     aboutTitle: 'Built like a real stats site.', aboutText: 'Official ranked data, main legends based on lifetime games, daily Elo snapshots, and a competitive section for esports fans.',
     madeBy: 'Made by <strong>Nad</strong>', followText: 'Brawlhalla clips and tracker updates.', disclaimer: 'Unofficial community project. Not affiliated with Ubisoft or Blue Mammoth Games.', footerMade: 'Made by', footerTagline: 'Brawlhalla statistics', rightsReserved: 'All rights reserved.',
-    searching: 'Searching ranked players…', loadingPlayer: 'Loading player profile…', fetchError: 'Could not load the data right now.',
-    noSearchResults: 'No player matched that name. Check the spelling or try another region.', oldNameMatch: 'Old name match', result: 'result', results: 'results', seasonalPeak: 'Season peak', currentElo: 'Current ELO', peakElo: 'Season peak', rankedOverview: 'Ranked overview', offPeak: 'off peak', atPeak: 'at season peak', globalRank: 'Global rank', rankedGames: 'Ranked games', rankedWins: 'Ranked wins',
+    searching: 'Searching all known player profiles…', loadingPlayer: 'Loading player profile…', fetchError: 'Could not load the data right now.',
+    noSearchResults: 'No profile matched that name yet. Check the spelling or search by BH ID.', oldNameMatch: 'Old name match', result: 'result', results: 'results', seasonalPeak: 'Season peak', currentElo: 'Current ELO', peakElo: 'Season peak', rankedOverview: 'Ranked overview', offPeak: 'off peak', atPeak: 'at season peak', globalRank: 'Global rank', rankedGames: 'Ranked games', rankedWins: 'Ranked wins',
     accountLevel: 'Account level', accountXP: 'Account XP', xpProgress: 'XP progress', gameTime: 'Online match time', mainWeapons: 'Main weapons', topLegends: 'Main legends', regionRank: 'Region rank', totalGames: 'Total games', totalWins: 'Total wins', overallWinRate: 'Overall win rate', liveOfficialData: 'Live player data', corehallaStats: 'Corehalla-compatible stats', currentAlias: 'Current name', previousAliases: 'Previous names', refreshLiveStats: 'Refresh live stats', refreshingLiveStats: 'Refreshing official stats…', notReported: 'Not reported by API', statsAccuracyNote: 'Account XP and legend levels are checked against fresh Brawlhalla and Corehalla data. PeakHalla keeps the highest reported progression value so older data cannot replace newer levels.', legendLevelLimit: 'Some legend XP and levels may be unavailable if that legend has not been played since Patch 9.07.',
     fullPlayerStats: 'Full player stats', officialLifetimeData: 'Official lifetime data', allLegendStats: 'Every legend · lifetime stats', searchLegends: 'Search legends', legendSearchPlaceholder: 'Legend or weapon', show: 'Show', playedOnly: 'Played only', allLegends: 'All legends', sortBy: 'Sort by', level: 'Level', xp: 'XP', losses: 'Losses', damageDealt: 'Damage dealt', damageTaken: 'Damage taken', kos: 'KOs', falls: 'Falls', kdRatio: 'K/D ratio', damageRatio: 'Damage ratio', suicides: 'Suicides', teamKOs: 'Team KOs', unarmedDamage: 'Unarmed damage', thrownDamage: 'Thrown-item damage', gadgetDamage: 'Gadget damage', gadgetKOs: 'Gadget KOs', unarmedKOs: 'Unarmed KOs', bombDamage: 'Bomb damage', mineDamage: 'Mine damage', spikeballDamage: 'Spikeball damage', sidekickDamage: 'Sidekick damage', snowballHits: 'Snowball hits', bombKOs: 'Bomb KOs', mineKOs: 'Mine KOs', sidekickKOs: 'Sidekick KOs', snowballKOs: 'Snowball KOs', spikeballKOs: 'Spikeball KOs', matchTime: 'Match time', seasonRanked: 'Current season ranked', lifetimeCombat: 'Lifetime combat', weaponBreakdown: 'Weapon breakdown', noLifetimeStats: 'No legends matched these filters.', legendsTotal: 'legends', playedLegends: 'played',
     legendUsed: 'legend used', legendsUsed: 'legends used', noRankedLegends: 'No ranked legend games found.', nameSeen: 'name recorded', namesSeen: 'names recorded', currentName: 'Current', previousName: 'Previous',
     firstSeen: 'First seen', lastSeen: 'Last seen', formerly: 'Formerly', aliasMatch: 'Old-name match', main: 'Main', unknownLegend: 'Main unknown',
     leaderboardPrefix: 'Top players ·', leaderboardSearch: 'Find a rank', leaderboardSearchPlaceholder: 'Search a player', leaderboardSearchTitle: 'Ranking search', emptyData: 'No data available right now.', allRegions: 'All regions',
+    clansTitle: 'Top clans', clansText: 'Official Brawlhalla guilds discovered from current ranked players and ordered by official guild rank.', clanSearch: 'Find a clan', clanSearchPlaceholder: 'Clan name or guild ID', clanRank: 'Clan rank', clanMembers: 'Members', clanPoints: 'Weekly points', clanXp: 'Clan XP', clanRecruiting: 'Recruiting', clanClosed: 'Closed', clanOpen: 'Open clan', clanDetails: 'Clan details', clanRoster: 'Clan roster', clanRole: 'Role', clanJoined: 'Joined', clanMemberXp: 'Member XP', clanNoData: 'No clans have been discovered yet. Refresh in a moment.', clanLoading: 'Discovering top clans…', clanUpdated: 'Updated', clanDiscoveryNote: 'Top clans are discovered from ranked players and sorted using the official guild rank.', clanView: 'View clan',
     MiddleEast: 'Middle East', Europe: 'Europe', USEast: 'US East', USWest: 'US West', SouthernAfrica: 'Southern Africa', SoutheastAsia: 'Southeast Asia', Brazil: 'Brazil', Australia: 'Australia', Japan: 'Japan',
     esportsTitle: 'Esports power rankings', esportsText: 'Official competitive names, medals, earnings, and a quick look at major tournament winners.', powerRanking: 'Power ranking', player: 'Player', earnings: 'Earnings',
     officialSource: 'Open official rankings ↗', tournamentList: 'Tournament list', proWinners: 'Pro players & major titles', notExhaustive: 'Featured titles, not a complete career list',
@@ -31,23 +32,24 @@ const translations = {
     arenaCommunity: 'COMMUNITY SCREENSHOTS', arenaEyebrow: 'COMMUNITY', arenaTitle: 'Arena Wall', arenaIntro: 'Share Brawlhalla screenshots, add a caption, and talk with other players through comments and replies.', arenaWhat: 'What is Arena Wall?', arenaWhatText: 'A community gallery for match screenshots, rank moments, funny clips captured as images, tournament results, and anything worth sharing from Brawlhalla. Create an account using only a username and password—no email or verification code.', arenaCreateAccount: 'Create account', arenaSignIn: 'Sign in', arenaNoEmail: 'NO EMAIL NEEDED', arenaJoinTitle: 'Join the wall', arenaJoinText: 'Choose a username and password. No email, verification code, or social login.', arenaUsername: 'Username', arenaPassword: 'Password', arenaPostingAs: 'Posting as', arenaLogout: 'Log out', arenaChooseScreenshot: 'Choose a screenshot', arenaImageLimit: 'PNG, JPG, or WebP · up to 5 MB', arenaCaption: 'Caption', arenaCaptionPlaceholder: 'What happened in this match?', arenaPublish: 'Publish screenshot', arenaLatest: 'LATEST DROPS', arenaFeed: 'Community feed', arenaLoading: 'Loading the wall…', arenaComments: 'Comments', arenaReply: 'Reply', arenaReplyingTo: 'Replying to', arenaCancelReply: 'Cancel', arenaWriteComment: 'Write a comment…', arenaSend: 'Send', arenaSignInToComment: 'Sign in to comment or reply.', arenaNoPosts: 'No screenshots yet. Be the first to post.', arenaChooseImageFirst: 'Choose a screenshot first.', arenaPosted: 'Screenshot published.', arenaAccountReady: 'Account created. Welcome to Arena Wall.', arenaSignedIn: 'Signed in.', arenaAuthError: 'Could not complete that request.', arenaPostError: 'Could not publish the screenshot.', friendlyProblem: 'Couldn’t reach Brawlhalla right now. Try again in a moment.'
   },
   ar: {
-    navLeaderboard: 'الرانك', navQueue: 'الكيو', navArena: 'ساحة الصور', rankedSolo: 'بحث رانك فردي', rankedDoubles: 'بحث رانك ثنائي', rankedThrees: 'بحث فريق 3 لاعبين', queueSolo: 'دور لاعبين 1v1', queueDoubles: 'دور شريك رانك', queueThrees: 'كوّن فريق 3 لاعبين', queueSoloLive: 'نشاط رانك 1v1', queueDoublesLive: 'نشاط فرق 2v2', queueThreesLive: 'نشاط فرق 3v3', navEsports: 'البطولات', navAbout: 'عن الموقع', navDonation: 'دعم الموقع', liveData: 'البيانات مباشرة',
-    heroTitle: 'تتبّع اللاعب.<br><em>واعرف شخصيته.</em>', heroText: 'دور على لاعب رانك، وشوف شخصيته الأساسية، وقارن المناطق وترتيب المحترفين.',
+    navLeaderboard: 'الرانك', navQueue: 'الكيو', navArena: 'ساحة الصور', rankedSolo: 'بحث رانك فردي', rankedDoubles: 'بحث رانك ثنائي', rankedThrees: 'بحث فريق 3 لاعبين', queueSolo: 'دور لاعبين 1v1', queueDoubles: 'دور شريك رانك', queueThrees: 'كوّن فريق 3 لاعبين', queueSoloLive: 'نشاط رانك 1v1', queueDoublesLive: 'نشاط فرق 2v2', queueThreesLive: 'نشاط فرق 3v3', navClans: 'الكلانات', navEsports: 'البطولات', navAbout: 'عن الموقع', navDonation: 'دعم الموقع', liveData: 'البيانات مباشرة',
+    heroTitle: 'تتبّع اللاعب.<br><em>واعرف شخصيته.</em>', heroText: 'ابحث عن كل بروفايلات براولهالا في جميع المناطق، وشاهد الشخصية الأساسية والكلانات والترتيب.',
     mainLegendFeature: 'الشخصية الأساسية', aliasFeature: 'الأسماء القديمة', boardsFeature: 'كل المناطق', esportsFeature: 'باور رانكنق البطولات', findPlayer: 'دور على لاعب',
     playerName: 'اسم اللاعب أو اسمه القديم أو BH ID', playerPlaceholder: 'مثال: Sandstorm', region: 'المنطقة', gameMode: 'النمط', searchButton: 'ابحث',
-    searchNote: 'ابحث عن الحساب المصنف أو غير المصنف بالاسم أو الاسم القديم أو BH ID.', searchResults: 'نتائج البحث', playerIdLabel: 'معرّف BH', updatedLabel: 'آخر تحديث', currentRank: 'الرانك الحالي',
+    searchNote: 'البحث يشمل كل المناطق تلقائيًا، ويعرض الحسابات غير المصنفة بالاسم القديم أو BH ID.', searchResults: 'نتائج البحث', playerIdLabel: 'معرّف BH', updatedLabel: 'آخر تحديث', currentRank: 'الرانك الحالي',
     eloProgress: 'تطور الإيلو', last120: '١٢٠ يوم', firstSnapshot: 'حفظنا أول لقطة، والرسم يكبر كل ما نشوف الحساب مرة ثانية.',
     playerSummary: 'زبدة الحساب', knownNames: 'الأسماء المعروفة', knownNamesNote: 'تُجلب الأسماء السابقة تلقائيًا من سجل Corehalla المحدث عند فتح صفحة اللاعب.',
     bestLegends: 'شخصيات الرانك', legend: 'الشخصية', weapons: 'الأسلحة', games: 'المباريات', wins: 'الفوز', winRate: 'نسبة الفوز', peak: 'أعلى إيلو', refresh: 'حدّث',
     aboutTitle: 'مبني مثل مواقع الإحصائيات الصح.', aboutText: 'بيانات رانك رسمية، وشخصية أساسية حسب مباريات الحساب، ولقطات إيلو يومية، وقسم كامل للمحترفين.',
     madeBy: 'من إنشاء <strong>Nad</strong>', followText: 'مقاطع براولهالا وتحديثات التراكر.', disclaimer: 'مشروع جماهيري غير رسمي، وغير تابع لـ Ubisoft أو Blue Mammoth Games.', footerMade: 'من إنشاء', footerTagline: 'إحصائيات براولهالا', rightsReserved: 'جميع الحقوق محفوظة.',
-    searching: 'ندور على اللاعب…', loadingPlayer: 'نفتح ملف اللاعب…', fetchError: 'ما قدرنا نجيب البيانات الحين.',
-    noSearchResults: 'ما لقينا لاعب بهذا الاسم. راجع الكتابة أو جرّب منطقة ثانية.', result: 'نتيجة', results: 'نتائج', seasonalPeak: 'قمة الموسم', currentElo: 'الإيلو الحالي', peakElo: 'أعلى إيلو', rankedOverview: 'ملخص الرانك', offPeak: 'عن القمة', atPeak: 'على قمة الموسم', globalRank: 'الترتيب العالمي', rankedGames: 'مباريات الرانك', rankedWins: 'فوز الرانك',
+    searching: 'ندور في كل بروفايلات اللاعبين…', loadingPlayer: 'نفتح ملف اللاعب…', fetchError: 'ما قدرنا نجيب البيانات الحين.',
+    noSearchResults: 'ما لقينا بروفايل بهذا الاسم للحين. راجع الكتابة أو ابحث بـ BH ID.', result: 'نتيجة', results: 'نتائج', seasonalPeak: 'قمة الموسم', currentElo: 'الإيلو الحالي', peakElo: 'أعلى إيلو', rankedOverview: 'ملخص الرانك', offPeak: 'عن القمة', atPeak: 'على قمة الموسم', globalRank: 'الترتيب العالمي', rankedGames: 'مباريات الرانك', rankedWins: 'فوز الرانك',
     accountLevel: 'لفل الحساب', accountXP: 'إكس بي الحساب', xpProgress: 'تقدم اللفل', gameTime: 'وقت المباريات الأونلاين', mainWeapons: 'الأسلحة الأساسية', topLegends: 'الشخصيات الأساسية', regionRank: 'ترتيب المنطقة', totalGames: 'كل المباريات', totalWins: 'كل الفوز', overallWinRate: 'نسبة الفوز العامة', liveOfficialData: 'بيانات اللاعب مباشرة', corehallaStats: 'إحصائيات متوافقة مع Corehalla', currentAlias: 'الاسم الحالي', previousAliases: 'الأسماء السابقة', refreshLiveStats: 'حدّث البيانات مباشرة', refreshingLiveStats: 'نحدّث البيانات الرسمية…', notReported: 'غير متوفر من الـAPI', statsAccuracyNote: 'يتم فحص إكس بي الحساب ولفلات الشخصيات من Brawlhalla وCorehalla مباشرة، ويعتمد PeakHalla أعلى قيمة تقدم حتى لا تستبدل البيانات القديمة اللفلات الأحدث.', legendLevelLimit: 'بعض لفلات وإكس بي الشخصيات قد لا تظهر إذا لم تُلعب الشخصية منذ تحديث 9.07.',
     fullPlayerStats: 'إحصائيات اللاعب كاملة', officialLifetimeData: 'بيانات رسمية طوال عمر الحساب', allLegendStats: 'كل الشخصيات · إحصائيات العمر الكامل', searchLegends: 'ابحث في الشخصيات', legendSearchPlaceholder: 'اسم شخصية أو سلاح', show: 'العرض', playedOnly: 'اللي لعب بها فقط', allLegends: 'كل الشخصيات', sortBy: 'الترتيب حسب', level: 'اللفل', xp: 'الإكس بي', losses: 'الخسائر', damageDealt: 'الضرر المسبب', damageTaken: 'الضرر المستلم', kos: 'الإقصاءات', falls: 'مرات السقوط', kdRatio: 'نسبة K/D', damageRatio: 'نسبة الضرر', suicides: 'سقوط ذاتي', teamKOs: 'إقصاء الزملاء', unarmedDamage: 'ضرر بدون سلاح', thrownDamage: 'ضرر الأدوات المرميّة', gadgetDamage: 'ضرر الأدوات', gadgetKOs: 'إقصاءات الأدوات', unarmedKOs: 'إقصاءات بدون سلاح', bombDamage: 'ضرر القنابل', mineDamage: 'ضرر الألغام', spikeballDamage: 'ضرر الكرة الشائكة', sidekickDamage: 'ضرر المساعد', snowballHits: 'إصابات كرة الثلج', bombKOs: 'إقصاءات القنابل', mineKOs: 'إقصاءات الألغام', sidekickKOs: 'إقصاءات المساعد', snowballKOs: 'إقصاءات كرة الثلج', spikeballKOs: 'إقصاءات الكرة الشائكة', matchTime: 'وقت المباريات', seasonRanked: 'رانك الموسم الحالي', lifetimeCombat: 'قتال العمر الكامل', weaponBreakdown: 'تفاصيل الأسلحة', noLifetimeStats: 'ما فيه شخصيات مطابقة للفلاتر.', legendsTotal: 'شخصية', playedLegends: 'مستخدمة',
     legendUsed: 'شخصية مستخدمة', legendsUsed: 'شخصيات مستخدمة', noRankedLegends: 'ما لقينا مباريات رانك على الشخصيات.', nameSeen: 'اسم مسجل', namesSeen: 'أسماء مسجلة', currentName: 'الحالي', previousName: 'قديم',
     firstSeen: 'أول ظهور', lastSeen: 'آخر ظهور', formerly: 'كان اسمه', aliasMatch: 'تطابق اسم قديم', main: 'الأساسية', unknownLegend: 'الشخصية غير معروفة',
     leaderboardPrefix: 'المتصدرين ·', leaderboardSearch: 'ابحث في الترتيب', leaderboardSearchPlaceholder: 'اكتب اسم اللاعب', leaderboardSearchTitle: 'نتيجة الترتيب', emptyData: 'ما فيه بيانات الحين.', allRegions: 'كل المناطق',
+    clansTitle: 'أفضل الكلانات', clansText: 'كلانات براولهالا الرسمية المكتشفة من اللاعبين المصنفين والمرتبة حسب ترتيب الكلان الرسمي.', clanSearch: 'ابحث عن كلان', clanSearchPlaceholder: 'اسم الكلان أو رقم Guild ID', clanRank: 'ترتيب الكلان', clanMembers: 'الأعضاء', clanPoints: 'نقاط الأسبوع', clanXp: 'خبرة الكلان', clanRecruiting: 'يقبل أعضاء', clanClosed: 'مغلق', clanOpen: 'كلان مفتوح', clanDetails: 'تفاصيل الكلان', clanRoster: 'أعضاء الكلان', clanRole: 'الرتبة', clanJoined: 'تاريخ الانضمام', clanMemberXp: 'خبرة العضو', clanNoData: 'ما اكتشفنا كلانات للحين، جرّب تحديث بعد شوي.', clanLoading: 'نكتشف أفضل الكلانات…', clanUpdated: 'آخر تحديث', clanDiscoveryNote: 'يتم اكتشاف الكلانات من اللاعبين المصنفين وترتيبها حسب ترتيب الكلان الرسمي.', clanView: 'افتح الكلان',
     MiddleEast: 'الشرق الأوسط', Europe: 'أوروبا', USEast: 'شرق أمريكا', USWest: 'غرب أمريكا', SouthernAfrica: 'جنوب أفريقيا', SoutheastAsia: 'جنوب شرق آسيا', Brazil: 'البرازيل', Australia: 'أستراليا', Japan: 'اليابان',
     esportsTitle: 'باور رانكنق المحترفين', esportsText: 'أسماء المحترفين، الميداليات، الأرباح، وأهم البطولات اللي فازوا فيها.', powerRanking: 'الباور رانكنق', player: 'اللاعب', earnings: 'الأرباح',
     officialSource: 'افتح الترتيب الرسمي ↗', tournamentList: 'قائمة البطولات', proWinners: 'المحترفين وأهم ألقابهم', notExhaustive: 'ألقاب مختارة، مو كل مسيرة اللاعب',
@@ -64,7 +66,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, leaderboardSearchTimer: null, leaderboardSearchController: null, queueMode: '1v1', queueRegion: 'ME', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, leaderboardSearchTimer: null, leaderboardSearchController: null, queueMode: '1v1', queueRegion: 'ME', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, selectedClan: null };
 const playerPathMatch = location.pathname.match(/^\/player\/(\d+)\/?$/);
 const standalonePlayerId = playerPathMatch ? playerPathMatch[1] : null;
 const isStandalonePlayerPage = Boolean(standalonePlayerId);
@@ -81,6 +83,7 @@ const els = {
   leaderboardMode: $('#leaderboard-mode'), leaderboardSearch: $('#leaderboard-search'), leaderboardTitle: $('#leaderboard-title'), languageToggle: $('#language-toggle'), rankedNav: $('#ranked-nav-dropdown'), rankedToggle: $('#ranked-nav-toggle'), rankedMenu: $('#ranked-nav-menu'), rankedModeLabel: $('#ranked-mode-label'), queueNav: $('#queue-nav-dropdown'), queueToggle: $('#queue-nav-toggle'), queueMenu: $('#queue-nav-menu'), queueModeLabel: $('#queue-mode-label'), playerPeakRating: $('#player-peak-rating'), eloGap: $('#elo-gap'), rankProgressFill: $('#rank-progress-fill'),
   esportsRegion: $('#esports-region'), esportsMode: $('#esports-mode'), powerBody: $('#power-ranking-body'), esportsUpdated: $('#esports-updated'),
   tournamentList: $('#tournament-list'), tournamentRegionLabel: $('#tournament-region-label'), championsGrid: $('#champions-grid'), esportsSource: $('#esports-source'),
+  clansGrid: $('#clans-grid'), clansSearch: $('#clans-search'), clansRefresh: $('#clans-refresh'), clansUpdated: $('#clans-updated'), clanModal: $('#clan-modal'), clanModalName: $('#clan-modal-name'), clanModalMeta: $('#clan-modal-meta'), clanModalStats: $('#clan-modal-stats'), clanMembersBody: $('#clan-members-body'), clanMemberCount: $('#clan-member-count'), clanModalStatus: $('#clan-modal-status'),
   careerModal: $('#esports-player-modal'), careerName: $('#career-player-name'), careerMeta: $('#career-player-meta'), careerStatus: $('#career-status'),
   careerContent: $('#career-content'), careerSummary: $('#career-summary'), careerList: $('#career-placement-list'), careerCount: $('#career-count'), careerSource: $('#career-source'),
   lifetimeSummary: $('#lifetime-summary-grid'), lifetimeLegends: $('#lifetime-legends-grid'), lifetimeLegendsCount: $('#lifetime-legends-count'), legendStatsSearch: $('#legend-stats-search'), legendStatsFilter: $('#legend-stats-filter'), legendStatsSort: $('#legend-stats-sort'), refreshPlayerStats: $('#refresh-player-stats'), statsSourceNote: $('#stats-source-note'), statsAccuracyNote: $('#stats-accuracy-note'), teammatesPanel: $('#teammates-panel'), teammatesGrid: $('#teammates-grid'), teammatesCount: $('#teammates-count'), queuePage: $('#live-queue-page'), queueRegion: $('#queue-region'), queueRefresh: $('#queue-refresh'), queueList: $('#queue-activity-list'), queueStatus: $('#queue-status'), queueActiveCount: $('#queue-active-count'), queueScanMeta: $('#queue-scan-meta'), arenaPage: $('#arena-page'), arenaAuthPanel: $('#arena-auth-panel'), arenaAuthForm: $('#arena-auth-form'), arenaUsername: $('#arena-username'), arenaPassword: $('#arena-password'), arenaAuthSubmit: $('#arena-auth-submit'), arenaAuthStatus: $('#arena-auth-status'), arenaComposer: $('#arena-composer'), arenaCurrentUser: $('#arena-current-user'), arenaUserAvatar: $('#arena-user-avatar'), arenaLogout: $('#arena-logout'), arenaPostForm: $('#arena-post-form'), arenaImageInput: $('#arena-image-input'), arenaImagePreview: $('#arena-image-preview'), arenaUploadPrompt: $('#arena-upload-prompt'), arenaCaption: $('#arena-caption'), arenaPostSubmit: $('#arena-post-submit'), arenaPostStatus: $('#arena-post-status'), arenaFeed: $('#arena-feed'), arenaRefresh: $('#arena-refresh')
@@ -122,32 +125,60 @@ function applyLanguage() {
     if (state.queueData) renderLiveQueue(state.queueData);
   } else if (!isStandalonePlayerPage && !isArenaPage) {
     loadLeaderboard();
+    if (state.clansData) renderClans(state.clansData); else window.setTimeout(() => loadClans(), 850);
     if (state.esportsData) renderEsports(state.esportsData); else loadEsports();
   }
   if (isArenaPage) { renderArenaAccount(); renderArenaPosts(); }
   if (state.esportsCareer && !els.careerModal.hidden) renderCareer(state.esportsCareer);
 }
 
+function clearLegendImageTimer(image) {
+  const timer = Number(image?.dataset?.imageTimer || 0);
+  if (timer) window.clearTimeout(timer);
+  if (image?.dataset) delete image.dataset.imageTimer;
+}
+
+function handleLegendImageLoad(image) {
+  clearLegendImageTimer(image);
+  image.classList.add('is-loaded');
+  image.closest('.legend-image-shell')?.classList.add('is-loaded');
+}
+
 function handleLegendImageError(image) {
+  clearLegendImageTimer(image);
   let candidates = [];
   try { candidates = JSON.parse(image.dataset.imageCandidates || '[]'); } catch { candidates = []; }
   const nextIndex = Number(image.dataset.imageIndex || '0') + 1;
   if (candidates[nextIndex]) {
     image.dataset.imageIndex = String(nextIndex);
+    image.classList.remove('is-loaded');
     image.src = candidates[nextIndex];
+    armLegendImageTimeout(image);
     return;
   }
   image.hidden = true;
+  image.closest('.legend-image-shell')?.classList.add('is-fallback');
   if (image.nextElementSibling) image.nextElementSibling.hidden = false;
 }
+
+function armLegendImageTimeout(image) {
+  clearLegendImageTimer(image);
+  if (image.complete && image.naturalWidth > 0) return handleLegendImageLoad(image);
+  const timer = window.setTimeout(() => {
+    if (!image.complete || image.naturalWidth === 0) handleLegendImageError(image);
+  }, 3200);
+  image.dataset.imageTimer = String(timer);
+}
 window.handleLegendImageError = handleLegendImageError;
+window.handleLegendImageLoad = handleLegendImageLoad;
 
 function legendImageMarkup(legend, options = {}) {
   const name = legend?.name || options.fallbackName || '';
   const fallback = escapeHtml(initials(name || 'BH'));
-  const candidates = Array.isArray(legend?.image_candidates) ? legend.image_candidates.filter(Boolean) : (legend?.image_url ? [legend.image_url] : []);
-  if (!candidates.length) return `<span>${fallback}</span>`;
-  return `<img src="${escapeHtml(candidates[0])}" alt="${escapeHtml(name)}" ${options.lazy === false ? '' : 'loading="lazy"'} referrerpolicy="no-referrer" data-legend-image data-image-candidates='${escapeHtml(JSON.stringify(candidates))}' data-image-index="0" onerror="handleLegendImageError(this)"><span class="legend-fallback" hidden>${fallback}</span>`;
+  const candidates = Array.isArray(legend?.image_candidates) ? [...new Set(legend.image_candidates.filter(Boolean))] : (legend?.image_url ? [legend.image_url] : []);
+  if (!candidates.length) return `<span class="legend-image-shell is-fallback"><span class="legend-fallback">${fallback}</span></span>`;
+  const lazy = options.lazy === false ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" fetchpriority="low"';
+  return `<span class="legend-image-shell"><img src="${escapeHtml(candidates[0])}" alt="${escapeHtml(name)}" ${lazy} decoding="async" referrerpolicy="no-referrer" data-legend-image data-image-candidates='${escapeHtml(JSON.stringify(candidates))}' data-image-index="0" onload="handleLegendImageLoad(this)" onerror="handleLegendImageError(this)"><span class="legend-fallback" hidden>${fallback}</span></span>`;
 }
 
 function portraitMarkup(legend, className = 'row-portrait', options = {}) {
@@ -156,7 +187,8 @@ function portraitMarkup(legend, className = 'row-portrait', options = {}) {
 
 function activateImageFallbacks() {
   document.querySelectorAll('[data-legend-image]').forEach((image) => {
-    if (image.complete && image.naturalWidth === 0) handleLegendImageError(image);
+    if (image.complete && image.naturalWidth > 0) handleLegendImageLoad(image);
+    else armLegendImageTimeout(image);
   });
 }
 
@@ -748,7 +780,7 @@ async function loadPlayer(id, options = {}) {
 async function searchPlayer(event) {
   event.preventDefault(); const q = els.name.value.trim(); const button = els.form.querySelector('button[type="submit"]');
   if (q.length < 2) return;
-  try { button.disabled = true; showStatus(t('searching')); const params = new URLSearchParams({ q, region: els.region.value, mode: els.mode.value }); const data = await getJson(`/api/search?${params}`); hideStatus(); renderSearchResults(data.rankings || []); }
+  try { button.disabled = true; showStatus(t('searching')); const params = new URLSearchParams({ q, region: 'ALL', mode: els.mode?.value || '1v1' }); const data = await getJson(`/api/search?${params}`); hideStatus(); renderSearchResults(data.rankings || []); }
   catch { hideStatus(); renderSearchResults([]); } finally { button.disabled = false; }
 }
 
@@ -818,6 +850,102 @@ async function loadLeaderboard() {
 function scheduleLeaderboardSearch() {
   window.clearTimeout(state.leaderboardSearchTimer);
   state.leaderboardSearchTimer = window.setTimeout(loadLeaderboard, 280);
+}
+
+
+function clanDate(timestamp) {
+  if (!Number(timestamp)) return '—';
+  return new Date(Number(timestamp) * 1000).toLocaleDateString(state.language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function clanCard(guild, index) {
+  const tags = (guild.tags || []).slice(0, 3).map((tag) => `<span>${escapeHtml(tag)}</span>`).join('');
+  return `<button class="clan-card" type="button" data-clan-id="${Number(guild.guild_id)}" style="--clan-delay:${Math.min(index, 15) * 45}ms">
+    <span class="clan-rank">${guild.rank ? `#${number(guild.rank)}` : '—'}</span>
+    <span class="clan-card-copy"><span class="clan-name-line"><strong>${escapeHtml(guild.name || `Guild ${guild.guild_id}`)}</strong><em class="${guild.is_recruiting ? 'open' : ''}">${escapeHtml(guild.is_recruiting ? t('clanRecruiting') : t('clanClosed'))}</em></span><small>ID ${number(guild.guild_id)}${guild.notice ? ` · ${escapeHtml(guild.notice)}` : ''}</small><span class="clan-tags">${tags}</span></span>
+    <span class="clan-card-metrics"><span><small>${escapeHtml(t('clanMembers'))}</small><b>${number(guild.member_count, '—')}</b></span><span><small>${escapeHtml(t('clanPoints'))}</small><b>${number(guild.guild_points, '0')}</b></span><span><small>${escapeHtml(t('clanXp'))}</small><b>${number(guild.xp, '0')}</b></span></span>
+    <span class="clan-arrow">→</span>
+  </button>`;
+}
+
+function renderClans(data = {}) {
+  state.clansData = data;
+  const guilds = data.guilds || [];
+  if (els.clansUpdated) els.clansUpdated.textContent = data.updated_at ? `${t('clanUpdated')}: ${shortDate(data.updated_at)}` : '';
+  if (!els.clansGrid) return;
+  els.clansGrid.innerHTML = guilds.length ? guilds.map(clanCard).join('') : `<p class="empty-copy">${escapeHtml(t('clanNoData'))}</p>`;
+  els.clansGrid.querySelectorAll('[data-clan-id]').forEach((button) => button.addEventListener('click', () => openClan(Number(button.dataset.clanId))));
+}
+
+async function loadClans(options = {}) {
+  if (!els.clansGrid) return;
+  const query = els.clansSearch?.value.trim() || '';
+  state.clansController?.abort();
+  state.clansController = new AbortController();
+  if (!state.clansData || options.refresh) els.clansGrid.innerHTML = `<div class="clans-loading"><span></span><strong>${escapeHtml(t('clanLoading'))}</strong></div>`;
+  try {
+    const params = new URLSearchParams({ limit: '24' });
+    if (query) params.set('q', query);
+    if (options.refresh) params.set('refresh', '1');
+    const response = await fetch(`/api/clans/top?${params}`, { headers: { Accept: 'application/json' }, signal: state.clansController.signal });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || t('fetchError'));
+    renderClans(data);
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+    els.clansGrid.innerHTML = `<p class="empty-copy">${escapeHtml(t('friendlyProblem'))}</p>`;
+  }
+}
+
+function clanRoleClass(role = '') {
+  const key = normalize(role);
+  if (key === 'leader') return 'leader';
+  if (key === 'officer') return 'officer';
+  return 'member';
+}
+
+function closeClanModal() {
+  if (!els.clanModal) return;
+  els.clanModal.hidden = true;
+  document.body.classList.remove('modal-open');
+}
+
+async function openClan(guildId) {
+  if (!els.clanModal || !guildId) return;
+  els.clanModal.hidden = false;
+  document.body.classList.add('modal-open');
+  els.clanModalName.textContent = t('clanDetails');
+  els.clanModalMeta.textContent = `Guild ID ${guildId}`;
+  els.clanModalStats.innerHTML = '';
+  els.clanMembersBody.innerHTML = '';
+  els.clanModalStatus.hidden = false;
+  els.clanModalStatus.textContent = t('clanLoading');
+  try {
+    const data = await getJson(`/api/clans/${encodeURIComponent(guildId)}`);
+    state.selectedClan = data;
+    const guild = data.guild || {};
+    const members = data.members || [];
+    els.clanModalName.textContent = guild.name || `Guild ${guildId}`;
+    els.clanModalMeta.textContent = [guild.rank ? `${t('clanRank')} #${number(guild.rank)}` : null, guild.is_recruiting ? t('clanOpen') : t('clanClosed'), guild.create_date ? clanDate(guild.create_date) : null].filter(Boolean).join(' · ');
+    els.clanModalStats.innerHTML = [
+      [t('clanMembers'), number(guild.member_count || members.length, '0')],
+      [t('clanPoints'), number(guild.guild_points, '0')],
+      [t('clanXp'), number(guild.xp, '0')],
+      [t('clanRank'), guild.rank ? `#${number(guild.rank)}` : '—']
+    ].map(([label, value]) => `<article><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></article>`).join('');
+    if (els.clanMemberCount) els.clanMemberCount.textContent = `${number(members.length)} ${t('clanMembers')}`;
+    els.clanMembersBody.innerHTML = members.length ? members.map((member) => `<tr><td><button type="button" class="clan-member-player" data-clan-player-id="${Number(member.brawlhalla_id)}"><strong>${escapeHtml(member.name || `Player ${member.brawlhalla_id}`)}</strong><small>BH ID ${number(member.brawlhalla_id)}</small></button></td><td><span class="clan-role ${clanRoleClass(member.rank)}">${escapeHtml(member.rank || 'Member')}</span></td><td>${number(member.guild_points, '0')}</td><td>${number(member.xp, '0')}</td><td>${escapeHtml(clanDate(member.join_date))}</td></tr>`).join('') : `<tr><td colspan="5" class="empty-copy">${escapeHtml(t('emptyData'))}</td></tr>`;
+    els.clanMembersBody.querySelectorAll('[data-clan-player-id]').forEach((button) => button.addEventListener('click', () => navigateToPlayer(button.dataset.clanPlayerId)));
+    els.clanModalStatus.hidden = true;
+  } catch (error) {
+    els.clanModalStatus.hidden = false;
+    els.clanModalStatus.textContent = error.message || t('friendlyProblem');
+  }
+}
+
+function scheduleClanSearch() {
+  window.clearTimeout(state.clansSearchTimer);
+  state.clansSearchTimer = window.setTimeout(() => loadClans(), 280);
 }
 
 function renderEsports(data) {
@@ -1416,7 +1544,7 @@ async function loadSearchSuggestions() {
   if (query.length < 2) { hideSuggestions(); return; }
   state.suggestionController?.abort();
   state.suggestionController = new AbortController();
-  const params = new URLSearchParams({ q: query, region: els.region?.value || 'ALL', mode: els.mode?.value || '1v1' });
+  const params = new URLSearchParams({ q: query, region: 'ALL', mode: els.mode?.value || '1v1' });
   try {
     const response = await fetch(`/api/suggestions?${params}`, { headers: { Accept: 'application/json' }, signal: state.suggestionController.signal });
     const data = await response.json().catch(() => ({}));
@@ -1617,7 +1745,6 @@ document.addEventListener('click', (event) => {
 els.form.addEventListener('submit', (event) => { hideSuggestions(); searchPlayer(event); });
 els.name?.addEventListener('input', scheduleSuggestions);
 els.name?.addEventListener('focus', () => { if ((els.name.value || '').trim().length >= 2) scheduleSuggestions(); });
-els.region?.addEventListener('change', () => { if ((els.name?.value || '').trim().length >= 2) scheduleSuggestions(); });
 els.mode?.addEventListener('change', () => { if ((els.name?.value || '').trim().length >= 2) scheduleSuggestions(); });
 els.name?.addEventListener('keydown', (event) => {
   if (els.suggestions?.hidden || !state.suggestionItems.length) return;
@@ -1627,6 +1754,9 @@ els.name?.addEventListener('keydown', (event) => {
   else if (event.key === 'Escape') hideSuggestions();
 });
 els.suggestions?.addEventListener('click', (event) => { const button = event.target.closest('[data-suggestion-index]'); if (button) { event.preventDefault(); event.stopPropagation(); selectSuggestion(Number(button.dataset.suggestionIndex)); } });
+els.clansSearch?.addEventListener('input', scheduleClanSearch);
+els.clansRefresh?.addEventListener('click', () => loadClans({ refresh: true }));
+els.clanModal?.addEventListener('click', (event) => { if (event.target.closest('[data-clan-close]')) closeClanModal(); });
 els.refreshLeaderboard.addEventListener('click', loadLeaderboard);
 els.leaderboardSearch?.addEventListener('input', scheduleLeaderboardSearch);
 els.leaderboardRegion.addEventListener('change', loadLeaderboard);
@@ -1717,6 +1847,7 @@ window.addEventListener('pageshow', () => {
   requestAnimationFrame(resetBrowserNavigationState);
 });
 window.addEventListener('popstate', resetBrowserNavigationState);
+window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && els.clanModal && !els.clanModal.hidden) closeClanModal(); });
 window.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') resetBrowserNavigationState();
 });
