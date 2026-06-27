@@ -1,0 +1,456 @@
+{
+  "1": [
+    {
+      "date": "2026-06-27",
+      "name": "One",
+      "rating": 1601,
+      "peak_rating": 1751,
+      "global_rank": null,
+      "games": 0,
+      "wins": 0,
+      "tier": "Gold"
+    }
+  ],
+  "123": [
+    {
+      "date": "2026-06-26",
+      "name": "TestPlayer",
+      "rating": 1900,
+      "peak_rating": 2000,
+      "global_rank": 10,
+      "games": 12,
+      "wins": 10,
+      "tier": "Diamond"
+    },
+    {
+      "date": "2026-06-27",
+      "name": "Tester",
+      "rating": 2188,
+      "peak_rating": 2250,
+      "global_rank": null,
+      "games": 50,
+      "wins": 30,
+      "tier": "Diamond"
+    }
+  ],
+  "1729386": [
+    {
+      "date": "2026-06-27",
+      "name": "tomigas24",
+      "rating": 1557,
+      "peak_rating": 1557,
+      "global_rank": 36059,
+      "games": 14,
+      "wins": 9,
+      "tier": "Gold 3"
+    }
+  ],
+  "3397008": [
+    {
+      "date": "2026-06-27",
+      "name": "New Zomber",
+      "rating": 2402,
+      "peak_rating": 2402,
+      "global_rank": 10,
+      "games": 73,
+      "wins": 56,
+      "tier": "Diamond"
+    }
+  ],
+  "3540146": [
+    {
+      "date": "2026-06-27",
+      "name": "PRML | Fezaru80",
+      "rating": 2386,
+      "peak_rating": 2386,
+      "global_rank": 14,
+      "games": 93,
+      "wins": 65,
+      "tier": "Diamond"
+    }
+  ],
+  "5461700": [
+    {
+      "date": "2026-06-27",
+      "name": "Lopes",
+      "rating": 2475,
+      "peak_rating": 2475,
+      "global_rank": null,
+      "games": 175,
+      "wins": 147,
+      "tier": "Diamond"
+    }
+  ],
+  "5989758": [
+    {
+      "date": "2026-06-27",
+      "name": "yüz",
+      "rating": 2386,
+      "peak_rating": 2386,
+      "global_rank": 15,
+      "games": 26,
+      "wins": 25,
+      "tier": "Diamond"
+    }
+  ],
+  "6027299": [
+    {
+      "date": "2026-06-27",
+      "name": "Migas",
+      "rating": 2188,
+      "peak_rating": 2351,
+      "global_rank": 243,
+      "games": 93,
+      "wins": 63,
+      "tier": "Diamond"
+    }
+  ],
+  "6269868": [
+    {
+      "date": "2026-06-27",
+      "name": "The One Who Holds Back",
+      "rating": 2372,
+      "peak_rating": 2372,
+      "global_rank": 17,
+      "games": 55,
+      "wins": 49,
+      "tier": "Diamond"
+    }
+  ],
+  "7570678": [
+    {
+      "date": "2026-06-27",
+      "name": "KC | Reaper",
+      "rating": 2365,
+      "peak_rating": 2365,
+      "global_rank": 18,
+      "games": 45,
+      "wins": 39,
+      "tier": "Diamond"
+    }
+  ],
+  "7904544": [
+    {
+      "date": "2026-06-27",
+      "name": "Ramy",
+      "rating": 1959,
+      "peak_rating": 2061,
+      "global_rank": 1862,
+      "games": 168,
+      "wins": 82,
+      "tier": "Diamond"
+    }
+  ],
+  "7950861": [
+    {
+      "date": "2026-06-27",
+      "name": "mayez",
+      "rating": 1568,
+      "peak_rating": 1731,
+      "global_rank": 34185,
+      "games": 67,
+      "wins": 30,
+      "tier": "Gold 4"
+    }
+  ],
+  "8474197": [
+    {
+      "date": "2026-06-27",
+      "name": "Khinger",
+      "rating": 2414,
+      "peak_rating": 2414,
+      "global_rank": 7,
+      "games": 51,
+      "wins": 47,
+      "tier": "Diamond"
+    }
+  ],
+  "9391317": [
+    {
+      "date": "2026-06-27",
+      "name": "yellowflash",
+      "rating": 2227,
+      "peak_rating": 2236,
+      "global_rank": 148,
+      "games": 75,
+      "wins": 46,
+      "tier": "Diamond"
+    }
+  ],
+  "24116692": [
+    {
+      "date": "2026-06-27",
+      "name": "bunny",
+      "rating": 2399,
+      "peak_rating": 2399,
+      "global_rank": 12,
+      "games": 32,
+      "wins": 29,
+      "tier": "Diamond"
+    }
+  ],
+  "28971456": [
+    {
+      "date": "2026-06-27",
+      "name": "Caliban prime",
+      "rating": 2385,
+      "peak_rating": 2385,
+      "global_rank": 16,
+      "games": 17,
+      "wins": 17,
+      "tier": "Diamond"
+    }
+  ],
+  "30226535": [
+    {
+      "date": "2026-06-27",
+      "name": "Raydish",
+      "rating": 2445,
+      "peak_rating": 2445,
+      "global_rank": 1,
+      "games": 31,
+      "wins": 31,
+      "tier": "Diamond"
+    }
+  ],
+  "33116656": [
+    {
+      "date": "2026-06-27",
+      "name": "md",
+      "rating": 2417,
+      "peak_rating": 2417,
+      "global_rank": 6,
+      "games": 61,
+      "wins": 51,
+      "tier": "Diamond"
+    }
+  ],
+  "34807214": [
+    {
+      "date": "2026-06-27",
+      "name": "Shotgun on da 80hz!",
+      "rating": 2429,
+      "peak_rating": 2429,
+      "global_rank": 2,
+      "games": 180,
+      "wins": 119,
+      "tier": "Diamond"
+    }
+  ],
+  "40195379": [
+    {
+      "date": "2026-06-27",
+      "name": "NadLi",
+      "rating": 1281,
+      "peak_rating": 1404,
+      "global_rank": 85113,
+      "games": 28,
+      "wins": 15,
+      "tier": "Silver 3"
+    }
+  ],
+  "40944897": [
+    {
+      "date": "2026-06-27",
+      "name": "Nade",
+      "rating": 2060,
+      "peak_rating": 2077,
+      "global_rank": 829,
+      "games": 11,
+      "wins": 8,
+      "tier": "Diamond"
+    }
+  ],
+  "45653969": [
+    {
+      "date": "2026-06-27",
+      "name": "Ahmet.",
+      "rating": 2428,
+      "peak_rating": 2434,
+      "global_rank": 3,
+      "games": 48,
+      "wins": 40,
+      "tier": "Diamond"
+    }
+  ],
+  "53042461": [
+    {
+      "date": "2026-06-27",
+      "name": "mayew",
+      "rating": 2004,
+      "peak_rating": 2005,
+      "global_rank": 1543,
+      "games": 12,
+      "wins": 8,
+      "tier": "Diamond"
+    }
+  ],
+  "70039376": [
+    {
+      "date": "2026-06-27",
+      "name": "ltheYellowFlashl",
+      "rating": 1577,
+      "peak_rating": 1640,
+      "global_rank": 32808,
+      "games": 56,
+      "wins": 31,
+      "tier": "Gold 4"
+    }
+  ],
+  "70129836": [
+    {
+      "date": "2026-06-27",
+      "name": "Saphir",
+      "rating": 2351,
+      "peak_rating": 2351,
+      "global_rank": 20,
+      "games": 35,
+      "wins": 26,
+      "tier": "Diamond"
+    }
+  ],
+  "74699177": [
+    {
+      "date": "2026-06-27",
+      "name": "Dragon",
+      "rating": 2427,
+      "peak_rating": 2427,
+      "global_rank": 4,
+      "games": 117,
+      "wins": 84,
+      "tier": "Diamond"
+    }
+  ],
+  "81864514": [
+    {
+      "date": "2026-06-27",
+      "name": "ELsholkamy_54",
+      "rating": 1109,
+      "peak_rating": 1109,
+      "global_rank": 111311,
+      "games": 15,
+      "wins": 7,
+      "tier": "Bronze 5"
+    }
+  ],
+  "84060148": [
+    {
+      "date": "2026-06-27",
+      "name": "sea",
+      "rating": 2408,
+      "peak_rating": 2422,
+      "global_rank": 8,
+      "games": 226,
+      "wins": 167,
+      "tier": "Diamond"
+    }
+  ],
+  "95753800": [
+    {
+      "date": "2026-06-27",
+      "name": "Yellow_flash⚡",
+      "rating": 1185,
+      "peak_rating": 1185,
+      "global_rank": 101294,
+      "games": 10,
+      "wins": 5,
+      "tier": "Silver 2"
+    }
+  ],
+  "97593680": [
+    {
+      "date": "2026-06-27",
+      "name": "nada",
+      "rating": 1658,
+      "peak_rating": 1785,
+      "global_rank": 21109,
+      "games": 29,
+      "wins": 13,
+      "tier": "Platinum 0"
+    }
+  ],
+  "97865302": [
+    {
+      "date": "2026-06-27",
+      "name": "Cyclone",
+      "rating": 2358,
+      "peak_rating": 2371,
+      "global_rank": 19,
+      "games": 49,
+      "wins": 33,
+      "tier": "Diamond"
+    }
+  ],
+  "104002853": [
+    {
+      "date": "2026-06-27",
+      "name": "Moni",
+      "rating": 2388,
+      "peak_rating": 2388,
+      "global_rank": 13,
+      "games": 21,
+      "wins": 20,
+      "tier": "Diamond"
+    }
+  ],
+  "110909732": [
+    {
+      "date": "2026-06-27",
+      "name": "Gamy",
+      "rating": 1158,
+      "peak_rating": 1186,
+      "global_rank": 104912,
+      "games": 32,
+      "wins": 18,
+      "tier": "Silver 1"
+    }
+  ],
+  "111913218": [
+    {
+      "date": "2026-06-27",
+      "name": "borgir",
+      "rating": 2399,
+      "peak_rating": 2419,
+      "global_rank": 11,
+      "games": 104,
+      "wins": 68,
+      "tier": "Diamond"
+    }
+  ],
+  "127262230": [
+    {
+      "date": "2026-06-27",
+      "name": "過去現在",
+      "rating": 2407,
+      "peak_rating": 2417,
+      "global_rank": 9,
+      "games": 90,
+      "wins": 41,
+      "tier": "Diamond"
+    }
+  ],
+  "127321511": [
+    {
+      "date": "2026-06-27",
+      "name": "matheus junior",
+      "rating": 2417,
+      "peak_rating": 2417,
+      "global_rank": 5,
+      "games": 101,
+      "wins": 55,
+      "tier": "Diamond"
+    }
+  ],
+  "138476391": [
+    {
+      "date": "2026-06-27",
+      "name": "ZIGA",
+      "rating": 856,
+      "peak_rating": 873,
+      "global_rank": 124071,
+      "games": 29,
+      "wins": 14,
+      "tier": "Tin 4"
+    }
+  ]
+}

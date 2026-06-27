@@ -1,0 +1,1705 @@
+const $ = (selector) => document.querySelector(selector);
+
+const translations = {
+  en: {
+    navLeaderboard: 'Ranked', navQueue: 'Queue', navArena: 'Arena Wall', rankedSolo: 'Solo ranked search', rankedDoubles: 'Team ranked search', rankedThrees: '3-player team search', queueSolo: 'Find solo players', queueDoubles: 'Find a ranked partner', queueThrees: 'Build a 3-player team', queueSoloLive: 'Solo ranked activity', queueDoublesLive: 'Team ranked activity', queueThreesLive: '3-player ranked activity', navEsports: 'Esports', navAbout: 'About', liveData: 'LIVE DATA',
+    heroTitle: 'Track the player.<br><em>Know the main.</em>', heroText: 'Search ranked players, see their main legend, compare regions, and browse competitive rankings.',
+    mainLegendFeature: 'Main legend', aliasFeature: 'Name history', boardsFeature: 'All regions', esportsFeature: 'Esports power rankings', findPlayer: 'Find a player',
+    playerName: 'Player name, old name, or BH ID', playerPlaceholder: 'Sandstorm', region: 'Region', gameMode: 'Mode', searchButton: 'Search player',
+    searchNote: 'Search ranked and unranked profiles by name, old name, or BH ID.', searchResults: 'Search results', playerIdLabel: 'BH ID', updatedLabel: 'Updated', currentRank: 'Current rank',
+    eloProgress: 'Elo progress', last120: '120 days', firstSnapshot: 'First snapshot saved. The chart grows when the tracker sees this account again.',
+    playerSummary: 'Player summary', knownNames: 'Known names', knownNamesNote: 'Previous names are loaded automatically from the fresh Corehalla alias history whenever the player page opens.',
+    bestLegends: 'Ranked legends', legend: 'Legend', weapons: 'Weapons', games: 'Games', wins: 'Wins', winRate: 'Win rate', peak: 'Peak', refresh: 'Refresh',
+    aboutTitle: 'Built like a real stats site.', aboutText: 'Official ranked data, main legends based on lifetime games, daily Elo snapshots, and a competitive section for esports fans.',
+    madeBy: 'Made by <strong>Nad</strong>', followText: 'Brawlhalla clips and tracker updates.', disclaimer: 'Unofficial community project. Not affiliated with Ubisoft or Blue Mammoth Games.', footerMade: 'Made by', footerTagline: 'Brawlhalla statistics', rightsReserved: 'All rights reserved.',
+    searching: 'Searching ranked players…', loadingPlayer: 'Loading player profile…', fetchError: 'Could not load the data right now.',
+    noSearchResults: 'No player matched that name. Check the spelling or try another region.', oldNameMatch: 'Old name match', result: 'result', results: 'results', seasonalPeak: 'Season peak', currentElo: 'Current ELO', peakElo: 'Season peak', rankedOverview: 'Ranked overview', offPeak: 'off peak', atPeak: 'at season peak', globalRank: 'Global rank', rankedGames: 'Ranked games', rankedWins: 'Ranked wins',
+    accountLevel: 'Account level', accountXP: 'Account XP', xpProgress: 'XP progress', gameTime: 'Online match time', mainWeapons: 'Main weapons', topLegends: 'Main legends', regionRank: 'Region rank', totalGames: 'Total games', totalWins: 'Total wins', overallWinRate: 'Overall win rate', liveOfficialData: 'Live player data', corehallaStats: 'Corehalla-compatible stats', currentAlias: 'Current name', previousAliases: 'Previous names', refreshLiveStats: 'Refresh live stats', refreshingLiveStats: 'Refreshing official stats…', notReported: 'Not reported by API', statsAccuracyNote: 'Account XP and legend levels are checked against fresh Brawlhalla and Corehalla data. PeakHalla keeps the highest reported progression value so older data cannot replace newer levels.', legendLevelLimit: 'Some legend XP and levels may be unavailable if that legend has not been played since Patch 9.07.',
+    fullPlayerStats: 'Full player stats', officialLifetimeData: 'Official lifetime data', allLegendStats: 'Every legend · lifetime stats', searchLegends: 'Search legends', legendSearchPlaceholder: 'Legend or weapon', show: 'Show', playedOnly: 'Played only', allLegends: 'All legends', sortBy: 'Sort by', level: 'Level', xp: 'XP', losses: 'Losses', damageDealt: 'Damage dealt', damageTaken: 'Damage taken', kos: 'KOs', falls: 'Falls', kdRatio: 'K/D ratio', damageRatio: 'Damage ratio', suicides: 'Suicides', teamKOs: 'Team KOs', unarmedDamage: 'Unarmed damage', thrownDamage: 'Thrown-item damage', gadgetDamage: 'Gadget damage', gadgetKOs: 'Gadget KOs', unarmedKOs: 'Unarmed KOs', bombDamage: 'Bomb damage', mineDamage: 'Mine damage', spikeballDamage: 'Spikeball damage', sidekickDamage: 'Sidekick damage', snowballHits: 'Snowball hits', bombKOs: 'Bomb KOs', mineKOs: 'Mine KOs', sidekickKOs: 'Sidekick KOs', snowballKOs: 'Snowball KOs', spikeballKOs: 'Spikeball KOs', matchTime: 'Match time', seasonRanked: 'Current season ranked', lifetimeCombat: 'Lifetime combat', weaponBreakdown: 'Weapon breakdown', noLifetimeStats: 'No legends matched these filters.', legendsTotal: 'legends', playedLegends: 'played',
+    legendUsed: 'legend used', legendsUsed: 'legends used', noRankedLegends: 'No ranked legend games found.', nameSeen: 'name recorded', namesSeen: 'names recorded', currentName: 'Current', previousName: 'Previous',
+    firstSeen: 'First seen', lastSeen: 'Last seen', formerly: 'Formerly', aliasMatch: 'Old-name match', main: 'Main', unknownLegend: 'Main unknown',
+    leaderboardPrefix: 'Top players ·', leaderboardSearch: 'Find a rank', leaderboardSearchPlaceholder: 'Search a player', leaderboardSearchTitle: 'Ranking search', emptyData: 'No data available right now.', allRegions: 'All regions',
+    MiddleEast: 'Middle East', Europe: 'Europe', USEast: 'US East', USWest: 'US West', SouthernAfrica: 'Southern Africa', SoutheastAsia: 'Southeast Asia', Brazil: 'Brazil', Australia: 'Australia', Japan: 'Japan',
+    esportsTitle: 'Esports power rankings', esportsText: 'Official competitive names, medals, earnings, and a quick look at major tournament winners.', powerRanking: 'Power ranking', player: 'Player', earnings: 'Earnings',
+    officialSource: 'Open official rankings ↗', tournamentList: 'Tournament list', proWinners: 'Pro players & major titles', notExhaustive: 'Featured titles, not a complete career list',
+    rankingsUpdated: 'Updated', noPowerData: 'No official ranking data came back right now. Try Refresh in a moment.', title: 'title', titles: 'titles',
+    viewCareer: 'View tournament career', tournamentCareer: 'TOURNAMENT CAREER', loadingCareer: 'Loading tournament history…',
+    allModes: 'All', top8Only: 'Top 8', careerEvents: 'Events', careerTitles: 'Titles', careerPodiums: 'Podiums', careerTop8: 'Top 8', bestFinish: 'Best finish',
+    noPlacements: 'No official tournament placements were found for this player yet.', careerSource: 'Tournament data source ↗', officialEventsOnly: 'Official events only',
+    onlineEvent: 'Online', offlineEvent: 'LAN', playerCareerNotFound: 'No tournament profile was found for this player.', placementLabel: 'Placement',
+    twoVTwoPartners: 'Ranked 2v2 teammates', twoVTwoPartnersNote: 'Official current-season teams from the player teams endpoint.', teammateElo: 'Player ELO', teamElo: 'Team ELO', noTeammates: 'No current-season 2v2 teammate was found for this account.', loadingTeammates: 'Loading 2v2 teammates…', backToTracker: 'Back to tracker', queueLiveTracking: 'LIVE ACTIVITY TRACKING', queueEyebrowLive: 'RANKED ACTIVITY', queueTitleLive: 'Who is playing ranked right now?', queueIntroLive: 'Tracks the top 500 leaderboard entries and shows players whose ranked games changed during the last 10 minutes.', queueActiveNow: 'ACTIVE NOW', queueDisclaimerLive: "Activity means leaderboard stats changed recently. It cannot see Brawlhalla's private matchmaking screen.", queueWarming: 'Building the first leaderboard snapshot. Active players appear after the next scan.', queueNoActivity: 'No ranked activity was detected in the top 500 during the last 10 minutes.', queueTrackedTop: 'Top entries tracked', queueLastScan: 'Last scan', queueNextScan: 'Next scan', queueGameDetected: 'game detected', queueGamesDetected: 'games detected', queueEloChange: 'ELO change', queueWatching: 'Watching the leaderboard live', queueError: 'Could not refresh live activity right now.',
+    arenaCommunity: 'COMMUNITY SCREENSHOTS', arenaEyebrow: 'COMMUNITY', arenaTitle: 'Arena Wall', arenaIntro: 'Share Brawlhalla screenshots, add a caption, and talk with other players through comments and replies.', arenaWhat: 'What is Arena Wall?', arenaWhatText: 'A community gallery for match screenshots, rank moments, funny clips captured as images, tournament results, and anything worth sharing from Brawlhalla. Create an account using only a username and password—no email or verification code.', arenaCreateAccount: 'Create account', arenaSignIn: 'Sign in', arenaNoEmail: 'NO EMAIL NEEDED', arenaJoinTitle: 'Join the wall', arenaJoinText: 'Choose a username and password. No email, verification code, or social login.', arenaUsername: 'Username', arenaPassword: 'Password', arenaPostingAs: 'Posting as', arenaLogout: 'Log out', arenaChooseScreenshot: 'Choose a screenshot', arenaImageLimit: 'PNG, JPG, or WebP · up to 5 MB', arenaCaption: 'Caption', arenaCaptionPlaceholder: 'What happened in this match?', arenaPublish: 'Publish screenshot', arenaLatest: 'LATEST DROPS', arenaFeed: 'Community feed', arenaLoading: 'Loading the wall…', arenaComments: 'Comments', arenaReply: 'Reply', arenaReplyingTo: 'Replying to', arenaCancelReply: 'Cancel', arenaWriteComment: 'Write a comment…', arenaSend: 'Send', arenaSignInToComment: 'Sign in to comment or reply.', arenaNoPosts: 'No screenshots yet. Be the first to post.', arenaChooseImageFirst: 'Choose a screenshot first.', arenaPosted: 'Screenshot published.', arenaAccountReady: 'Account created. Welcome to Arena Wall.', arenaSignedIn: 'Signed in.', arenaAuthError: 'Could not complete that request.', arenaPostError: 'Could not publish the screenshot.', friendlyProblem: 'Couldn’t reach Brawlhalla right now. Try again in a moment.'
+  },
+  ar: {
+    navLeaderboard: 'الرانك', navQueue: 'الكيو', navArena: 'ساحة الصور', rankedSolo: 'بحث رانك فردي', rankedDoubles: 'بحث رانك ثنائي', rankedThrees: 'بحث فريق 3 لاعبين', queueSolo: 'دور لاعبين 1v1', queueDoubles: 'دور شريك رانك', queueThrees: 'كوّن فريق 3 لاعبين', queueSoloLive: 'نشاط رانك 1v1', queueDoublesLive: 'نشاط فرق 2v2', queueThreesLive: 'نشاط فرق 3v3', navEsports: 'البطولات', navAbout: 'عن الموقع', liveData: 'البيانات مباشرة',
+    heroTitle: 'تتبّع اللاعب.<br><em>واعرف شخصيته.</em>', heroText: 'دور على لاعب رانك، وشوف شخصيته الأساسية، وقارن المناطق وترتيب المحترفين.',
+    mainLegendFeature: 'الشخصية الأساسية', aliasFeature: 'الأسماء القديمة', boardsFeature: 'كل المناطق', esportsFeature: 'باور رانكنق البطولات', findPlayer: 'دور على لاعب',
+    playerName: 'اسم اللاعب أو اسمه القديم أو BH ID', playerPlaceholder: 'مثال: Sandstorm', region: 'المنطقة', gameMode: 'النمط', searchButton: 'ابحث',
+    searchNote: 'ابحث عن الحساب المصنف أو غير المصنف بالاسم أو الاسم القديم أو BH ID.', searchResults: 'نتائج البحث', playerIdLabel: 'معرّف BH', updatedLabel: 'آخر تحديث', currentRank: 'الرانك الحالي',
+    eloProgress: 'تطور الإيلو', last120: '١٢٠ يوم', firstSnapshot: 'حفظنا أول لقطة، والرسم يكبر كل ما نشوف الحساب مرة ثانية.',
+    playerSummary: 'زبدة الحساب', knownNames: 'الأسماء المعروفة', knownNamesNote: 'تُجلب الأسماء السابقة تلقائيًا من سجل Corehalla المحدث عند فتح صفحة اللاعب.',
+    bestLegends: 'شخصيات الرانك', legend: 'الشخصية', weapons: 'الأسلحة', games: 'المباريات', wins: 'الفوز', winRate: 'نسبة الفوز', peak: 'أعلى إيلو', refresh: 'حدّث',
+    aboutTitle: 'مبني مثل مواقع الإحصائيات الصح.', aboutText: 'بيانات رانك رسمية، وشخصية أساسية حسب مباريات الحساب، ولقطات إيلو يومية، وقسم كامل للمحترفين.',
+    madeBy: 'من إنشاء <strong>Nad</strong>', followText: 'مقاطع براولهالا وتحديثات التراكر.', disclaimer: 'مشروع جماهيري غير رسمي، وغير تابع لـ Ubisoft أو Blue Mammoth Games.', footerMade: 'من إنشاء', footerTagline: 'إحصائيات براولهالا', rightsReserved: 'جميع الحقوق محفوظة.',
+    searching: 'ندور على اللاعب…', loadingPlayer: 'نفتح ملف اللاعب…', fetchError: 'ما قدرنا نجيب البيانات الحين.',
+    noSearchResults: 'ما لقينا لاعب بهذا الاسم. راجع الكتابة أو جرّب منطقة ثانية.', result: 'نتيجة', results: 'نتائج', seasonalPeak: 'قمة الموسم', currentElo: 'الإيلو الحالي', peakElo: 'أعلى إيلو', rankedOverview: 'ملخص الرانك', offPeak: 'عن القمة', atPeak: 'على قمة الموسم', globalRank: 'الترتيب العالمي', rankedGames: 'مباريات الرانك', rankedWins: 'فوز الرانك',
+    accountLevel: 'لفل الحساب', accountXP: 'إكس بي الحساب', xpProgress: 'تقدم اللفل', gameTime: 'وقت المباريات الأونلاين', mainWeapons: 'الأسلحة الأساسية', topLegends: 'الشخصيات الأساسية', regionRank: 'ترتيب المنطقة', totalGames: 'كل المباريات', totalWins: 'كل الفوز', overallWinRate: 'نسبة الفوز العامة', liveOfficialData: 'بيانات اللاعب مباشرة', corehallaStats: 'إحصائيات متوافقة مع Corehalla', currentAlias: 'الاسم الحالي', previousAliases: 'الأسماء السابقة', refreshLiveStats: 'حدّث البيانات مباشرة', refreshingLiveStats: 'نحدّث البيانات الرسمية…', notReported: 'غير متوفر من الـAPI', statsAccuracyNote: 'يتم فحص إكس بي الحساب ولفلات الشخصيات من Brawlhalla وCorehalla مباشرة، ويعتمد PeakHalla أعلى قيمة تقدم حتى لا تستبدل البيانات القديمة اللفلات الأحدث.', legendLevelLimit: 'بعض لفلات وإكس بي الشخصيات قد لا تظهر إذا لم تُلعب الشخصية منذ تحديث 9.07.',
+    fullPlayerStats: 'إحصائيات اللاعب كاملة', officialLifetimeData: 'بيانات رسمية طوال عمر الحساب', allLegendStats: 'كل الشخصيات · إحصائيات العمر الكامل', searchLegends: 'ابحث في الشخصيات', legendSearchPlaceholder: 'اسم شخصية أو سلاح', show: 'العرض', playedOnly: 'اللي لعب بها فقط', allLegends: 'كل الشخصيات', sortBy: 'الترتيب حسب', level: 'اللفل', xp: 'الإكس بي', losses: 'الخسائر', damageDealt: 'الضرر المسبب', damageTaken: 'الضرر المستلم', kos: 'الإقصاءات', falls: 'مرات السقوط', kdRatio: 'نسبة K/D', damageRatio: 'نسبة الضرر', suicides: 'سقوط ذاتي', teamKOs: 'إقصاء الزملاء', unarmedDamage: 'ضرر بدون سلاح', thrownDamage: 'ضرر الأدوات المرميّة', gadgetDamage: 'ضرر الأدوات', gadgetKOs: 'إقصاءات الأدوات', unarmedKOs: 'إقصاءات بدون سلاح', bombDamage: 'ضرر القنابل', mineDamage: 'ضرر الألغام', spikeballDamage: 'ضرر الكرة الشائكة', sidekickDamage: 'ضرر المساعد', snowballHits: 'إصابات كرة الثلج', bombKOs: 'إقصاءات القنابل', mineKOs: 'إقصاءات الألغام', sidekickKOs: 'إقصاءات المساعد', snowballKOs: 'إقصاءات كرة الثلج', spikeballKOs: 'إقصاءات الكرة الشائكة', matchTime: 'وقت المباريات', seasonRanked: 'رانك الموسم الحالي', lifetimeCombat: 'قتال العمر الكامل', weaponBreakdown: 'تفاصيل الأسلحة', noLifetimeStats: 'ما فيه شخصيات مطابقة للفلاتر.', legendsTotal: 'شخصية', playedLegends: 'مستخدمة',
+    legendUsed: 'شخصية مستخدمة', legendsUsed: 'شخصيات مستخدمة', noRankedLegends: 'ما لقينا مباريات رانك على الشخصيات.', nameSeen: 'اسم مسجل', namesSeen: 'أسماء مسجلة', currentName: 'الحالي', previousName: 'قديم',
+    firstSeen: 'أول ظهور', lastSeen: 'آخر ظهور', formerly: 'كان اسمه', aliasMatch: 'تطابق اسم قديم', main: 'الأساسية', unknownLegend: 'الشخصية غير معروفة',
+    leaderboardPrefix: 'المتصدرين ·', leaderboardSearch: 'ابحث في الترتيب', leaderboardSearchPlaceholder: 'اكتب اسم اللاعب', leaderboardSearchTitle: 'نتيجة الترتيب', emptyData: 'ما فيه بيانات الحين.', allRegions: 'كل المناطق',
+    MiddleEast: 'الشرق الأوسط', Europe: 'أوروبا', USEast: 'شرق أمريكا', USWest: 'غرب أمريكا', SouthernAfrica: 'جنوب أفريقيا', SoutheastAsia: 'جنوب شرق آسيا', Brazil: 'البرازيل', Australia: 'أستراليا', Japan: 'اليابان',
+    esportsTitle: 'باور رانكنق المحترفين', esportsText: 'أسماء المحترفين، الميداليات، الأرباح، وأهم البطولات اللي فازوا فيها.', powerRanking: 'الباور رانكنق', player: 'اللاعب', earnings: 'الأرباح',
+    officialSource: 'افتح الترتيب الرسمي ↗', tournamentList: 'قائمة البطولات', proWinners: 'المحترفين وأهم ألقابهم', notExhaustive: 'ألقاب مختارة، مو كل مسيرة اللاعب',
+    rankingsUpdated: 'آخر تحديث', noPowerData: 'ما رجعت بيانات الترتيب الرسمي الحين. جرّب تحدث بعد شوي.', title: 'لقب', titles: 'ألقاب',
+    viewCareer: 'شوف بطولاته', tournamentCareer: 'مسيرة البطولات', loadingCareer: 'نجيب بطولات اللاعب…',
+    allModes: 'الكل', top8Only: 'توب 8', careerEvents: 'بطولات', careerTitles: 'بطولات فاز فيها', careerPodiums: 'منصات', careerTop8: 'توب 8', bestFinish: 'أفضل مركز',
+    noPlacements: 'ما لقينا نتائج بطولات رسمية لهذا اللاعب للحين.', careerSource: 'مصدر بيانات البطولات ↗', officialEventsOnly: 'بطولات رسمية فقط',
+    onlineEvent: 'أونلاين', offlineEvent: 'حضوري', playerCareerNotFound: 'ما لقينا ملف بطولات لهذا اللاعب.', placementLabel: 'المركز',
+    twoVTwoPartners: 'شركاء رانك 2v2', twoVTwoPartnersNote: 'الفرق الرسمية للموسم الحالي من بيانات اللاعب.', teammateElo: 'إيلو اللاعب', teamElo: 'إيلو الفريق', noTeammates: 'ما لقينا شريك 2v2 لهذا الحساب في الموسم الحالي.', loadingTeammates: 'نجيب شركاء 2v2…', backToTracker: 'ارجع للتراكر', queueLiveTracking: 'تتبّع النشاط المباشر', queueEyebrowLive: 'نشاط الرانك', queueTitleLive: 'مين قاعد يلعب رانك الحين؟', queueIntroLive: 'نتابع أعلى 500 نتيجة في الترتيب ونظهر اللاعبين اللي تغيّرت مبارياتهم خلال آخر 10 دقائق.', queueActiveNow: 'نشط الحين', queueDisclaimerLive: 'النشاط يعني أن بيانات الرانك تغيّرت مؤخرًا، وليس وصولًا إلى شاشة المطابقة الخاصة داخل اللعبة.', queueWarming: 'نبني أول لقطة للترتيب. اللاعبين النشطين يظهرون بعد الفحص الجاي.', queueNoActivity: 'ما رصدنا نشاط رانك ضمن أعلى 500 خلال آخر 10 دقائق.', queueTrackedTop: 'نتيجة نتابعها', queueLastScan: 'آخر فحص', queueNextScan: 'الفحص الجاي', queueGameDetected: 'مباراة مرصودة', queueGamesDetected: 'مباريات مرصودة', queueEloChange: 'تغيّر الإيلو', queueWatching: 'متابعة الترتيب مباشرة', queueError: 'ما قدرنا نحدّث النشاط المباشر الحين.',
+    arenaCommunity: 'صور المجتمع', arenaEyebrow: 'المجتمع', arenaTitle: 'ساحة الصور', arenaIntro: 'شارك لقطات براولهالا، اكتب تعليقك، وتكلم مع اللاعبين من خلال التعليقات والردود.', arenaWhat: 'وش هي ساحة الصور؟', arenaWhatText: 'معرض مجتمعي للقطات المباريات، لحظات الرانك، النتائج واللقطات المضحكة. الحساب يحتاج يوزر وباسورد فقط، بدون إيميل أو رمز تحقق.', arenaCreateAccount: 'إنشاء حساب', arenaSignIn: 'تسجيل الدخول', arenaNoEmail: 'بدون إيميل', arenaJoinTitle: 'ادخل الساحة', arenaJoinText: 'اختر يوزر وباسورد فقط، بدون إيميل أو رمز تحقق أو تسجيل اجتماعي.', arenaUsername: 'اسم المستخدم', arenaPassword: 'كلمة المرور', arenaPostingAs: 'تنشر باسم', arenaLogout: 'تسجيل الخروج', arenaChooseScreenshot: 'اختر سكرين شوت', arenaImageLimit: 'PNG أو JPG أو WebP · حتى 5 ميجا', arenaCaption: 'وصف الصورة', arenaCaptionPlaceholder: 'وش صار في المباراة؟', arenaPublish: 'انشر الصورة', arenaLatest: 'أحدث الصور', arenaFeed: 'صور المجتمع', arenaLoading: 'نحمّل الساحة…', arenaComments: 'التعليقات', arenaReply: 'رد', arenaReplyingTo: 'ترد على', arenaCancelReply: 'إلغاء', arenaWriteComment: 'اكتب تعليق…', arenaSend: 'إرسال', arenaSignInToComment: 'سجل دخول عشان تعلق أو ترد.', arenaNoPosts: 'ما فيه صور للحين، كن أول واحد ينشر.', arenaChooseImageFirst: 'اختر صورة أول.', arenaPosted: 'تم نشر الصورة.', arenaAccountReady: 'تم إنشاء الحساب، حيّاك في الساحة.', arenaSignedIn: 'تم تسجيل الدخول.', arenaAuthError: 'ما قدرنا نكمل الطلب.', arenaPostError: 'ما قدرنا ننشر الصورة.', friendlyProblem: 'براولهالا ما ردت الحين، جرّب بعد شوي.'
+  }
+};
+
+const copyrightYear = document.querySelector('#copyright-year');
+if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
+
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, leaderboardSearchTimer: null, leaderboardSearchController: null, queueMode: '1v1', queueRegion: 'ME', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null };
+const playerPathMatch = location.pathname.match(/^\/player\/(\d+)\/?$/);
+const standalonePlayerId = playerPathMatch ? playerPathMatch[1] : null;
+const isStandalonePlayerPage = Boolean(standalonePlayerId);
+const isLiveQueuePage = /^\/queue\/?$/.test(location.pathname);
+const isArenaPage = /^\/arena\/?$/.test(location.pathname);
+if (isStandalonePlayerPage) document.body.classList.add('player-page-mode', 'page-entering');
+if (isLiveQueuePage) document.body.classList.add('live-queue-page-mode', 'page-entering');
+if (isArenaPage) document.body.classList.add('arena-page-mode', 'page-entering');
+if (isStandalonePlayerPage || isLiveQueuePage || isArenaPage) { const brandLink = document.querySelector('.brand'); if (brandLink) brandLink.href = '/'; }
+const els = {
+  form: $('#search-form'), name: $('#player-name'), region: $('#search-region'), mode: $('#search-mode'), suggestions: $('#search-suggestions'), status: $('#status'),
+  resultsSection: $('#search-results'), resultsGrid: $('#results-grid'), resultCount: $('#result-count'), profile: $('#player-profile'), accountShowcase: $('#account-showcase'), profileAliases: $('#player-aliases'),
+  leaderboard: $('#leaderboard-list'), refreshLeaderboard: $('#refresh-leaderboard'), leaderboardRegion: $('#leaderboard-region'),
+  leaderboardMode: $('#leaderboard-mode'), leaderboardSearch: $('#leaderboard-search'), leaderboardTitle: $('#leaderboard-title'), languageToggle: $('#language-toggle'), rankedNav: $('#ranked-nav-dropdown'), rankedToggle: $('#ranked-nav-toggle'), rankedMenu: $('#ranked-nav-menu'), rankedModeLabel: $('#ranked-mode-label'), queueNav: $('#queue-nav-dropdown'), queueToggle: $('#queue-nav-toggle'), queueMenu: $('#queue-nav-menu'), queueModeLabel: $('#queue-mode-label'), playerPeakRating: $('#player-peak-rating'), eloGap: $('#elo-gap'), rankProgressFill: $('#rank-progress-fill'),
+  esportsRegion: $('#esports-region'), esportsMode: $('#esports-mode'), powerBody: $('#power-ranking-body'), esportsUpdated: $('#esports-updated'),
+  tournamentList: $('#tournament-list'), tournamentRegionLabel: $('#tournament-region-label'), championsGrid: $('#champions-grid'), esportsSource: $('#esports-source'),
+  careerModal: $('#esports-player-modal'), careerName: $('#career-player-name'), careerMeta: $('#career-player-meta'), careerStatus: $('#career-status'),
+  careerContent: $('#career-content'), careerSummary: $('#career-summary'), careerList: $('#career-placement-list'), careerCount: $('#career-count'), careerSource: $('#career-source'),
+  lifetimeSummary: $('#lifetime-summary-grid'), lifetimeLegends: $('#lifetime-legends-grid'), lifetimeLegendsCount: $('#lifetime-legends-count'), legendStatsSearch: $('#legend-stats-search'), legendStatsFilter: $('#legend-stats-filter'), legendStatsSort: $('#legend-stats-sort'), refreshPlayerStats: $('#refresh-player-stats'), statsSourceNote: $('#stats-source-note'), statsAccuracyNote: $('#stats-accuracy-note'), teammatesPanel: $('#teammates-panel'), teammatesGrid: $('#teammates-grid'), teammatesCount: $('#teammates-count'), queuePage: $('#live-queue-page'), queueRegion: $('#queue-region'), queueRefresh: $('#queue-refresh'), queueList: $('#queue-activity-list'), queueStatus: $('#queue-status'), queueActiveCount: $('#queue-active-count'), queueScanMeta: $('#queue-scan-meta'), arenaPage: $('#arena-page'), arenaAuthPanel: $('#arena-auth-panel'), arenaAuthForm: $('#arena-auth-form'), arenaUsername: $('#arena-username'), arenaPassword: $('#arena-password'), arenaAuthSubmit: $('#arena-auth-submit'), arenaAuthStatus: $('#arena-auth-status'), arenaComposer: $('#arena-composer'), arenaCurrentUser: $('#arena-current-user'), arenaUserAvatar: $('#arena-user-avatar'), arenaLogout: $('#arena-logout'), arenaPostForm: $('#arena-post-form'), arenaImageInput: $('#arena-image-input'), arenaImagePreview: $('#arena-image-preview'), arenaUploadPrompt: $('#arena-upload-prompt'), arenaCaption: $('#arena-caption'), arenaPostSubmit: $('#arena-post-submit'), arenaPostStatus: $('#arena-post-status'), arenaFeed: $('#arena-feed'), arenaRefresh: $('#arena-refresh')
+};
+
+function t(key) { return translations[state.language][key] || translations.en[key] || key; }
+function escapeHtml(value) { return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;'); }
+function initials(name) { return String(name || 'BH').trim().slice(0, 2).toUpperCase(); }
+function number(value, fallback = '—') { if (value === null || value === undefined || value === '') return fallback; const numeric = Number(value); return Number.isFinite(numeric) ? new Intl.NumberFormat(state.language === 'ar' ? 'ar-SA' : 'en-US').format(numeric) : fallback; }
+function money(value) { return Number.isFinite(Number(value)) ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(Number(value)) : '—'; }
+function dateTime(value) { return new Date(value).toLocaleString(state.language === 'ar' ? 'ar-SA' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' }); }
+function shortDate(value) { return new Date(value).toLocaleDateString(state.language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }); }
+function normalize(value) { return String(value || '').trim().toLowerCase(); }
+const INVALID_HISTORY_NAMES = new Set(['menu','home','profile','club','meta','events','overview','details','matches','ranked','legends','weapons','settings','search','share','stats','statistics','account','player','players','main','history','identity','known names','about','help','contact','privacy','terms','followers','following','social','socials']);
+function validHistoryName(value) {
+  const clean = String(value || '').normalize('NFKC').replace(/[\u0000-\u001F\u007F]/g, '').replace(/\s+/g, ' ').trim();
+  if (clean.length < 2 || clean.length > 32) return false;
+  if (INVALID_HISTORY_NAMES.has(normalize(clean))) return false;
+  if (!/[\p{L}\p{N}]/u.test(clean)) return false;
+  if (/\b(function|return|const|let|var|undefined|null|document|window|onclick|classname)\b/i.test(clean)) return false;
+  if (/=>|==|!=|&&|\|\||[{};:=<>]/.test(clean)) return false;
+  return true;
+}
+const regionKeys = { ALL: 'allRegions', ME: 'MiddleEast', EU: 'Europe', 'US-E': 'USEast', 'US-W': 'USWest', SA: 'SouthernAfrica', SEA: 'SoutheastAsia', BRZ: 'Brazil', AUS: 'Australia', JPS: 'Japan' };
+function regionLabel(code) { return t(regionKeys[code]) || code; }
+
+function applyLanguage() {
+  const isArabic = state.language === 'ar';
+  document.documentElement.lang = state.language;
+  document.documentElement.dir = isArabic ? 'rtl' : 'ltr';
+  document.body.classList.toggle('is-arabic', isArabic);
+  document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+  els.languageToggle.innerHTML = isArabic ? '<span>EN</span><b>AR</b>' : '<b>EN</b><span>AR</span>';
+  localStorage.setItem('nad-bh-language', state.language);
+  if (state.currentPlayer) renderPlayer(state.currentPlayer, false);
+  if (isLiveQueuePage) {
+    if (state.queueData) renderLiveQueue(state.queueData);
+  } else if (!isStandalonePlayerPage && !isArenaPage) {
+    loadLeaderboard();
+    if (state.esportsData) renderEsports(state.esportsData); else loadEsports();
+  }
+  if (isArenaPage) { renderArenaAccount(); renderArenaPosts(); }
+  if (state.esportsCareer && !els.careerModal.hidden) renderCareer(state.esportsCareer);
+}
+
+function handleLegendImageError(image) {
+  let candidates = [];
+  try { candidates = JSON.parse(image.dataset.imageCandidates || '[]'); } catch { candidates = []; }
+  const nextIndex = Number(image.dataset.imageIndex || '0') + 1;
+  if (candidates[nextIndex]) {
+    image.dataset.imageIndex = String(nextIndex);
+    image.src = candidates[nextIndex];
+    return;
+  }
+  image.hidden = true;
+  if (image.nextElementSibling) image.nextElementSibling.hidden = false;
+}
+window.handleLegendImageError = handleLegendImageError;
+
+function legendImageMarkup(legend, options = {}) {
+  const name = legend?.name || options.fallbackName || '';
+  const fallback = escapeHtml(initials(name || 'BH'));
+  const candidates = Array.isArray(legend?.image_candidates) ? legend.image_candidates.filter(Boolean) : (legend?.image_url ? [legend.image_url] : []);
+  if (!candidates.length) return `<span>${fallback}</span>`;
+  return `<img src="${escapeHtml(candidates[0])}" alt="${escapeHtml(name)}" ${options.lazy === false ? '' : 'loading="lazy"'} referrerpolicy="no-referrer" data-legend-image data-image-candidates='${escapeHtml(JSON.stringify(candidates))}' data-image-index="0" onerror="handleLegendImageError(this)"><span class="legend-fallback" hidden>${fallback}</span>`;
+}
+
+function portraitMarkup(legend, className = 'row-portrait', options = {}) {
+  return `<span class="${className}">${legendImageMarkup(legend, options)}</span>`;
+}
+
+function activateImageFallbacks() {
+  document.querySelectorAll('[data-legend-image]').forEach((image) => {
+    if (image.complete && image.naturalWidth === 0) handleLegendImageError(image);
+  });
+}
+
+function formerNames(player) {
+  const current = normalize(player.username);
+  return (player.known_names || []).map((item) => item.name).filter((name) => normalize(name) !== current).slice(0, 3);
+}
+
+function showStatus(message, type = 'loading') { els.status.hidden = false; els.status.className = `status shell ${type}`; els.status.textContent = message; }
+function hideStatus() { els.status.hidden = true; }
+async function getJson(url, options = {}) {
+  const response = await fetch(url, { cache: 'no-store', headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' }, signal: options.signal });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || t('fetchError'));
+  return data;
+}
+
+function playerPayloadSignature(data = {}) {
+  const player = data.player || {};
+  const legends = (player.lifetime_legends || []).map((legend) => [legend.legend_id, legend.level, legend.xp]);
+  const names = (data.known_names || []).map((item) => item?.name || item);
+  return JSON.stringify([player.brawlhalla_id, player.name, player.account_xp, player.level, names, legends]);
+}
+
+const PLAYER_BROWSER_CACHE_KEY = 'peakhalla-player-cache-v1';
+function readPlayerBrowserCache(id) {
+  try {
+    const all = JSON.parse(localStorage.getItem(PLAYER_BROWSER_CACHE_KEY) || '{}');
+    const entry = all[String(id)];
+    if (!entry?.data || Date.now() - Number(entry.saved_at || 0) > 7 * 24 * 60 * 60_000) return null;
+    return entry.data;
+  } catch { return null; }
+}
+
+function writePlayerBrowserCache(id, data) {
+  try {
+    const all = JSON.parse(localStorage.getItem(PLAYER_BROWSER_CACHE_KEY) || '{}');
+    all[String(id)] = { saved_at: Date.now(), data };
+    const trimmed = Object.entries(all)
+      .sort((a, b) => Number(b[1]?.saved_at || 0) - Number(a[1]?.saved_at || 0))
+      .slice(0, 50);
+    localStorage.setItem(PLAYER_BROWSER_CACHE_KEY, JSON.stringify(Object.fromEntries(trimmed)));
+  } catch { /* localStorage can be unavailable or full */ }
+}
+
+const PLAYER_NAV_SEED_KEY = 'peakhalla-player-nav-seed-v1';
+function makePlayerSeedPayload(item = {}, player = {}) {
+  const id = Number(player.id || player.brawlhalla_id);
+  const name = player.username || player.name || `Player ${id}`;
+  const knownNames = [];
+  const seen = new Set();
+  const pushName = (value) => {
+    const clean = String(value?.name || value || '').trim();
+    const key = normalize(clean);
+    if (!clean || seen.has(key)) return;
+    seen.add(key);
+    knownNames.push({ name: clean, is_current: key === normalize(name) });
+  };
+  pushName(name);
+  (player.known_names || []).forEach(pushName);
+  (player.matched_aliases || []).forEach(pushName);
+  const mainLegend = player.main_legend || null;
+  return {
+    seed_only: true,
+    player: {
+      brawlhalla_id: id,
+      name,
+      level: null,
+      xp_percentage: null,
+      account_xp: null,
+      game_time_seconds: 0,
+      game_time_display: '—',
+      lifetime_games: null,
+      lifetime_wins: null,
+      lifetime_win_rate: null,
+      rating: item.rating ?? null,
+      peak_rating: item.best_rating ?? item.peak_rating ?? null,
+      tier: item.tier || 'Unranked',
+      region: item.region || '—',
+      global_rank: item.rank ?? null,
+      region_ranks: [],
+      ranked_games: item.games ?? null,
+      ranked_wins: item.wins ?? null,
+      ranked_win_rate: null,
+      main_legend: mainLegend,
+      top_legends: mainLegend ? [{ ...mainLegend, games: 0 }] : [],
+      main_weapons: [],
+      lifetime_totals: {},
+      lifetime_legends: [],
+      legends: [],
+      data_quality: { source: 'Instant search preview · live stats loading', corehalla_enriched: false, live_fetch: false },
+      updated_at: new Date().toISOString()
+    },
+    history: [],
+    known_names: knownNames,
+    background_refresh_recommended: true
+  };
+}
+
+function writePlayerNavigationSeed(data) {
+  try { sessionStorage.setItem(PLAYER_NAV_SEED_KEY, JSON.stringify({ saved_at: Date.now(), data })); }
+  catch { /* session storage can be unavailable */ }
+}
+
+function readPlayerNavigationSeed(id) {
+  try {
+    const entry = JSON.parse(sessionStorage.getItem(PLAYER_NAV_SEED_KEY) || 'null');
+    sessionStorage.removeItem(PLAYER_NAV_SEED_KEY);
+    if (!entry?.data || Date.now() - Number(entry.saved_at || 0) > 2 * 60_000) return null;
+    if (Number(entry.data?.player?.brawlhalla_id) !== Number(id)) return null;
+    return entry.data;
+  } catch { return null; }
+}
+
+function prefetchPlayerProfile(id) {
+  const numericId = Number(id);
+  if (!Number.isSafeInteger(numericId) || numericId <= 0) return Promise.resolve(null);
+  const cached = readPlayerBrowserCache(numericId);
+  const cacheAge = cached?.player?.updated_at ? Date.now() - new Date(cached.player.updated_at).getTime() : Infinity;
+  if (cached && cacheAge < 2 * 60_000 && !cached.seed_only) return Promise.resolve(cached);
+  if (state.playerPrefetches.has(numericId)) return state.playerPrefetches.get(numericId);
+  const promise = fetch(`/api/player/${encodeURIComponent(numericId)}?live=1&prefetch=1&_=${Date.now()}`, {
+    cache: 'no-store',
+    keepalive: true,
+    headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' }
+  })
+    .then((response) => response.ok ? response.json() : null)
+    .then((data) => {
+      if (data?.player) writePlayerBrowserCache(numericId, data);
+      return data;
+    })
+    .catch(() => null)
+    .finally(() => state.playerPrefetches.delete(numericId));
+  state.playerPrefetches.set(numericId, promise);
+  return promise;
+}
+
+function setupPlayerPrefetch(container, selector, datasetKey) {
+  const buttons = [...container.querySelectorAll(selector)];
+  const warm = (button) => prefetchPlayerProfile(button.dataset[datasetKey]);
+  for (const button of buttons) {
+    button.addEventListener('pointerenter', () => warm(button), { once: true, passive: true });
+    button.addEventListener('focus', () => warm(button), { once: true });
+    button.addEventListener('touchstart', () => warm(button), { once: true, passive: true });
+  }
+  window.setTimeout(() => buttons.slice(0, 3).forEach(warm), 0);
+}
+
+function playerCard(item, player) {
+  const mainLegend = player.main_legend; const rank = item.rank ? `#${number(item.rank)}` : '—';
+  const matchedAlias = (player.matched_aliases || []).find((name) => normalize(name) !== normalize(player.username));
+  const matchLine = matchedAlias ? `<span class="fighter-alias-match">${escapeHtml(t('oldNameMatch'))}: <b>${escapeHtml(matchedAlias)}</b></span>` : '';
+  return `<button class="fighter-card" data-player-id="${Number(player.id)}">
+    ${portraitMarkup(mainLegend || { name: player.username }, 'fighter-portrait')}
+    <span class="fighter-data">
+      <span class="fighter-top"><span>${escapeHtml(item.region || '—')}</span><span>BH ${Number(player.id)}</span></span>
+      <h3>${escapeHtml(player.username || 'Unknown')}</h3>
+      ${matchLine}
+      <span class="fighter-main">${escapeHtml(mainLegend ? `${t('main')}: ${mainLegend.name}` : t('unknownLegend'))}</span>
+      <span class="fighter-metrics"><span>RANK<b>${rank}</b></span><span>ELO<b>${number(item.rating)}</b></span><span>${escapeHtml(t('wins'))}<b>${number(item.wins)}</b></span></span>
+    </span>
+  </button>`;
+}
+
+function renderSearchResults(rankings = []) {
+  els.resultsSection.hidden = false;
+  const playerCount = rankings.reduce((sum, item) => sum + (item.players?.length || 0), 0);
+  els.resultCount.textContent = `${number(playerCount)} ${playerCount === 1 ? t('result') : t('results')}`;
+  if (!rankings.length) {
+    els.resultsGrid.innerHTML = `<div class="no-results"><span>?</span><strong>${escapeHtml(t('noSearchResults'))}</strong></div>`;
+    els.resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  state.playerSeeds.clear();
+  const cards = [];
+  for (const item of rankings) {
+    for (const player of item.players || []) {
+      const id = Number(player.id);
+      state.playerSeeds.set(id, makePlayerSeedPayload(item, player));
+      cards.push(playerCard(item, player));
+    }
+  }
+  els.resultsGrid.innerHTML = cards.join('');
+  els.resultsGrid.querySelectorAll('[data-player-id]').forEach((button) => button.addEventListener('click', () => {
+    const id = Number(button.dataset.playerId);
+    navigateToPlayer(id, state.playerSeeds.get(id));
+  }));
+  setupPlayerPrefetch(els.resultsGrid, '[data-player-id]', 'playerId');
+  activateImageFallbacks();
+  els.resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function statCard(label, value, note) { return `<article class="stat-card"><span>${escapeHtml(label)}</span><strong>${value}</strong><small>${escapeHtml(note)}</small></article>`; }
+
+const CANONICAL_WEAPON_NAMES = {
+  hammer: 'Hammer',
+  sword: 'Sword',
+  blaster: 'Blasters',
+  blasters: 'Blasters',
+  pistol: 'Blasters',
+  pistols: 'Blasters',
+  lance: 'Rocket Lance',
+  rocketlance: 'Rocket Lance',
+  rocketlances: 'Rocket Lance',
+  spear: 'Spear',
+  katar: 'Katars',
+  katars: 'Katars',
+  axe: 'Axe',
+  bow: 'Bow',
+  gauntlet: 'Gauntlets',
+  gauntlets: 'Gauntlets',
+  fist: 'Gauntlets',
+  fists: 'Gauntlets',
+  scythe: 'Scythe',
+  cannon: 'Cannon',
+  orb: 'Orb',
+  greatsword: 'Greatsword',
+  greatswords: 'Greatsword',
+  boot: 'Battle Boots',
+  boots: 'Battle Boots',
+  battleboot: 'Battle Boots',
+  battleboots: 'Battle Boots',
+  chakram: 'Chakram',
+  chakrams: 'Chakram'
+};
+
+function canonicalWeaponName(name = '') {
+  const raw = String(name || '').trim();
+  if (!raw || raw === '—') return raw || '—';
+  const key = raw.toLowerCase().replace(/[^a-z0-9]+/g, '');
+  return CANONICAL_WEAPON_NAMES[key] || raw;
+}
+
+function weaponGlyph(name = '') {
+  const canonical = canonicalWeaponName(name);
+  const map = {
+    Hammer: '🔨', Sword: '⚔', Blasters: '🔫', 'Rocket Lance': '🚀', Spear: '🗡', Katars: '🗡', Axe: '🪓', Bow: '🏹', Gauntlets: '🥊', Scythe: '☾', Cannon: '💥', Orb: '🔮', Greatsword: '⚔', 'Battle Boots': '🥾', Chakram: '◉'
+  };
+  return map[canonical] || '✦';
+}
+
+function weaponSlug(name = '') {
+  return canonicalWeaponName(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'weapon';
+}
+
+function showcaseMetric(title, value, meta = '', extra = '') {
+  return `<article class="showcase-card showcase-metric"><span class="showcase-label">${escapeHtml(title)}</span><strong>${value}</strong>${meta ? `<small>${escapeHtml(meta)}</small>` : ''}${extra}</article>`;
+}
+
+function legendShowcase(topLegends = []) {
+  const items = topLegends.slice(0, 3);
+  return `<article class="showcase-card showcase-legends"><span class="showcase-label">${escapeHtml(t('topLegends'))}</span><div class="showcase-strip">${items.map((legend) => `<div class="mini-legend">${portraitMarkup(legend, 'mini-portrait')}<div><strong>${escapeHtml(legend.name)}</strong><small>${number(legend.games)} ${escapeHtml(t('games'))}</small></div></div>`).join('')}</div></article>`;
+}
+
+function weaponShowcase(weapons = []) {
+  const items = weapons.slice(0, 3);
+  return `<article class="showcase-card showcase-weapons"><span class="showcase-label">${escapeHtml(t('mainWeapons'))}</span><div class="weapon-grid">${items.map((weapon) => `<div class="weapon-tile weapon-${escapeHtml(weaponSlug(weapon.name))}"><span class="weapon-glyph">${escapeHtml(weaponGlyph(weapon.name))}</span><div><strong>${escapeHtml(canonicalWeaponName(weapon.name))}</strong><small>${escapeHtml(weapon.time_held_display || '—')} · ${number(weapon.kos)} ${escapeHtml(t('kos'))}</small></div></div>`).join('')}</div></article>`;
+}
+
+function renderAccountShowcase(player) {
+  const xpPercent = Number.isFinite(Number(player.xp_percentage)) ? Number(player.xp_percentage) : null;
+  const accountLevel = player.level === null || player.level === undefined ? t('notReported') : number(player.level);
+  const xpValue = player.account_xp === null || player.account_xp === undefined ? t('notReported') : number(player.account_xp);
+  const gameTimeValue = player.game_time_seconds > 0 ? player.game_time_display : t('notReported');
+  const sourceNote = player.data_quality?.corehalla_enriched ? t('corehallaStats') : t('liveOfficialData');
+  els.accountShowcase.innerHTML = [
+    showcaseMetric(t('accountLevel'), accountLevel, sourceNote),
+    showcaseMetric(t('accountXP'), xpValue, sourceNote),
+    showcaseMetric(t('gameTime'), gameTimeValue, sourceNote),
+    legendShowcase(player.top_legends || []),
+    weaponShowcase(player.main_weapons || [])
+  ].join('');
+}
+
+function lifetimeMetric(label, value, note = '', tone = 'default') {
+  return `<article class="lifetime-metric lifetime-metric-${tone}"><span>${escapeHtml(label)}</span><strong>${value}</strong>${note ? `<small>${escapeHtml(note)}</small>` : ''}</article>`;
+}
+
+function renderLifetimeSummary(totals = {}) {
+  const kd = Number.isFinite(Number(totals.kd_ratio)) ? number(totals.kd_ratio) : '—';
+  const damageRatio = Number.isFinite(Number(totals.damage_ratio)) ? number(totals.damage_ratio) : '—';
+  const primary = [
+    lifetimeMetric(t('totalGames'), number(totals.games), '', 'primary'),
+    lifetimeMetric(t('totalWins'), number(totals.wins), '', 'primary'),
+    lifetimeMetric(t('overallWinRate'), `${number(totals.win_rate)}%`, '', 'primary'),
+    lifetimeMetric(t('gameTime'), totals.match_time_display || '—', '', 'primary'),
+    lifetimeMetric(t('kos'), number(totals.kos), '', 'primary'),
+    lifetimeMetric(t('damageDealt'), number(totals.damage_dealt), '', 'primary')
+  ];
+  const secondary = [
+    lifetimeMetric(t('losses'), number(totals.losses)),
+    lifetimeMetric(t('falls'), number(totals.falls)),
+    lifetimeMetric(t('kdRatio'), kd),
+    lifetimeMetric(t('damageTaken'), number(totals.damage_taken)),
+    lifetimeMetric(t('damageRatio'), damageRatio),
+    lifetimeMetric(t('suicides'), number(totals.suicides)),
+    lifetimeMetric(t('teamKOs'), number(totals.team_kos)),
+    lifetimeMetric(t('unarmedDamage'), number(totals.damage_unarmed)),
+    lifetimeMetric(t('thrownDamage'), number(totals.damage_thrown_item)),
+    lifetimeMetric(t('gadgetDamage'), number(totals.damage_gadgets)),
+    lifetimeMetric(t('gadgetKOs'), number(totals.ko_gadgets)),
+    lifetimeMetric(t('bombDamage'), number(totals.damage_bomb)),
+    lifetimeMetric(t('mineDamage'), number(totals.damage_mine)),
+    lifetimeMetric(t('spikeballDamage'), number(totals.damage_spikeball)),
+    lifetimeMetric(t('sidekickDamage'), number(totals.damage_sidekick)),
+    lifetimeMetric(t('snowballHits'), number(totals.hit_snowball)),
+    lifetimeMetric(t('bombKOs'), number(totals.ko_bomb)),
+    lifetimeMetric(t('mineKOs'), number(totals.ko_mine)),
+    lifetimeMetric(t('sidekickKOs'), number(totals.ko_sidekick)),
+    lifetimeMetric(t('snowballKOs'), number(totals.ko_snowball)),
+    lifetimeMetric(t('spikeballKOs'), number(totals.ko_spikeball))
+  ];
+  els.lifetimeSummary.innerHTML = `<div class="lifetime-summary-primary">${primary.join('')}</div><div class="lifetime-summary-secondary">${secondary.join('')}</div>`;
+}
+
+function legendMetric(label, value) {
+  return `<div class="legend-stat"><span>${escapeHtml(label)}</span><strong>${value}</strong></div>`;
+}
+
+function weaponDetail(stats = {}) {
+  return `<article class="legend-weapon-card"><div class="legend-weapon-name"><span class="weapon-glyph">${escapeHtml(weaponGlyph(stats.name))}</span><strong>${escapeHtml(canonicalWeaponName(stats.name || '—'))}</strong></div><div class="legend-mini-grid">${legendMetric(t('damageDealt'), number(stats.damage))}${legendMetric(t('kos'), number(stats.kos))}${legendMetric(t('gameTime'), escapeHtml(stats.time_held_display || '—'))}</div></article>`;
+}
+
+function lifetimeLegendCard(legend) {
+  const rank = legend.ranked || {};
+  const xpPercent = Number.isFinite(Number(legend.xp_percentage)) ? Number(legend.xp_percentage) : null;
+  const xpBar = xpPercent !== null ? `<div class="legend-xp-bar"><div style="width:${Math.max(0, Math.min(100, xpPercent))}%"></div></div>` : '';
+  return `<details class="lifetime-legend-card" data-legend-name="${escapeHtml(legend.name)}">
+    <summary>
+      ${portraitMarkup(legend, 'lifetime-legend-portrait', { lazy: Number(legend.games) <= 0 })}
+      <div class="lifetime-legend-title"><strong>${escapeHtml(legend.name)}</strong><small>${escapeHtml(canonicalWeaponName(legend.weapon_one))} + ${escapeHtml(canonicalWeaponName(legend.weapon_two))}</small>${xpBar}</div>
+      <div class="legend-head-metrics">
+        ${legendMetric(t('games'), number(legend.games))}
+        ${legendMetric(t('wins'), number(legend.wins))}
+        ${legendMetric(t('winRate'), `${number(legend.win_rate)}%`)}
+        ${legendMetric(t('level'), legend.level === null ? escapeHtml(t('notReported')) : number(legend.level))}
+        ${legendMetric(t('gameTime'), escapeHtml(legend.match_time_display || '—'))}
+      </div>
+      <span class="details-chevron">⌄</span>
+    </summary>
+    <div class="lifetime-legend-details">
+      <section><span class="legend-detail-title">${escapeHtml(t('lifetimeCombat'))}</span><div class="legend-detail-grid">
+        ${legendMetric(t('xp'), legend.xp === null ? escapeHtml(t('notReported')) : number(legend.xp))}
+        ${legendMetric(t('xpProgress'), legend.xp_percentage === null ? escapeHtml(t('notReported')) : `${number(legend.xp_percentage)}%`)}
+        ${legendMetric(t('losses'), number(legend.losses))}
+        ${legendMetric(t('kos'), number(legend.kos))}
+        ${legendMetric(t('falls'), number(legend.falls))}
+        ${legendMetric(t('kdRatio'), legend.kd_ratio === null ? '—' : number(legend.kd_ratio))}
+        ${legendMetric(t('damageDealt'), number(legend.damage_dealt))}
+        ${legendMetric(t('damageTaken'), number(legend.damage_taken))}
+        ${legendMetric(t('damageRatio'), legend.damage_ratio === null ? '—' : number(legend.damage_ratio))}
+        ${legendMetric(t('suicides'), number(legend.suicides))}
+        ${legendMetric(t('teamKOs'), number(legend.team_kos))}
+        ${legendMetric(t('unarmedDamage'), number(legend.damage_unarmed))}
+        ${legendMetric(t('unarmedKOs'), number(legend.ko_unarmed))}
+        ${legendMetric(t('thrownDamage'), number(legend.damage_thrown_item))}
+        ${legendMetric(t('gadgetDamage'), number(legend.damage_gadgets))}
+        ${legendMetric(t('gadgetKOs'), number(legend.ko_gadgets))}
+      </div></section>
+      <section><span class="legend-detail-title">${escapeHtml(t('weaponBreakdown'))}</span><div class="legend-weapons-detail">${weaponDetail(legend.weapon_one_stats)}${weaponDetail(legend.weapon_two_stats)}</div></section>
+      <section><span class="legend-detail-title">${escapeHtml(t('seasonRanked'))}</span><div class="legend-detail-grid ranked-detail-grid">
+        ${legendMetric(t('games'), number(rank.games))}
+        ${legendMetric(t('wins'), number(rank.wins))}
+        ${legendMetric('ELO', rank.rating === null ? '—' : number(rank.rating))}
+        ${legendMetric(t('peak'), rank.peak_rating === null ? '—' : number(rank.peak_rating))}
+        ${legendMetric(t('currentRank'), escapeHtml(rank.tier || '—'))}
+      </div></section>
+    </div>
+  </details>`;
+}
+
+function renderLifetimeLegends() {
+  const all = state.currentPlayer?.player?.lifetime_legends || [];
+  const query = normalize(els.legendStatsSearch?.value || '');
+  const filter = els.legendStatsFilter?.value || 'all';
+  const sort = els.legendStatsSort?.value || 'games';
+  const sortValues = {
+    games: (legend) => legend.games,
+    wins: (legend) => legend.wins,
+    level: (legend) => legend.level ?? -1,
+    xp: (legend) => legend.xp ?? -1,
+    time: (legend) => legend.match_time_seconds,
+    damage: (legend) => legend.damage_dealt,
+    kos: (legend) => legend.kos
+  };
+  const filtered = all.filter((legend) => {
+    if (filter === 'played' && Number(legend.games) <= 0) return false;
+    if (!query) return true;
+    return [legend.name, canonicalWeaponName(legend.weapon_one), canonicalWeaponName(legend.weapon_two)].some((value) => normalize(value).includes(query));
+  }).sort((a, b) => (sortValues[sort]?.(b) || 0) - (sortValues[sort]?.(a) || 0) || a.name.localeCompare(b.name));
+  const played = all.filter((legend) => Number(legend.games) > 0).length;
+  els.lifetimeLegendsCount.textContent = `${number(all.length)} ${t('legendsTotal')} · ${number(played)} ${t('playedLegends')}`;
+  els.lifetimeLegends.innerHTML = filtered.length ? filtered.map(lifetimeLegendCard).join('') : `<p class="empty-copy">${escapeHtml(t('noLifetimeStats'))}</p>`;
+  activateImageFallbacks();
+  registerScrollReveal(els.lifetimeLegends);
+}
+
+function renderHistory(history = []) {
+  const chart = $('#history-chart'); const empty = $('#history-empty');
+  const valid = history.filter((item) => Number.isFinite(Number(item.rating)));
+  if (valid.length < 2) { chart.hidden = true; empty.hidden = false; return; }
+  chart.hidden = false; empty.hidden = true;
+  const min = Math.min(...valid.map((item) => item.rating)); const max = Math.max(...valid.map((item) => item.rating)); const spread = Math.max(max - min, 1);
+  chart.innerHTML = valid.map((item) => { const height = 18 + ((item.rating - min) / spread) * 165; return `<div class="chart-column" title="${escapeHtml(item.date)} — ${number(item.rating)} Elo"><b>${number(item.rating)}</b><div class="chart-bar" style="height:${height}px"></div><span>${escapeHtml(item.date.slice(5))}</span></div>`; }).join('');
+}
+
+function renderKnownNames(names = [], currentName = '') {
+  const unique = [];
+  const seen = new Set();
+  for (const item of names || []) {
+    const cleanName = String(item?.name || '').normalize('NFKC').replace(/[-]/g, '').replace(/\s+/g, ' ').trim();
+    if (!validHistoryName(cleanName)) continue;
+    const key = normalize(cleanName);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push({ ...item, name: cleanName });
+  }
+  $('#aliases-count').textContent = `${number(unique.length)} ${unique.length === 1 ? t('nameSeen') : t('namesSeen')}`;
+  const sorted = [...unique].sort((a, b) => {
+    const aCurrent = normalize(a.name) === normalize(currentName) ? 1 : 0;
+    const bCurrent = normalize(b.name) === normalize(currentName) ? 1 : 0;
+    return (bCurrent - aCurrent) || (new Date(b.last_seen || 0) - new Date(a.last_seen || 0));
+  });
+  $('#aliases-list').innerHTML = sorted.length ? sorted.map((item, index) => {
+    const current = normalize(item.name) === normalize(currentName);
+    return `<div class="alias-row ${current ? 'current' : ''}"><span class="alias-index">${String(index + 1).padStart(2, '0')}</span><div><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(t('firstSeen'))}: ${escapeHtml(shortDate(item.first_seen))} · ${escapeHtml(t('lastSeen'))}: ${escapeHtml(shortDate(item.last_seen))}</small></div><span class="alias-state">${escapeHtml(current ? t('currentName') : t('previousName'))}</span></div>`;
+  }).join('') : `<div class="alias-empty"><strong>${escapeHtml(currentName || '—')}</strong><span>${escapeHtml(t('knownNamesNote'))}</span></div>`;
+}
+
+function navigateToPlayer(id, seed = null) {
+  if (!id) return;
+  const preparedSeed = seed || state.playerSeeds.get(Number(id));
+  if (preparedSeed) writePlayerNavigationSeed(preparedSeed);
+  prefetchPlayerProfile(id);
+  document.body.classList.add('page-leaving');
+  window.setTimeout(() => { location.href = `/player/${encodeURIComponent(id)}`; }, 160);
+}
+
+function teammateCard(item) {
+  const main = item.main_legend || { name: item.name };
+  return `<button class="teammate-card" type="button" data-teammate-id="${Number(item.id)}">
+    ${portraitMarkup(main, 'teammate-portrait')}
+    <span class="teammate-copy">
+      <span class="teammate-top"><b>${escapeHtml(item.name || 'Unknown')}</b><em>${escapeHtml(item.tier || item.team_tier || '—')}</em></span>
+      <small>${escapeHtml(main?.name || t('unknownLegend'))}</small>
+      <span class="teammate-stats teammate-team-only">
+        <span><small>2V2 TEAM ELO</small><strong>${number(item.team_rating)}</strong><em>${escapeHtml(t('peak'))}: ${number(item.team_peak_rating)}</em></span>
+        <span><small>${escapeHtml(t('games'))}</small><strong>${number(item.games)}</strong><em>${escapeHtml(t('wins'))}: ${number(item.wins)}</em></span>
+      </span>
+    </span>
+    <span class="teammate-arrow">→</span>
+  </button>`;
+}
+
+async function loadTeammates(id) {
+  if (!els.teammatesGrid) return;
+  els.teammatesCount.textContent = '';
+  els.teammatesGrid.innerHTML = `<div class="teammates-loading"><span>${escapeHtml(t('loadingTeammates'))}</span></div>`;
+  try {
+    const data = await getJson(`/api/player/${encodeURIComponent(id)}/teammates`);
+    const teammates = data.teammates || [];
+    els.teammatesCount.textContent = teammates.length ? `${number(teammates.length)} ${t('twoVTwoPartners')}` : '';
+    els.teammatesGrid.innerHTML = teammates.length ? teammates.map(teammateCard).join('') : `<p class="empty-copy">${escapeHtml(t('noTeammates'))}</p>`;
+    els.teammatesGrid.querySelectorAll('[data-teammate-id]').forEach((button) => button.addEventListener('click', () => navigateToPlayer(button.dataset.teammateId)));
+    activateImageFallbacks();
+    registerScrollReveal(els.teammatesPanel);
+  } catch {
+    els.teammatesCount.textContent = '';
+    els.teammatesGrid.innerHTML = `<p class="empty-copy">${escapeHtml(t('noTeammates'))}</p>`;
+  }
+}
+
+function renderProfileAliases(names = [], currentName = '') {
+  if (!els.profileAliases) return;
+  const unique = [];
+  const seen = new Set();
+  const push = (value, isCurrent = false) => {
+    const name = String(value || '').normalize('NFKC').replace(/[\u0000-\u001F\u007F]/g, '').replace(/\s+/g, ' ').trim();
+    if (!validHistoryName(name)) return;
+    const key = normalize(name);
+    if (seen.has(key)) return;
+    seen.add(key);
+    unique.push({ name, isCurrent: isCurrent || key === normalize(currentName) });
+  };
+  push(currentName, true);
+  for (const item of names || []) push(item?.name || item, Boolean(item?.is_current));
+  if (!unique.length) {
+    els.profileAliases.hidden = true;
+    els.profileAliases.innerHTML = '';
+    return;
+  }
+  els.profileAliases.innerHTML = unique.slice(0, 10).map((item, index) => `<span class="profile-alias-chip ${item.isCurrent ? 'current' : ''}" style="--alias-index:${index}">${escapeHtml(item.name)}${item.isCurrent ? `<small>${escapeHtml(t('currentName'))}</small>` : ''}</span>`).join('');
+  els.profileAliases.hidden = false;
+}
+
+function renderPlayer(data, shouldScroll = true, renderOptions = {}) {
+  state.currentPlayer = data;
+  const { player, history, known_names: knownNames = [] } = data;
+  els.profile.hidden = false;
+  const avatar = $('#player-avatar');
+  avatar.innerHTML = player.main_legend ? legendImageMarkup(player.main_legend, { lazy: false, fallbackName: player.name }) : `<span>${escapeHtml(initials(player.name))}</span>`;
+  $('#main-legend-label').textContent = player.main_legend ? `${t('main')}: ${player.main_legend.name}` : t('unknownLegend');
+  $('#player-title').textContent = player.name; $('#player-id').textContent = player.brawlhalla_id; $('#player-region').textContent = player.region; $('#player-tier').textContent = player.tier; $('#player-rating').textContent = number(player.rating); $('#updated-at').textContent = dateTime(player.updated_at); renderProfileAliases(knownNames, player.name);
+  if (els.statsSourceNote) { els.statsSourceNote.title = `${player.data_quality?.source || 'Brawlhalla Developer API v1'} · ${dateTime(player.data_quality?.fetched_at || player.updated_at)}`; const label = els.statsSourceNote.querySelector('span'); if (label) label.textContent = player.data_quality?.corehalla_enriched ? t('corehallaStats') : t('liveOfficialData'); }
+  if (els.statsAccuracyNote) els.statsAccuracyNote.textContent = t('statsAccuracyNote');
+  const currentElo = Number(player.rating);
+  const peakElo = Number(player.peak_rating);
+  if (els.playerPeakRating) els.playerPeakRating.textContent = Number.isFinite(peakElo) ? number(peakElo) : '—';
+  const eloGap = Number.isFinite(currentElo) && Number.isFinite(peakElo) ? Math.max(0, peakElo - currentElo) : null;
+  if (els.eloGap) els.eloGap.textContent = eloGap === null ? '—' : (eloGap === 0 ? t('atPeak') : `${number(eloGap)} ${t('offPeak')}`);
+  const progress = Number.isFinite(currentElo) && Number.isFinite(peakElo) && peakElo > 0 ? Math.max(8, Math.min(100, (currentElo / peakElo) * 100)) : 0;
+  if (els.rankProgressFill) requestAnimationFrame(() => { els.rankProgressFill.style.width = `${progress}%`; });
+  renderAccountShowcase(player);
+  renderLifetimeSummary(player.lifetime_totals || {});
+  $('#stats-grid').innerHTML = [
+    statCard(t('globalRank'), player.global_rank ? `#${number(player.global_rank)}` : '—', 'WORLD POSITION'), statCard(t('rankedGames'), number(player.ranked_games), 'CURRENT SEASON'), statCard(t('rankedWins'), number(player.ranked_wins), 'CURRENT SEASON'), statCard(t('winRate'), `${number(player.ranked_win_rate)}%`, 'CURRENT SEASON')
+  ].join('');
+  const regionalRank = player.region_ranks?.find((rank) => rank.region === player.region)?.rank;
+  $('#player-summary').innerHTML = `<div><dt>${escapeHtml(t('accountLevel'))}</dt><dd>${number(player.level)}</dd></div><div><dt>${escapeHtml(t('regionRank'))}</dt><dd>${regionalRank ? `#${number(regionalRank)}` : '—'}</dd></div><div><dt>${escapeHtml(t('totalGames'))}</dt><dd>${number(player.lifetime_games)}</dd></div><div><dt>${escapeHtml(t('totalWins'))}</dt><dd>${number(player.lifetime_wins)}</dd></div><div><dt>${escapeHtml(t('overallWinRate'))}</dt><dd>${number(player.lifetime_win_rate)}%</dd></div>`;
+  const legends = player.legends || [];
+  $('#legends-count').textContent = `${number(legends.length)} ${legends.length === 1 ? t('legendUsed') : t('legendsUsed')}`;
+  $('#legends-body').innerHTML = legends.length ? legends.map((legend) => `<tr><td><span class="legend-name">${portraitMarkup(legend, 'legend-icon')}<span>${escapeHtml(legend.name)}</span></span></td><td>${escapeHtml(canonicalWeaponName(legend.weapon_one))} + ${escapeHtml(canonicalWeaponName(legend.weapon_two))}</td><td>${number(legend.games)}</td><td>${number(legend.wins)}</td><td class="rate">${number(legend.win_rate)}%</td><td>${number(legend.rating)}</td><td>${number(legend.peak_rating)}</td></tr>`).join('') : `<tr><td colspan="7" class="empty-copy">${escapeHtml(t('noRankedLegends'))}</td></tr>`;
+  renderHistory(history);
+  renderLifetimeLegends();
+  activateImageFallbacks();
+  registerScrollReveal(els.profile);
+  if (renderOptions.refreshSecondary !== false) loadTeammates(player.brawlhalla_id);
+  if (shouldScroll) els.profile.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function loadPlayer(id, options = {}) {
+  const silent = Boolean(options.silent);
+  const manualRefresh = Boolean(options.refresh);
+  const backgroundRefresh = Boolean(options.background);
+  let renderedInstantData = false;
+  try {
+    if (!silent && !manualRefresh && !backgroundRefresh) {
+      const cached = readPlayerBrowserCache(id) || readPlayerNavigationSeed(id);
+      if (cached) {
+        renderPlayer(cached, options.shouldScroll !== false, { refreshSecondary: !cached.seed_only });
+        state.playerSignature = playerPayloadSignature(cached);
+        renderedInstantData = true;
+        hideStatus();
+      }
+    }
+    if (!silent && !renderedInstantData) showStatus(manualRefresh ? t('refreshingLiveStats') : t('loadingPlayer'));
+    const params = new URLSearchParams({
+      [manualRefresh ? 'refresh' : (backgroundRefresh ? 'live' : 'fast')]: '1',
+      _: String(Date.now())
+    });
+    if (manualRefresh) {
+      state.playerRefreshController?.abort();
+      state.playerRefreshController = new AbortController();
+    }
+    const data = await getJson(`/api/player/${encodeURIComponent(id)}?${params}`, { signal: manualRefresh ? state.playerRefreshController.signal : undefined });
+    if (data?.player) writePlayerBrowserCache(id, data);
+    if (!silent) hideStatus();
+    const signature = playerPayloadSignature(data);
+    const changed = signature !== state.playerSignature;
+    const shouldRender = silent ? changed : (!renderedInstantData || changed || manualRefresh);
+    if (shouldRender) {
+      renderPlayer(data, renderedInstantData ? false : options.shouldScroll !== false, { refreshSecondary: !silent && !renderedInstantData });
+      state.playerSignature = signature;
+    } else {
+      state.currentPlayer = data;
+    }
+    history.replaceState(null, '', `/?player=${encodeURIComponent(id)}`);
+
+    if (options.autoVerify !== false && !manualRefresh && !backgroundRefresh) {
+      window.clearTimeout(state.playerAutoRefreshTimer);
+      const refreshInBackground = () => loadPlayer(id, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
+      state.playerAutoRefreshTimer = window.setTimeout(refreshInBackground, renderedInstantData ? 0 : 80);
+    }
+    return data;
+  } catch (error) {
+    if (error.name === 'AbortError') return null;
+    if (silent) throw error;
+    if (renderedInstantData) {
+      hideStatus();
+      return state.currentPlayer;
+    }
+    els.profile.hidden = true;
+    showStatus(error?.message || t('friendlyProblem'), 'error');
+    els.status.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return null;
+  }
+}
+
+async function searchPlayer(event) {
+  event.preventDefault(); const q = els.name.value.trim(); const button = els.form.querySelector('button[type="submit"]');
+  if (q.length < 2) return;
+  try { button.disabled = true; showStatus(t('searching')); const params = new URLSearchParams({ q, region: els.region.value, mode: els.mode.value }); const data = await getJson(`/api/search?${params}`); hideStatus(); renderSearchResults(data.rankings || []); }
+  catch { hideStatus(); renderSearchResults([]); } finally { button.disabled = false; }
+}
+
+function leaderboardPerson(player, region) {
+  const main = player.main_legend;
+  const readableRegion = regionLabel(region);
+  const regionCode = String(region || '—').toUpperCase();
+  const regionTitle = readableRegion && readableRegion !== regionCode ? `${readableRegion} · ${regionCode}` : regionCode;
+  return `<div class="leader-person">${portraitMarkup(main || { name: player.username }, 'row-portrait')}<button data-leader-id="${Number(player.id)}"><span class="leader-name-line"><strong>${escapeHtml(player.username || 'Unknown')}</strong></span><span class="leader-meta-line"><small class="leader-legend-meta">${escapeHtml(main ? main.name : 'Brawlhalla')}</small><span class="leader-region-chip" title="${escapeHtml(regionTitle)}">${escapeHtml(regionCode)}</span></span></button></div>`;
+}
+
+function renderLeaderboardRows(rankings = []) {
+  els.leaderboard.innerHTML = rankings.map((item) => {
+    const wins = Math.max(0, Number(item.wins) || 0);
+    const reportedLosses = Number(item.losses);
+    const reportedGames = Number(item.games);
+    const losses = Number.isFinite(reportedLosses)
+      ? Math.max(0, reportedLosses)
+      : Math.max(0, (Number.isFinite(reportedGames) ? reportedGames : wins) - wins);
+    const games = Number.isFinite(reportedGames) ? Math.max(0, reportedGames) : wins + losses;
+    const safeGames = Math.max(games, wins + losses);
+    const winRate = safeGames ? ((wins / safeGames) * 100).toFixed(1) : '0.0';
+    const winWidth = safeGames ? ((wins / safeGames) * 100).toFixed(2) : '0';
+    const lossWidth = safeGames ? ((losses / safeGames) * 100).toFixed(2) : '0';
+    const recordTitle = `${number(safeGames)} ${t('games')} · ${number(wins)}W · ${number(losses)}L`;
+    const playersMarkup = (item.players || []).map((player) => {
+      state.playerSeeds.set(Number(player.id), makePlayerSeedPayload(item, player));
+      return leaderboardPerson(player, item.region || '—');
+    }).join('');
+    return `<div class="leader-row"><span class="leader-rank">#${number(item.rank)}</span><div class="leader-players">${playersMarkup}</div><div class="leader-metric"><span>ELO</span><b>${number(item.rating)}</b></div><div class="leader-metric"><span>${escapeHtml(t('peak'))}</span><b>${number(item.best_rating)}</b></div><div class="leader-metric leader-games-metric" title="${escapeHtml(recordTitle)}" aria-label="${escapeHtml(recordTitle)}"><span>${escapeHtml(t('games'))}</span><b>${number(safeGames)}</b><div class="leader-record-stack"><div class="leader-record-bar"><i class="leader-record-fill leader-record-fill-win" style="width:${winWidth}%"></i><i class="leader-record-fill leader-record-fill-loss" style="width:${lossWidth}%"></i></div><div class="leader-record-labels"><small class="leader-win-label"><strong>${number(wins)}</strong>W</small><small class="leader-loss-label"><strong>${number(losses)}</strong>L</small></div></div></div><div class="leader-metric leader-winrate-metric"><span>${escapeHtml(t('winRate'))}</span><b>${winRate}%</b></div><span class="tier-chip">${escapeHtml(item.tier || 'Unranked')}</span></div>`;
+  }).join('') || `<p class="empty-copy">${escapeHtml(t('emptyData'))}</p>`;
+  els.leaderboard.querySelectorAll('[data-leader-id]').forEach((button) => button.addEventListener('click', () => {
+    const id = Number(button.dataset.leaderId);
+    navigateToPlayer(id, state.playerSeeds.get(id));
+  }));
+  setupPlayerPrefetch(els.leaderboard, '[data-leader-id]', 'leaderId');
+  activateImageFallbacks();
+  els.leaderboard.classList.remove('leaderboard-mode-enter');
+  requestAnimationFrame(() => els.leaderboard.classList.add('leaderboard-mode-enter'));
+}
+
+async function loadLeaderboard() {
+  const region = els.leaderboardRegion?.value || 'ALL';
+  const mode = els.leaderboardMode?.value || '1v1';
+  const query = els.leaderboardSearch?.value.trim() || '';
+  els.leaderboardTitle.textContent = query.length >= 2
+    ? `${t('leaderboardSearchTitle')} · ${query}`
+    : `${t('leaderboardPrefix')} ${regionLabel(region)}`;
+  els.leaderboard.innerHTML = '<div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div>';
+  state.leaderboardSearchController?.abort();
+  state.leaderboardSearchController = new AbortController();
+  try {
+    const params = new URLSearchParams(query.length >= 2
+      ? { q: query, region, mode }
+      : { region, mode, page: '1' });
+    const endpoint = query.length >= 2 ? '/api/search' : '/api/leaderboard';
+    const response = await fetch(`${endpoint}?${params}`, { headers: { Accept: 'application/json' }, signal: state.leaderboardSearchController.signal });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || t('fetchError'));
+    renderLeaderboardRows(data.rankings || []);
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+    els.leaderboard.innerHTML = `<p class="empty-copy">${escapeHtml(t('friendlyProblem'))}</p>`;
+  }
+}
+
+function scheduleLeaderboardSearch() {
+  window.clearTimeout(state.leaderboardSearchTimer);
+  state.leaderboardSearchTimer = window.setTimeout(loadLeaderboard, 280);
+}
+
+function renderEsports(data) {
+  state.esportsData = data;
+  els.esportsUpdated.textContent = data.updated_at ? `${t('rankingsUpdated')}: ${shortDate(data.updated_at)}` : '';
+  const rankings = data.rankings || [];
+  els.powerBody.innerHTML = rankings.length ? rankings.map((item) => `<tr><td><span class="power-rank">#${number(item.rank)}</span></td><td><button class="power-player-button" type="button" data-esports-player="${escapeHtml(item.name)}" data-esports-region="${escapeHtml(data.region || '')}"><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(t('viewCareer'))} →</small></button></td><td>${money(item.earnings)}</td><td>${number(item.top8)}</td><td>${number(item.gold)}</td><td>${number(item.silver)}</td><td>${number(item.bronze)}</td></tr>`).join('') : `<tr><td colspan="7" class="empty-copy">${escapeHtml(t('noPowerData'))}</td></tr>`;
+  if (els.tournamentRegionLabel) els.tournamentRegionLabel.textContent = `${data.region || 'GLOBAL'} EVENTS`;
+  if (els.esportsSource && data.source_url) els.esportsSource.href = data.source_url;
+  const tournaments = data.tournament_series || [];
+  els.tournamentList.innerHTML = tournaments.length ? tournaments.map((event, index) => {
+    const eventRegions = event.regions || ['GLOBAL'];
+    const region = eventRegions.includes(data.region) ? data.region : (eventRegions[0] || 'GLOBAL');
+    const title = event.source_url
+      ? `<a href="${escapeHtml(event.source_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(event.name)} ↗</a>`
+      : escapeHtml(event.name);
+    return `<div class="tournament-item"><span>${String(index + 1).padStart(2, '0')}</span><div><div class="tournament-title-line"><strong>${title}</strong><b class="event-region">${region}</b></div><small>${escapeHtml(event.type)} · ${escapeHtml(event.note)}</small></div></div>`;
+  }).join('') : `<p class="empty-copy">${escapeHtml(t('emptyData'))}</p>`;
+  els.championsGrid.innerHTML = (data.featured_champions || []).map((champion) => `<article class="champion-card"><div><span>${escapeHtml(champion.region)}</span><strong>${escapeHtml(champion.players)}</strong></div><ul>${(champion.titles || []).map((title) => `<li>${escapeHtml(title)}</li>`).join('')}</ul></article>`).join('');
+}
+
+
+function closeCareerModal() {
+  els.careerModal.hidden = true;
+  document.body.classList.remove('modal-open');
+}
+
+function tournamentDate(timestamp) {
+  if (!Number(timestamp)) return '—';
+  return new Date(Number(timestamp) * 1000).toLocaleDateString(state.language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function careerMetric(label, value) {
+  return `<article><span>${escapeHtml(label)}</span><strong>${value}</strong></article>`;
+}
+
+function filteredPlacements(data) {
+  const placements = data?.placements || [];
+  if (state.careerFilter === '1v1' || state.careerFilter === '2v2') return placements.filter((item) => item.mode === state.careerFilter);
+  if (state.careerFilter === 'top8') return placements.filter((item) => Number(item.placement) <= 8);
+  return placements;
+}
+
+function renderCareer(data) {
+  state.esportsCareer = data;
+  const player = data.player || {};
+  const summary = data.summary || {};
+  els.careerName.textContent = player.name || 'Player';
+  const meta = [player.region, player.country, player.pr1v1 ? `1v1 PR #${number(player.pr1v1)}` : null, player.pr2v2 ? `2v2 PR #${number(player.pr2v2)}` : null].filter(Boolean);
+  els.careerMeta.textContent = meta.join(' · ');
+  els.careerSummary.innerHTML = [
+    careerMetric(t('careerEvents'), number(summary.events, '0')),
+    careerMetric(t('careerTitles'), number(summary.titles, '0')),
+    careerMetric(t('careerPodiums'), number(summary.podiums, '0')),
+    careerMetric(t('careerTop8'), number(summary.top8, '0')),
+    careerMetric(t('bestFinish'), summary.best_placement ? `#${number(summary.best_placement)}` : '—')
+  ].join('');
+
+  const placements = filteredPlacements(data);
+  els.careerCount.textContent = `${number(placements.length)} ${t('careerEvents')}`;
+  els.careerList.innerHTML = placements.length ? placements.map((item) => {
+    const tournament = item.tournament || {};
+    const place = Number(item.placement);
+    const placeClass = place === 1 ? 'is-gold' : place <= 3 ? 'is-podium' : place <= 8 ? 'is-top8' : '';
+    const eventTitle = tournament.tournamentName || tournament.eventName || 'Tournament';
+    const eventName = tournament.eventName && tournament.eventName !== eventTitle ? tournament.eventName : '';
+    const eventLink = tournament.source_url ? `<a href="${escapeHtml(tournament.source_url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(eventTitle)} ↗</a>` : `<strong>${escapeHtml(eventTitle)}</strong>`;
+    const location = tournament.isOnline === false ? t('offlineEvent') : t('onlineEvent');
+    return `<article class="career-placement"><span class="placement-badge ${placeClass}">#${number(place)}</span><div class="career-event-copy">${eventLink}${eventName ? `<small>${escapeHtml(eventName)}</small>` : ''}<p>${escapeHtml(item.mode)} · ${escapeHtml(location)} · ${escapeHtml(tournamentDate(tournament.startTime))}</p></div></article>`;
+  }).join('') : `<p class="empty-copy">${escapeHtml(t('noPlacements'))}</p>`;
+  els.careerStatus.hidden = true;
+  els.careerContent.hidden = false;
+  if (data.source_url) els.careerSource.href = data.source_url;
+}
+
+async function openEsportsCareer(name, region = '') {
+  state.careerFilter = 'all';
+  document.querySelectorAll('[data-career-filter]').forEach((button) => button.classList.toggle('active', button.dataset.careerFilter === 'all'));
+  els.careerModal.hidden = false;
+  document.body.classList.add('modal-open');
+  els.careerName.textContent = name;
+  els.careerMeta.textContent = region || '';
+  els.careerContent.hidden = true;
+  els.careerStatus.hidden = false;
+  els.careerStatus.innerHTML = `<div class="career-loader"></div><strong>${escapeHtml(t('loadingCareer'))}</strong>`;
+  try {
+    const params = new URLSearchParams({ name, region });
+    renderCareer(await getJson(`/api/esports/player?${params}`));
+  } catch (_error) {
+    state.esportsCareer = null;
+    els.careerStatus.hidden = false;
+    els.careerStatus.innerHTML = `<span class="career-error-mark">!</span><strong>${escapeHtml(t('playerCareerNotFound'))}</strong>`;
+  }
+}
+
+async function loadEsports() {
+  const params = new URLSearchParams({ region: els.esportsRegion.value, mode: els.esportsMode.value });
+  els.powerBody.innerHTML = '<tr><td colspan="7"><div class="table-loading"></div></td></tr>';
+  try { renderEsports(await getJson(`/api/esports?${params}`)); }
+  catch { els.powerBody.innerHTML = `<tr><td colspan="7" class="empty-copy">${escapeHtml(t('friendlyProblem'))}</td></tr>`; }
+}
+
+function closeRankedMenu() {
+  if (!els.rankedMenu || !els.rankedToggle) return;
+  els.rankedToggle.setAttribute('aria-expanded', 'false');
+  els.rankedMenu.setAttribute('aria-hidden', 'true');
+  els.rankedNav?.classList.remove('open');
+}
+
+function toggleRankedMenu() {
+  if (!els.rankedMenu || !els.rankedToggle) return;
+  closeQueueMenu();
+  const opening = !els.rankedNav?.classList.contains('open');
+  els.rankedToggle.setAttribute('aria-expanded', String(opening));
+  els.rankedMenu.setAttribute('aria-hidden', String(!opening));
+  els.rankedNav?.classList.toggle('open', opening);
+}
+
+async function chooseRankedMode(mode) {
+  if (!['1v1', '2v2', '3v3'].includes(mode)) return;
+  if (isLiveQueuePage || isStandalonePlayerPage || isArenaPage) {
+    document.body.classList.add('page-leaving');
+    window.setTimeout(() => { location.href = `/?ranked=${encodeURIComponent(mode)}#leaderboard`; }, 260);
+    return;
+  }
+  if (els.mode) { els.mode.value = mode; els.mode.dispatchEvent(new Event('change', { bubbles: true })); }
+  if (els.leaderboardMode) { els.leaderboardMode.value = mode; els.leaderboardMode._motionSync?.(); }
+  if (els.rankedModeLabel) els.rankedModeLabel.textContent = mode;
+  els.rankedMenu?.querySelectorAll('[data-ranked-mode]').forEach((button) => button.classList.toggle('selected', button.dataset.rankedMode === mode));
+  closeRankedMenu();
+
+  const leaderboardSection = document.querySelector('#leaderboard');
+  const loading = loadLeaderboard();
+  leaderboardSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  await loading;
+
+  els.leaderboard?.classList.remove('leaderboard-mode-enter');
+  requestAnimationFrame(() => {
+    els.leaderboard?.classList.add('leaderboard-mode-enter');
+    window.setTimeout(() => els.leaderboard?.classList.remove('leaderboard-mode-enter'), 900);
+  });
+}
+
+
+function closeQueueMenu() {
+  if (!els.queueMenu || !els.queueToggle) return;
+  els.queueToggle.setAttribute('aria-expanded', 'false');
+  els.queueMenu.setAttribute('aria-hidden', 'true');
+  els.queueNav?.classList.remove('open');
+}
+
+function toggleQueueMenu() {
+  if (!els.queueMenu || !els.queueToggle) return;
+  const opening = !els.queueNav?.classList.contains('open');
+  closeRankedMenu();
+  els.queueToggle.setAttribute('aria-expanded', String(opening));
+  els.queueMenu.setAttribute('aria-hidden', String(!opening));
+  els.queueNav?.classList.toggle('open', opening);
+}
+
+function navigateToQueue(mode = '1v1', region = state.queueRegion || 'ME') {
+  if (!['1v1', '2v2', '3v3'].includes(mode)) mode = '1v1';
+  const params = new URLSearchParams({ mode, region });
+  document.body.classList.add('page-leaving');
+  window.setTimeout(() => { location.href = `/queue?${params}`; }, 260);
+}
+
+function chooseQueueMode(mode) {
+  closeQueueMenu();
+  navigateToQueue(mode, state.queueRegion || 'ME');
+}
+
+function queueRelativeTime(timestamp) {
+  const seconds = Math.max(0, Math.floor((Date.now() - Number(timestamp || 0)) / 1000));
+  if (seconds < 15) return state.language === 'ar' ? 'الآن' : 'just now';
+  if (seconds < 60) return state.language === 'ar' ? `قبل ${seconds} ثانية` : `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  return state.language === 'ar' ? `قبل ${minutes} د` : `${minutes}m ago`;
+}
+
+function queueScanTime(timestamp) {
+  if (!timestamp) return '—';
+  return new Date(timestamp).toLocaleTimeString(state.language === 'ar' ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+}
+
+function queueActivityChip(label, value, className = '') {
+  return `<span class="queue-activity-chip ${className}"><small>${escapeHtml(label)}</small><b>${escapeHtml(value)}</b></span>`;
+}
+
+function queuePlayerLine(player) {
+  const main = player.main_legend;
+  return `<button type="button" class="queue-live-player" data-queue-player-id="${Number(player.id) || ''}">
+    ${portraitMarkup(main || { name: player.username }, 'queue-live-portrait')}
+    <span><strong>${escapeHtml(player.username || 'Unknown')}</strong><small>${escapeHtml(main?.name || t('unknownLegend'))}</small></span>
+  </button>`;
+}
+
+function queueEntryCard(entry, index) {
+  const deltaGames = Number(entry.delta_games || 0);
+  const deltaWins = Number(entry.delta_wins || 0);
+  const deltaLosses = Number(entry.delta_losses || 0);
+  const deltaElo = Number(entry.delta_elo || 0);
+  const gameLabel = deltaGames === 1 ? t('queueGameDetected') : t('queueGamesDetected');
+  const activityBits = [
+    queueActivityChip(gameLabel, `+${number(deltaGames)}`, 'games'),
+    queueActivityChip(t('wins'), `+${number(deltaWins)}`, 'wins')
+  ];
+  if (deltaLosses > 0) activityBits.push(queueActivityChip(t('losses'), `+${number(deltaLosses)}`, 'losses'));
+  activityBits.push(queueActivityChip(t('queueEloChange'), `${deltaElo > 0 ? '+' : ''}${number(deltaElo)}`, deltaElo >= 0 ? 'elo-up' : 'elo-down'));
+  return `<article class="queue-live-card" style="--queue-delay:${Math.min(index, 12) * 45}ms">
+    <div class="queue-card-rank"><span>#${number(entry.rank)}</span><small>${escapeHtml(entry.tier || 'Unranked')}</small></div>
+    <div class="queue-card-players">${(entry.players || []).map(queuePlayerLine).join('')}</div>
+    <div class="queue-card-stats">
+      <span><small>ELO</small><b>${number(entry.rating)}</b></span>
+      <span><small>${escapeHtml(t('peak'))}</small><b>${number(entry.best_rating)}</b></span>
+      <span><small>${escapeHtml(t('winRate'))}</small><b>${entry.games ? `${number(((entry.wins / entry.games) * 100).toFixed(1))}%` : '—'}</b></span>
+    </div>
+    <div class="queue-card-activity">${activityBits.join('')}</div>
+    <div class="queue-card-time"><i></i><span>${escapeHtml(queueRelativeTime(entry.last_activity_at))}</span></div>
+  </article>`;
+}
+
+function renderLiveQueue(data) {
+  state.queueData = data;
+  state.queueMode = data.mode || state.queueMode;
+  state.queueRegion = data.region || state.queueRegion;
+  if (els.queueActiveCount) els.queueActiveCount.textContent = number(data.active_count || 0, '0');
+  if (els.queueModeLabel) els.queueModeLabel.textContent = state.queueMode;
+  document.querySelectorAll('[data-live-queue-mode]').forEach((button) => button.classList.toggle('active', button.dataset.liveQueueMode === state.queueMode));
+  els.queueMenu?.querySelectorAll('[data-queue-mode]').forEach((button) => button.classList.toggle('selected', button.dataset.queueMode === state.queueMode));
+  if (els.queueScanMeta) {
+    const pieces = [`${number(data.tracked_count || 0)} ${t('queueTrackedTop')}`];
+    if (data.last_scan_at) pieces.push(`${t('queueLastScan')}: ${queueScanTime(data.last_scan_at)}`);
+    els.queueScanMeta.textContent = pieces.join(' · ');
+  }
+  if (els.queueStatus) {
+    els.queueStatus.hidden = false;
+    if (data.status === 'error' && !(data.players || []).length) {
+      els.queueStatus.className = 'queue-status error';
+      els.queueStatus.textContent = t('queueError');
+    } else {
+      els.queueStatus.className = 'queue-status live';
+      els.queueStatus.innerHTML = `<i></i><span>${escapeHtml(t('queueWatching'))} · ${escapeHtml(regionLabel(data.region))} · ${escapeHtml(data.mode)}</span>`;
+    }
+  }
+  const players = [...(data.players || [])].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0) || Number(a.rank || Infinity) - Number(b.rank || Infinity));
+  if (!players.length) {
+    const firstBaseline = data.last_scan_at && Number(data.tracked_count || 0) > 0;
+    els.queueList.innerHTML = `<div class="queue-live-empty"><span>${firstBaseline ? '⌁' : '…'}</span><strong>${escapeHtml(firstBaseline ? t('queueNoActivity') : t('queueWarming'))}</strong><small>${escapeHtml(t('queueDisclaimerLive'))}</small></div>`;
+  } else {
+    els.queueList.innerHTML = players.map(queueEntryCard).join('');
+    els.queueList.querySelectorAll('[data-queue-player-id]').forEach((button) => button.addEventListener('click', () => {
+      const id = button.dataset.queuePlayerId;
+      if (id) navigateToPlayer(id);
+    }));
+    activateImageFallbacks();
+  }
+}
+
+async function loadLiveQueue(options = {}) {
+  if (!isLiveQueuePage || !els.queueList) return;
+  const silent = Boolean(options.silent);
+  state.queueController?.abort();
+  state.queueController = new AbortController();
+  if (!silent) {
+    els.queueList.innerHTML = '<div class="queue-live-loading"><span></span><strong>Scanning top 500…</strong></div>';
+  }
+  const params = new URLSearchParams({ region: state.queueRegion, mode: state.queueMode });
+  try {
+    const response = await fetch(`/api/queue/activity?${params}`, { headers: { Accept: 'application/json' }, signal: state.queueController.signal });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || t('queueError'));
+    renderLiveQueue(data);
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+    if (!silent || !state.queueData) {
+      els.queueList.innerHTML = `<div class="queue-live-empty"><span>!</span><strong>${escapeHtml(t('queueError'))}</strong></div>`;
+    }
+  }
+}
+
+function setLiveQueueMode(mode, options = {}) {
+  if (!['1v1', '2v2', '3v3'].includes(mode)) return;
+  state.queueMode = mode;
+  if (els.queueModeLabel) els.queueModeLabel.textContent = mode;
+  document.querySelectorAll('[data-live-queue-mode]').forEach((button) => button.classList.toggle('active', button.dataset.liveQueueMode === mode));
+  const params = new URLSearchParams(location.search);
+  params.set('mode', mode);
+  params.set('region', state.queueRegion);
+  history.replaceState(null, '', `/queue?${params}`);
+  if (!options.skipLoad) loadLiveQueue();
+}
+
+function setupLiveQueuePage() {
+  if (!isLiveQueuePage) return;
+  if (els.queuePage) els.queuePage.hidden = false;
+  const params = new URLSearchParams(location.search);
+  state.queueMode = ['1v1', '2v2', '3v3'].includes(params.get('mode')) ? params.get('mode') : '1v1';
+  const regions = ['US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'];
+  state.queueRegion = regions.includes(params.get('region')) ? params.get('region') : 'ME';
+  if (els.queueRegion) {
+    els.queueRegion.value = state.queueRegion;
+    els.queueRegion._motionSync?.();
+  }
+  setLiveQueueMode(state.queueMode, { skipLoad: true });
+  loadLiveQueue();
+  window.clearInterval(state.queueTimer);
+  state.queueTimer = window.setInterval(() => loadLiveQueue({ silent: true }), 30_000);
+}
+
+
+async function arenaRequest(url, options = {}) {
+  const response = await fetch(url, {
+    ...options,
+    headers: { Accept: 'application/json', ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...(options.headers || {}) }
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || t('arenaAuthError'));
+  return data;
+}
+
+function setArenaFormStatus(element, message = '', type = 'info') {
+  if (!element) return;
+  element.hidden = !message;
+  element.className = `arena-form-status ${type}`;
+  element.textContent = message;
+}
+
+function setArenaAuthMode(mode) {
+  state.arenaAuthMode = mode === 'login' ? 'login' : 'register';
+  document.querySelectorAll('[data-arena-auth-mode]').forEach((button) => button.classList.toggle('active', button.dataset.arenaAuthMode === state.arenaAuthMode));
+  if (els.arenaAuthSubmit) els.arenaAuthSubmit.querySelector('span').textContent = state.arenaAuthMode === 'login' ? t('arenaSignIn') : t('arenaCreateAccount');
+  if (els.arenaPassword) els.arenaPassword.autocomplete = state.arenaAuthMode === 'login' ? 'current-password' : 'new-password';
+  setArenaFormStatus(els.arenaAuthStatus);
+}
+
+function renderArenaAccount() {
+  const loggedIn = Boolean(state.arenaUser);
+  if (els.arenaAuthPanel) els.arenaAuthPanel.hidden = loggedIn;
+  if (els.arenaComposer) els.arenaComposer.hidden = !loggedIn;
+  if (loggedIn) {
+    els.arenaCurrentUser.textContent = state.arenaUser.username;
+    els.arenaUserAvatar.textContent = initials(state.arenaUser.username).slice(0, 1);
+  }
+}
+
+function arenaDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString(state.language === 'ar' ? 'ar-SA' : 'en-US', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function arenaAvatar(name) {
+  return `<span class="arena-comment-avatar">${escapeHtml(initials(name).slice(0, 1))}</span>`;
+}
+
+function renderArenaComment(comment, replies = []) {
+  return `<article class="arena-comment">
+    ${arenaAvatar(comment.username)}
+    <div class="arena-comment-body">
+      <header><strong>${escapeHtml(comment.username)}</strong><time>${escapeHtml(arenaDate(comment.created_at))}</time></header>
+      <p>${escapeHtml(comment.text)}</p>
+      ${state.arenaUser ? `<button type="button" class="arena-reply-button" data-arena-reply-id="${escapeHtml(comment.id)}" data-arena-reply-user="${escapeHtml(comment.username)}">${escapeHtml(t('arenaReply'))}</button>` : ''}
+      ${replies.length ? `<div class="arena-replies">${replies.map((reply) => `<article class="arena-comment arena-comment-reply">${arenaAvatar(reply.username)}<div class="arena-comment-body"><header><strong>${escapeHtml(reply.username)}</strong><time>${escapeHtml(arenaDate(reply.created_at))}</time></header><p>${escapeHtml(reply.text)}</p></div></article>`).join('')}</div>` : ''}
+    </div>
+  </article>`;
+}
+
+function renderArenaPost(post, index) {
+  const comments = Array.isArray(post.comments) ? post.comments : [];
+  const parents = comments.filter((comment) => !comment.parent_id);
+  const replyMap = new Map();
+  for (const comment of comments.filter((item) => item.parent_id)) {
+    const list = replyMap.get(comment.parent_id) || [];
+    list.push(comment);
+    replyMap.set(comment.parent_id, list);
+  }
+  const commentForm = state.arenaUser
+    ? `<form class="arena-comment-form" data-arena-post-id="${escapeHtml(post.id)}"><div class="arena-replying" hidden><span></span><button type="button" data-arena-cancel-reply>×</button></div><input type="hidden" name="parent_id"><input name="text" maxlength="500" autocomplete="off" placeholder="${escapeHtml(t('arenaWriteComment'))}" required><button type="submit">${escapeHtml(t('arenaSend'))}</button></form>`
+    : `<p class="arena-signin-note">${escapeHtml(t('arenaSignInToComment'))}</p>`;
+  return `<article class="arena-post panel" style="--arena-delay:${Math.min(index, 10) * 55}ms">
+    <header class="arena-post-header">${arenaAvatar(post.username)}<div><strong>${escapeHtml(post.username)}</strong><time>${escapeHtml(arenaDate(post.created_at))}</time></div></header>
+    <div class="arena-post-image"><img src="${escapeHtml(post.image_url)}" alt="Screenshot shared by ${escapeHtml(post.username)}" loading="lazy"></div>
+    ${post.caption ? `<p class="arena-post-caption">${escapeHtml(post.caption)}</p>` : ''}
+    <section class="arena-comments"><header><strong>${escapeHtml(t('arenaComments'))}</strong><span>${number(comments.length, '0')}</span></header><div class="arena-comment-list">${parents.map((comment) => renderArenaComment(comment, replyMap.get(comment.id) || [])).join('')}</div>${commentForm}</section>
+  </article>`;
+}
+
+function renderArenaPosts() {
+  if (!els.arenaFeed) return;
+  if (!state.arenaPosts.length) {
+    els.arenaFeed.innerHTML = `<div class="arena-empty panel"><span>▧</span><strong>${escapeHtml(t('arenaNoPosts'))}</strong></div>`;
+    return;
+  }
+  els.arenaFeed.innerHTML = state.arenaPosts.map(renderArenaPost).join('');
+}
+
+async function loadArenaPosts(options = {}) {
+  if (!els.arenaFeed) return;
+  if (!options.silent) els.arenaFeed.innerHTML = `<div class="arena-feed-loading"><span></span><strong>${escapeHtml(t('arenaLoading'))}</strong></div>`;
+  try {
+    const data = await arenaRequest('/api/arena/posts');
+    state.arenaPosts = data.posts || [];
+    renderArenaPosts();
+  } catch (error) {
+    els.arenaFeed.innerHTML = `<div class="arena-empty panel"><span>!</span><strong>${escapeHtml(error.message)}</strong></div>`;
+  }
+}
+
+async function loadArenaUser() {
+  try {
+    const data = await arenaRequest('/api/arena/me');
+    state.arenaUser = data.user || null;
+  } catch {
+    state.arenaUser = null;
+  }
+  renderArenaAccount();
+  renderArenaPosts();
+}
+
+function resetArenaImage() {
+  state.arenaImageData = null;
+  if (els.arenaImageInput) els.arenaImageInput.value = '';
+  if (els.arenaImagePreview) { els.arenaImagePreview.hidden = true; els.arenaImagePreview.removeAttribute('src'); }
+  if (els.arenaUploadPrompt) els.arenaUploadPrompt.hidden = false;
+}
+
+function readArenaImage(file) {
+  return new Promise((resolve, reject) => {
+    if (!file || !['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) return reject(new Error(t('arenaChooseImageFirst')));
+    if (file.size > 5 * 1024 * 1024) return reject(new Error('Screenshot must be smaller than 5 MB.'));
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error(t('arenaPostError')));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function submitArenaAuth(event) {
+  event.preventDefault();
+  const button = els.arenaAuthSubmit;
+  const username = els.arenaUsername.value.trim();
+  const password = els.arenaPassword.value;
+  try {
+    button.disabled = true;
+    setArenaFormStatus(els.arenaAuthStatus);
+    const endpoint = state.arenaAuthMode === 'login' ? '/api/arena/login' : '/api/arena/register';
+    const data = await arenaRequest(endpoint, { method: 'POST', body: JSON.stringify({ username, password }) });
+    state.arenaUser = data.user;
+    els.arenaAuthForm.reset();
+    renderArenaAccount();
+    setArenaFormStatus(els.arenaPostStatus, state.arenaAuthMode === 'login' ? t('arenaSignedIn') : t('arenaAccountReady'), 'success');
+    renderArenaPosts();
+  } catch (error) {
+    setArenaFormStatus(els.arenaAuthStatus, error.message, 'error');
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function submitArenaPost(event) {
+  event.preventDefault();
+  if (!state.arenaImageData) return setArenaFormStatus(els.arenaPostStatus, t('arenaChooseImageFirst'), 'error');
+  try {
+    els.arenaPostSubmit.disabled = true;
+    setArenaFormStatus(els.arenaPostStatus);
+    const data = await arenaRequest('/api/arena/posts', { method: 'POST', body: JSON.stringify({ image_data: state.arenaImageData, caption: els.arenaCaption.value.trim() }) });
+    state.arenaPosts.unshift(data.post);
+    els.arenaCaption.value = '';
+    resetArenaImage();
+    setArenaFormStatus(els.arenaPostStatus, t('arenaPosted'), 'success');
+    renderArenaPosts();
+    els.arenaFeed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (error) {
+    setArenaFormStatus(els.arenaPostStatus, error.message || t('arenaPostError'), 'error');
+  } finally {
+    els.arenaPostSubmit.disabled = false;
+  }
+}
+
+async function submitArenaComment(form) {
+  const postId = form.dataset.arenaPostId;
+  const textInput = form.elements.text;
+  const parentInput = form.elements.parent_id;
+  const submit = form.querySelector('button[type="submit"]');
+  try {
+    submit.disabled = true;
+    const data = await arenaRequest(`/api/arena/posts/${encodeURIComponent(postId)}/comments`, { method: 'POST', body: JSON.stringify({ text: textInput.value.trim(), parent_id: parentInput.value || null }) });
+    const index = state.arenaPosts.findIndex((post) => post.id === postId);
+    if (index >= 0) state.arenaPosts[index] = data.post;
+    renderArenaPosts();
+  } catch (error) {
+    textInput.setCustomValidity(error.message);
+    textInput.reportValidity();
+    window.setTimeout(() => textInput.setCustomValidity(''), 1500);
+  } finally {
+    submit.disabled = false;
+  }
+}
+
+function setupArenaPage() {
+  if (!isArenaPage) return;
+  if (els.arenaPage) els.arenaPage.hidden = false;
+  setArenaAuthMode('register');
+  loadArenaUser();
+  loadArenaPosts();
+  window.setInterval(() => loadArenaPosts({ silent: true }), 45_000);
+}
+
+
+
+
+function levenshtein(a = '', b = '') {
+  const left = normalize(a);
+  const right = normalize(b);
+  const row = Array.from({ length: right.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= left.length; i += 1) {
+    let previous = row[0];
+    row[0] = i;
+    for (let j = 1; j <= right.length; j += 1) {
+      const temp = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, previous + (left[i - 1] === right[j - 1] ? 0 : 1));
+      previous = temp;
+    }
+  }
+  return row[right.length];
+}
+
+function suggestionScore(name, query) {
+  const candidate = normalize(name);
+  const needle = normalize(query);
+  if (candidate === needle) return 1000;
+  if (candidate.startsWith(needle)) return 850 - (candidate.length - needle.length);
+  if (candidate.includes(needle)) return 700 - candidate.indexOf(needle);
+  return 500 - (levenshtein(candidate, needle) * 35) - Math.abs(candidate.length - needle.length) * 4;
+}
+
+function hideSuggestions() {
+  if (!els.suggestions) return;
+  els.suggestions.hidden = true;
+  els.name?.setAttribute('aria-expanded', 'false');
+  state.suggestionIndex = -1;
+}
+
+function selectSuggestion(index) {
+  const item = state.suggestionItems[index];
+  if (!item) return;
+  hideSuggestions();
+  navigateToPlayer(item.id, item.seed || state.playerSeeds.get(Number(item.id)));
+}
+
+function renderSuggestions(rankings = [], query = '') {
+  if (!els.suggestions) return;
+  const seen = new Set();
+  const items = [];
+  for (const ranking of rankings) {
+    for (const player of ranking.players || []) {
+      const id = Number(player.id);
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      const matchedAliases = player.matched_aliases || [];
+      const seed = makePlayerSeedPayload(ranking, player);
+      state.playerSeeds.set(id, seed);
+      items.push({
+        id,
+        name: player.username || 'Unknown',
+        region: ranking.region || '—',
+        elo: ranking.rating,
+        rank: ranking.rank,
+        main_legend: player.main_legend || null,
+        matched_alias: matchedAliases[0] || '',
+        seed,
+        score: Math.max(suggestionScore(player.username || '', query), ...matchedAliases.map((name) => suggestionScore(name, query)), 0)
+      });
+    }
+  }
+  state.suggestionItems = items.sort((a, b) => b.score - a.score || Number(b.elo || 0) - Number(a.elo || 0)).slice(0, 7);
+  state.suggestionIndex = -1;
+  if (!state.suggestionItems.length) {
+    els.suggestions.innerHTML = `<div class="suggestion-empty">${escapeHtml(t('noSearchResults'))}</div>`;
+  } else {
+    els.suggestions.innerHTML = state.suggestionItems.map((item, index) => `<button type="button" class="search-suggestion" role="option" data-suggestion-index="${index}">
+      ${portraitMarkup(item.main_legend || { name: item.name }, 'suggestion-portrait')}
+      <span class="suggestion-copy"><strong>${escapeHtml(item.name)}</strong><small>${item.matched_alias && normalize(item.matched_alias) !== normalize(item.name) ? `${escapeHtml(t('oldNameMatch'))}: ${escapeHtml(item.matched_alias)}` : `${escapeHtml(item.main_legend?.name || t('unknownLegend'))} · ${escapeHtml(item.region)}`}</small></span>
+      <span class="suggestion-meta"><b>${number(item.elo)}</b><small>${Number.isFinite(Number(item.elo)) ? 'ELO' : 'PROFILE'}</small></span>
+    </button>`).join('');
+  }
+  els.suggestions.hidden = false;
+  els.name?.setAttribute('aria-expanded', 'true');
+  state.suggestionItems.slice(0, 3).forEach((item) => prefetchPlayerProfile(item.id));
+  activateImageFallbacks();
+}
+
+async function loadSearchSuggestions() {
+  const query = els.name?.value.trim() || '';
+  if (query.length < 2) { hideSuggestions(); return; }
+  state.suggestionController?.abort();
+  state.suggestionController = new AbortController();
+  const params = new URLSearchParams({ q: query, region: els.region?.value || 'ALL', mode: els.mode?.value || '1v1' });
+  try {
+    const response = await fetch(`/api/suggestions?${params}`, { headers: { Accept: 'application/json' }, signal: state.suggestionController.signal });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Search failed');
+    if (query !== (els.name?.value.trim() || '')) return;
+    renderSuggestions(data.rankings || [], query);
+  } catch (error) {
+    if (error.name !== 'AbortError') hideSuggestions();
+  }
+}
+
+function scheduleSuggestions() {
+  window.clearTimeout(state.suggestionTimer);
+  state.suggestionTimer = window.setTimeout(loadSearchSuggestions, 260);
+}
+
+function updateSuggestionHighlight() {
+  els.suggestions?.querySelectorAll('.search-suggestion').forEach((item, index) => item.classList.toggle('active', index === state.suggestionIndex));
+}
+
+function enhanceSelect(select) {
+  if (!select || select.dataset.enhancedSelect === 'true') return;
+  select.dataset.enhancedSelect = 'true';
+  const wrapper = document.createElement('div');
+  wrapper.className = 'motion-select';
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'motion-select-trigger';
+  trigger.setAttribute('aria-haspopup', 'listbox');
+  trigger.setAttribute('aria-expanded', 'false');
+  const menu = document.createElement('div');
+  menu.className = 'motion-select-menu';
+  menu.setAttribute('role', 'listbox');
+  select.classList.add('motion-select-native');
+  select.insertAdjacentElement('afterend', wrapper);
+  wrapper.append(trigger, menu);
+
+  const sync = () => {
+    const selected = select.options[select.selectedIndex];
+    trigger.innerHTML = `<span>${escapeHtml(selected?.textContent || '')}</span><b>⌄</b>`;
+    menu.querySelectorAll('button').forEach((button) => button.classList.toggle('selected', button.dataset.value === select.value));
+  };
+
+  [...select.options].forEach((option, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.value = option.value;
+    button.setAttribute('role', 'option');
+    button.style.setProperty('--option-index', String(index));
+    button.innerHTML = `<span>${escapeHtml(option.textContent)}</span><b>✓</b>`;
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      select.value = option.value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      wrapper.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
+      sync();
+      wrapper.classList.remove('selection-pop');
+      requestAnimationFrame(() => wrapper.classList.add('selection-pop'));
+    });
+    menu.append(button);
+  });
+
+  trigger.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    document.querySelectorAll('.motion-select.open').forEach((item) => { if (item !== wrapper) item.classList.remove('open'); });
+    const opening = !wrapper.classList.contains('open');
+    wrapper.classList.toggle('open', opening);
+    trigger.setAttribute('aria-expanded', String(opening));
+  });
+  select._motionSync = sync;
+  select.addEventListener('change', sync);
+  sync();
+}
+
+function setupMotionSelects() {
+  [els.region, els.mode, els.leaderboardRegion, els.leaderboardMode, els.esportsRegion, els.esportsMode, els.queueRegion].forEach(enhanceSelect);
+}
+
+const revealSelector = [
+  '.section-heading',
+  '.results-grid',
+  '.profile-hero',
+  '.account-showcase',
+  '.stats-grid',
+  '.profile-layout > .panel',
+  '.lifetime-summary-panel',
+  '.lifetime-heading',
+  '.legend-tools',
+  '.lifetime-legend-card',
+  '.teammates-panel .panel-heading',
+  '.teammates-note',
+  '.teammate-card',
+  '.leaderboard-list',
+  '.esports-grid > .panel',
+  '.champions-panel',
+  '#about > *'
+].join(',');
+
+let revealObserver;
+let lastScrollY = window.scrollY;
+
+function registerScrollReveal(root = document) {
+  if (!revealObserver) return;
+  const items = [];
+  if (root instanceof Element && root.matches(revealSelector)) items.push(root);
+  if (root.querySelectorAll) items.push(...root.querySelectorAll(revealSelector));
+  items.forEach((item, index) => {
+    if (item.dataset.scrollRevealReady === 'true') return;
+    item.dataset.scrollRevealReady = 'true';
+    item.classList.add('scroll-reveal');
+    item.style.setProperty('--reveal-delay', `${Math.min(index * 35, 180)}ms`);
+    revealObserver.observe(item);
+  });
+}
+
+function setupScrollReveal() {
+  if (!('IntersectionObserver' in window)) return;
+  revealObserver = new IntersectionObserver((entries) => {
+    const scrollingDown = window.scrollY >= lastScrollY;
+    lastScrollY = window.scrollY;
+    entries.forEach((entry) => {
+      const item = entry.target;
+      if (entry.isIntersecting) {
+        item.classList.toggle('reveal-from-top', !scrollingDown);
+        item.classList.toggle('reveal-from-bottom', scrollingDown);
+        requestAnimationFrame(() => item.classList.add('is-visible'));
+      } else {
+        item.classList.remove('is-visible');
+      }
+    });
+  }, { threshold: 0.025, rootMargin: '0px 0px -5% 0px' });
+
+  registerScrollReveal(document);
+  const mutationObserver = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === 1) registerScrollReveal(node);
+      });
+    }
+  });
+  mutationObserver.observe(document.querySelector('main') || document.body, { childList: true, subtree: true });
+}
+
+els.powerBody.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-esports-player]');
+  if (button) openEsportsCareer(button.dataset.esportsPlayer, button.dataset.esportsRegion || '');
+});
+document.querySelectorAll('[data-career-close]').forEach((button) => button.addEventListener('click', closeCareerModal));
+document.querySelectorAll('[data-career-filter]').forEach((button) => button.addEventListener('click', () => {
+  state.careerFilter = button.dataset.careerFilter;
+  document.querySelectorAll('[data-career-filter]').forEach((item) => item.classList.toggle('active', item === button));
+  if (state.esportsCareer) renderCareer(state.esportsCareer);
+}));
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    if (!els.careerModal.hidden) closeCareerModal();
+    closeRankedMenu();
+    closeQueueMenu();
+  }
+});
+
+els.rankedToggle?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  toggleRankedMenu();
+});
+els.rankedMenu?.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-ranked-mode]');
+  if (button) chooseRankedMode(button.dataset.rankedMode);
+});
+els.queueToggle?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  toggleQueueMenu();
+});
+els.queueMenu?.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-queue-mode]');
+  if (button) chooseQueueMode(button.dataset.queueMode);
+});
+document.querySelectorAll('[data-live-queue-mode]').forEach((button) => button.addEventListener('click', () => setLiveQueueMode(button.dataset.liveQueueMode)));
+els.queueRegion?.addEventListener('change', () => {
+  state.queueRegion = els.queueRegion.value;
+  const params = new URLSearchParams(location.search);
+  params.set('mode', state.queueMode);
+  params.set('region', state.queueRegion);
+  history.replaceState(null, '', `/queue?${params}`);
+  loadLiveQueue();
+});
+els.queueRefresh?.addEventListener('click', () => loadLiveQueue());
+document.addEventListener('click', (event) => {
+  if (els.rankedNav && !els.rankedNav.contains(event.target)) closeRankedMenu();
+  if (els.queueNav && !els.queueNav.contains(event.target)) closeQueueMenu();
+  if (!event.target.closest('.main-field')) hideSuggestions();
+  document.querySelectorAll('.motion-select.open').forEach((item) => { if (!item.contains(event.target)) item.classList.remove('open'); });
+});
+
+els.form.addEventListener('submit', (event) => { hideSuggestions(); searchPlayer(event); });
+els.name?.addEventListener('input', scheduleSuggestions);
+els.name?.addEventListener('focus', () => { if ((els.name.value || '').trim().length >= 2) scheduleSuggestions(); });
+els.region?.addEventListener('change', () => { if ((els.name?.value || '').trim().length >= 2) scheduleSuggestions(); });
+els.mode?.addEventListener('change', () => { if ((els.name?.value || '').trim().length >= 2) scheduleSuggestions(); });
+els.name?.addEventListener('keydown', (event) => {
+  if (els.suggestions?.hidden || !state.suggestionItems.length) return;
+  if (event.key === 'ArrowDown') { event.preventDefault(); state.suggestionIndex = Math.min(state.suggestionIndex + 1, state.suggestionItems.length - 1); updateSuggestionHighlight(); }
+  else if (event.key === 'ArrowUp') { event.preventDefault(); state.suggestionIndex = Math.max(state.suggestionIndex - 1, 0); updateSuggestionHighlight(); }
+  else if (event.key === 'Enter' && state.suggestionIndex >= 0) { event.preventDefault(); selectSuggestion(state.suggestionIndex); }
+  else if (event.key === 'Escape') hideSuggestions();
+});
+els.suggestions?.addEventListener('click', (event) => { const button = event.target.closest('[data-suggestion-index]'); if (button) { event.preventDefault(); event.stopPropagation(); selectSuggestion(Number(button.dataset.suggestionIndex)); } });
+els.refreshLeaderboard.addEventListener('click', loadLeaderboard);
+els.leaderboardSearch?.addEventListener('input', scheduleLeaderboardSearch);
+els.leaderboardRegion.addEventListener('change', loadLeaderboard);
+els.leaderboardMode.addEventListener('change', loadLeaderboard);
+els.esportsRegion.addEventListener('change', loadEsports);
+els.esportsMode.addEventListener('change', loadEsports);
+
+els.refreshPlayerStats?.addEventListener('click', async () => {
+  const id = state.currentPlayer?.player?.brawlhalla_id;
+  if (!id || els.refreshPlayerStats.disabled) return;
+  els.refreshPlayerStats.disabled = true;
+  try { await loadPlayer(id, { refresh: true, shouldScroll: false }); }
+  finally { els.refreshPlayerStats.disabled = false; }
+});
+
+els.languageToggle.addEventListener('click', () => { state.language = state.language === 'en' ? 'ar' : 'en'; applyLanguage(); });
+els.legendStatsSearch?.addEventListener('input', renderLifetimeLegends);
+els.legendStatsFilter?.addEventListener('change', renderLifetimeLegends);
+els.legendStatsSort?.addEventListener('change', renderLifetimeLegends);
+
+document.querySelectorAll('[data-arena-auth-mode]').forEach((button) => button.addEventListener('click', () => setArenaAuthMode(button.dataset.arenaAuthMode)));
+els.arenaAuthForm?.addEventListener('submit', submitArenaAuth);
+els.arenaLogout?.addEventListener('click', async () => { await arenaRequest('/api/arena/logout', { method: 'POST' }).catch(() => null); state.arenaUser = null; renderArenaAccount(); renderArenaPosts(); });
+els.arenaImageInput?.addEventListener('change', async () => {
+  try {
+    state.arenaImageData = await readArenaImage(els.arenaImageInput.files?.[0]);
+    els.arenaImagePreview.src = state.arenaImageData;
+    els.arenaImagePreview.hidden = false;
+    els.arenaUploadPrompt.hidden = true;
+    setArenaFormStatus(els.arenaPostStatus);
+  } catch (error) {
+    resetArenaImage();
+    setArenaFormStatus(els.arenaPostStatus, error.message, 'error');
+  }
+});
+els.arenaPostForm?.addEventListener('submit', submitArenaPost);
+els.arenaRefresh?.addEventListener('click', () => loadArenaPosts());
+els.arenaFeed?.addEventListener('click', (event) => {
+  const reply = event.target.closest('[data-arena-reply-id]');
+  if (reply) {
+    const post = reply.closest('.arena-post');
+    const form = post?.querySelector('.arena-comment-form');
+    if (!form) return;
+    form.elements.parent_id.value = reply.dataset.arenaReplyId;
+    const banner = form.querySelector('.arena-replying');
+    banner.hidden = false;
+    banner.querySelector('span').textContent = `${t('arenaReplyingTo')} @${reply.dataset.arenaReplyUser}`;
+    form.elements.text.focus();
+  }
+  if (event.target.closest('[data-arena-cancel-reply]')) {
+    const form = event.target.closest('.arena-comment-form');
+    form.elements.parent_id.value = '';
+    form.querySelector('.arena-replying').hidden = true;
+  }
+});
+els.arenaFeed?.addEventListener('submit', (event) => {
+  const form = event.target.closest('.arena-comment-form');
+  if (!form) return;
+  event.preventDefault();
+  submitArenaComment(form);
+});
+
+if (els.rankedModeLabel) els.rankedModeLabel.textContent = els.mode?.value || '1v1';
+setupMotionSelects();
+setupScrollReveal();
+els.rankedMenu?.querySelectorAll('[data-ranked-mode]').forEach((button) => button.classList.toggle('selected', button.dataset.rankedMode === (els.mode?.value || '1v1')));
+if (isLiveQueuePage) setupLiveQueuePage();
+if (isArenaPage) setupArenaPage();
+applyLanguage();
+requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('page-entering')));
+const pageParams = new URLSearchParams(location.search);
+const playerFromUrl = pageParams.get('player');
+const rankedFromUrl = pageParams.get('ranked');
+if (standalonePlayerId) loadPlayer(standalonePlayerId);
+else if (playerFromUrl && /^\d+$/.test(playerFromUrl)) navigateToPlayer(playerFromUrl);
+else if (!isLiveQueuePage && !isArenaPage && ['1v1', '2v2', '3v3'].includes(rankedFromUrl)) window.setTimeout(() => chooseRankedMode(rankedFromUrl), 180);

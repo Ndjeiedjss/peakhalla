@@ -1,0 +1,814 @@
+{
+  "updated_at": "2026-06-27",
+  "source": "Official Brawlhalla Esports Power Rankings",
+  "source_url": "https://www.brawlhalla.com/rankings/esports",
+  "rankings": {
+    "NA:1v1": [
+      {
+        "rank": 1,
+        "name": "Marckiem00",
+        "earnings": 62525,
+        "top8": 19,
+        "top32": 22,
+        "gold": 9,
+        "silver": 6,
+        "bronze": 2
+      },
+      {
+        "rank": 2,
+        "name": "LGN | BBBalloonBoy",
+        "earnings": 58215,
+        "top8": 19,
+        "top32": 27,
+        "gold": 1,
+        "silver": 6,
+        "bronze": 5
+      },
+      {
+        "rank": 3,
+        "name": "flowerVS",
+        "earnings": 10560,
+        "top8": 7,
+        "top32": 16,
+        "gold": 0,
+        "silver": 1,
+        "bronze": 1
+      },
+      {
+        "rank": 4,
+        "name": "Dragy!",
+        "earnings": 3260,
+        "top8": 2,
+        "top32": 8,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0
+      },
+      {
+        "rank": 5,
+        "name": "TNX | Bunny",
+        "earnings": 9325,
+        "top8": 7,
+        "top32": 21,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0
+      },
+      {
+        "rank": 6,
+        "name": "Moni-",
+        "earnings": 10010,
+        "top8": 6,
+        "top32": 18,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0
+      },
+      {
+        "rank": 7,
+        "name": "megD",
+        "earnings": 61200,
+        "top8": 16,
+        "top32": 47,
+        "gold": 0,
+        "silver": 2,
+        "bronze": 5
+      },
+      {
+        "rank": 8,
+        "name": "Pink | Guichabou",
+        "earnings": 15520,
+        "top8": 13,
+        "top32": 27,
+        "gold": 1,
+        "silver": 1,
+        "bronze": 1
+      },
+      {
+        "rank": 10,
+        "name": "p2 | shade",
+        "earnings": 2070,
+        "top8": 0,
+        "top32": 11,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0
+      },
+      {
+        "rank": 11,
+        "name": "Anon Alex",
+        "earnings": 12675,
+        "top8": 7,
+        "top32": 28,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0
+      }
+    ],
+    "EU:1v1": [
+      {
+        "rank": 1,
+        "name": "Zivai",
+        "earnings": 208458.33,
+        "top8": 34,
+        "top32": 40,
+        "gold": 20,
+        "silver": 5,
+        "bronze": 3
+      },
+      {
+        "rank": 2,
+        "name": "Ahmet_",
+        "earnings": 15650,
+        "top8": 6,
+        "top32": 11,
+        "gold": 1,
+        "silver": 2,
+        "bronze": 1
+      },
+      {
+        "rank": 3,
+        "name": "acno?",
+        "earnings": 187615,
+        "top8": 40,
+        "top32": 57,
+        "gold": 13,
+        "silver": 8,
+        "bronze": 4
+      },
+      {
+        "rank": 4,
+        "name": "Mounir",
+        "earnings": 47825,
+        "top8": 19,
+        "top32": 31,
+        "gold": 1,
+        "silver": 3,
+        "bronze": 6
+      },
+      {
+        "rank": 5,
+        "name": "Pink | Shira",
+        "earnings": 1550,
+        "top8": 2,
+        "top32": 5,
+        "gold": 0,
+        "silver": 1,
+        "bronze": 0
+      },
+      {
+        "rank": 6,
+        "name": "Jakeyy",
+        "earnings": 13400,
+        "top8": 3,
+        "top32": 14,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 1
+      },
+      {
+        "rank": 7,
+        "name": "borgirlol",
+        "earnings": 1100,
+        "top8": 2,
+        "top32": 4,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 1
+      },
+      {
+        "rank": 8,
+        "name": "Skeldra",
+        "earnings": 10650,
+        "top8": 8,
+        "top32": 19,
+        "gold": 0,
+        "silver": 1,
+        "bronze": 2
+      },
+      {
+        "rank": 9,
+        "name": "Deltabh",
+        "earnings": 26666.67,
+        "top8": 8,
+        "top32": 26,
+        "gold": 1,
+        "silver": 1,
+        "bronze": 0
+      },
+      {
+        "rank": 10,
+        "name": "xJcoolJ",
+        "earnings": 14625,
+        "top8": 6,
+        "top32": 23,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0
+      }
+    ],
+    "SA:1v1": [
+      {
+        "rank": 1,
+        "name": "yüz",
+        "earnings": 125771.67,
+        "top8": 32,
+        "top32": 44,
+        "gold": 12,
+        "silver": 4,
+        "bronze": 3
+      },
+      {
+        "rank": 2,
+        "name": "V3M_T4NQUIL0",
+        "earnings": 37000,
+        "top8": 17,
+        "top32": 30,
+        "gold": 1,
+        "silver": 0,
+        "bronze": 0
+      },
+      {
+        "rank": 3,
+        "name": "whoiskyna",
+        "earnings": 155710,
+        "top8": 37,
+        "top32": 46,
+        "gold": 13,
+        "silver": 8,
+        "bronze": 4
+      },
+      {
+        "rank": 4,
+        "name": "SiB | Wess",
+        "earnings": 127306.67,
+        "top8": 49,
+        "top32": 58,
+        "gold": 5,
+        "silver": 13,
+        "bronze": 10
+      },
+      {
+        "rank": 5,
+        "name": "LGN | sea",
+        "earnings": 4091.67,
+        "top8": 6,
+        "top32": 17,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 3
+      },
+      {
+        "rank": 6,
+        "name": "lopesbrawlhalla",
+        "earnings": 32305,
+        "top8": 24,
+        "top32": 33,
+        "gold": 2,
+        "silver": 4,
+        "bronze": 5
+      },
+      {
+        "rank": 7,
+        "name": "ianbh_",
+        "earnings": 6000,
+        "top8": 4,
+        "top32": 12,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0
+      },
+      {
+        "rank": 8,
+        "name": "powerbh",
+        "earnings": 59688.34,
+        "top8": 25,
+        "top32": 43,
+        "gold": 3,
+        "silver": 3,
+        "bronze": 4
+      },
+      {
+        "rank": 9,
+        "name": "DMT | lores",
+        "earnings": 96200,
+        "top8": 27,
+        "top32": 39,
+        "gold": 3,
+        "silver": 4,
+        "bronze": 2
+      },
+      {
+        "rank": 10,
+        "name": "Legion | M4nji",
+        "earnings": 966.67,
+        "top8": 2,
+        "top32": 15,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0
+      }
+    ],
+    "SEA:1v1": [
+      {
+        "rank": 1,
+        "name": "keiththepoopoo",
+        "earnings": 15505,
+        "top8": 18,
+        "top32": 28,
+        "gold": 7,
+        "silver": 5,
+        "bronze": 2
+      },
+      {
+        "rank": 2,
+        "name": "seijaru",
+        "earnings": 1240,
+        "top8": 3,
+        "top32": 3,
+        "gold": 0,
+        "silver": 1,
+        "bronze": 0
+      },
+      {
+        "rank": 3,
+        "name": "SireXDD",
+        "earnings": 17230,
+        "top8": 21,
+        "top32": 33,
+        "gold": 1,
+        "silver": 5,
+        "bronze": 3
+      },
+      {
+        "rank": 4,
+        "name": "TigerBrawlhalla",
+        "earnings": 35465,
+        "top8": 43,
+        "top32": 47,
+        "gold": 27,
+        "silver": 3,
+        "bronze": 1
+      },
+      {
+        "rank": 5,
+        "name": "sphynxs",
+        "earnings": 6625,
+        "top8": 21,
+        "top32": 30,
+        "gold": 0,
+        "silver": 3,
+        "bronze": 6
+      },
+      {
+        "rank": 6,
+        "name": "_Penny_",
+        "earnings": 200,
+        "top8": 1,
+        "top32": 4,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0
+      },
+      {
+        "rank": 7,
+        "name": "plumthegreat",
+        "earnings": 4410,
+        "top8": 9,
+        "top32": 11,
+        "gold": 0,
+        "silver": 1,
+        "bronze": 2
+      },
+      {
+        "rank": 8,
+        "name": "hrzz",
+        "earnings": 14400,
+        "top8": 12,
+        "top32": 20,
+        "gold": 1,
+        "silver": 2,
+        "bronze": 3
+      },
+      {
+        "rank": 9,
+        "name": "malovent7",
+        "earnings": 60,
+        "top8": 0,
+        "top32": 4,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0
+      },
+      {
+        "rank": 10,
+        "name": "elyja0502",
+        "earnings": 160,
+        "top8": 1,
+        "top32": 1,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0
+      }
+    ],
+    "NA:2v2": [
+      {
+        "rank": 1,
+        "name": "hideawaybh",
+        "earnings": 27850,
+        "top8": 15,
+        "top32": 16,
+        "gold": 5,
+        "silver": 5,
+        "bronze": 3
+      },
+      {
+        "rank": 1,
+        "name": "Pink | Zen",
+        "earnings": 60933.33,
+        "top8": 24,
+        "top32": 31,
+        "gold": 7,
+        "silver": 5,
+        "bronze": 6
+      },
+      {
+        "rank": 3,
+        "name": "LGN | BBBalloonBoy",
+        "earnings": 58215,
+        "top8": 13,
+        "top32": 26,
+        "gold": 4,
+        "silver": 3,
+        "bronze": 4
+      },
+      {
+        "rank": 4,
+        "name": "Moni-",
+        "earnings": 10010,
+        "top8": 6,
+        "top32": 16,
+        "gold": 1,
+        "silver": 0,
+        "bronze": 1
+      },
+      {
+        "rank": 5,
+        "name": "lolryze",
+        "earnings": 7350,
+        "top8": 8,
+        "top32": 11,
+        "gold": 0,
+        "silver": 4,
+        "bronze": 0
+      },
+      {
+        "rank": 6,
+        "name": "Marckiem00",
+        "earnings": 62525,
+        "top8": 10,
+        "top32": 15,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 1
+      },
+      {
+        "rank": 7,
+        "name": "sole.",
+        "earnings": 4900,
+        "top8": 7,
+        "top32": 12,
+        "gold": 0,
+        "silver": 4,
+        "bronze": 0
+      },
+      {
+        "rank": 8,
+        "name": "flowerVS",
+        "earnings": 10560,
+        "top8": 5,
+        "top32": 15,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 0
+      },
+      {
+        "rank": 9,
+        "name": "megD",
+        "earnings": 61200,
+        "top8": 14,
+        "top32": 42,
+        "gold": 0,
+        "silver": 1,
+        "bronze": 1
+      },
+      {
+        "rank": 10,
+        "name": "Raydish",
+        "earnings": 82475,
+        "top8": 15,
+        "top32": 35,
+        "gold": 0,
+        "silver": 2,
+        "bronze": 4
+      }
+    ],
+    "EU:2v2": [
+      {
+        "rank": 1,
+        "name": "Ahmet_",
+        "earnings": 15650,
+        "top8": 5,
+        "top32": 8,
+        "gold": 2,
+        "silver": 0,
+        "bronze": 1
+      },
+      {
+        "rank": 2,
+        "name": "Mounir",
+        "earnings": 47825,
+        "top8": 17,
+        "top32": 26,
+        "gold": 3,
+        "silver": 4,
+        "bronze": 0
+      },
+      {
+        "rank": 3,
+        "name": "Zivai",
+        "earnings": 208458.33,
+        "top8": 27,
+        "top32": 29,
+        "gold": 7,
+        "silver": 7,
+        "bronze": 5
+      },
+      {
+        "rank": 4,
+        "name": "Taya.",
+        "earnings": 14400,
+        "top8": 11,
+        "top32": 13,
+        "gold": 4,
+        "silver": 1,
+        "bronze": 1
+      },
+      {
+        "rank": 5,
+        "name": "Blaze",
+        "earnings": 119107.83,
+        "top8": 50,
+        "top32": 59,
+        "gold": 23,
+        "silver": 12,
+        "bronze": 5
+      },
+      {
+        "rank": 6,
+        "name": "acno?",
+        "earnings": 187615,
+        "top8": 46,
+        "top32": 51,
+        "gold": 23,
+        "silver": 10,
+        "bronze": 6
+      },
+      {
+        "rank": 7,
+        "name": "RayzoX",
+        "earnings": 5275,
+        "top8": 9,
+        "top32": 21,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 2
+      },
+      {
+        "rank": 8,
+        "name": "kimonobh",
+        "earnings": 1550,
+        "top8": 4,
+        "top32": 20,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 2
+      },
+      {
+        "rank": 9,
+        "name": "ADIO | Dark",
+        "earnings": 850,
+        "top8": 2,
+        "top32": 5,
+        "gold": 0,
+        "silver": 0,
+        "bronze": 1
+      },
+      {
+        "rank": 10,
+        "name": "Jakeyy",
+        "earnings": 13400,
+        "top8": 12,
+        "top32": 16,
+        "gold": 2,
+        "silver": 2,
+        "bronze": 2
+      }
+    ]
+  },
+  "tournament_series": [
+    {
+      "name": "Brawlhalla World Championship Expo 2026",
+      "type": "World championship",
+      "note": "The biggest title of the season.",
+      "regions": [
+        "GLOBAL"
+      ]
+    },
+    {
+      "name": "Brawlhalla Midseason Championship 2026",
+      "type": "International major",
+      "note": "A major offline stop in the middle of the season.",
+      "regions": [
+        "GLOBAL"
+      ]
+    },
+    {
+      "name": "Winter Championship 2026",
+      "type": "Seasonal championship",
+      "note": "Official regional 1v1 and 2v2 brackets.",
+      "regions": [
+        "GLOBAL"
+      ]
+    },
+    {
+      "name": "Spring Championship 2026",
+      "type": "Seasonal championship",
+      "note": "Official regional 1v1 and 2v2 brackets.",
+      "regions": [
+        "GLOBAL"
+      ]
+    },
+    {
+      "name": "Summer Championship 2026",
+      "type": "Seasonal championship",
+      "note": "Official regional 1v1 and 2v2 brackets.",
+      "regions": [
+        "GLOBAL"
+      ]
+    },
+    {
+      "name": "Autumn Championship 2026",
+      "type": "Seasonal championship",
+      "note": "Official regional 1v1 and 2v2 brackets.",
+      "regions": [
+        "GLOBAL"
+      ]
+    },
+    {
+      "name": "Eternal Sports Championships 2026",
+      "type": "Alternate modes",
+      "note": "Official events for modes such as Brawlball and Kung Foot.",
+      "regions": [
+        "GLOBAL"
+      ]
+    },
+    {
+      "name": "Winter Championship — Middle East 2026 — 1v1",
+      "type": "MENA regional · 1v1",
+      "note": "Completed · February 20, 2026",
+      "regions": [
+        "MENA"
+      ],
+      "modes": [
+        "1v1"
+      ],
+      "year": 2026,
+      "status": "completed",
+      "date": "2026-02-20",
+      "source_url": "https://www.challengermode.com/s/Brawlhalla/tournaments/dda4d4e1-1b9b-49ca-6d05-08de30f37986"
+    },
+    {
+      "name": "Winter Championship — Middle East 2026 — 2v2",
+      "type": "MENA regional · 2v2",
+      "note": "Completed · February 27, 2026",
+      "regions": [
+        "MENA"
+      ],
+      "modes": [
+        "2v2"
+      ],
+      "year": 2026,
+      "status": "completed",
+      "date": "2026-02-27",
+      "source_url": "https://www.challengermode.com/s/Brawlhalla/tournaments/d6254583-f907-4b1a-6d09-08de30f37986"
+    },
+    {
+      "name": "Spring Championship — Middle East 2026 — 1v1",
+      "type": "MENA regional · 1v1",
+      "note": "Completed · April 24, 2026",
+      "regions": [
+        "MENA"
+      ],
+      "modes": [
+        "1v1"
+      ],
+      "year": 2026,
+      "status": "completed",
+      "date": "2026-04-24",
+      "source_url": "https://www.challengermode.com/s/Brawlhalla/tournaments/ee6333d9-87fe-4eb1-d809-08de6a223b1e"
+    },
+    {
+      "name": "Spring Championship — Middle East 2026 — 2v2",
+      "type": "MENA regional · 2v2",
+      "note": "Completed · May 1, 2026",
+      "regions": [
+        "MENA"
+      ],
+      "modes": [
+        "2v2"
+      ],
+      "year": 2026,
+      "status": "completed",
+      "date": "2026-05-01",
+      "source_url": "https://www.challengermode.com/s/Brawlhalla/tournaments/6ad8b105-c32f-46e6-cd3d-08de6ae6380c"
+    },
+    {
+      "name": "Summer Championship — Middle East 2026 — 1v1",
+      "type": "MENA regional · 1v1",
+      "note": "Upcoming · July 17, 2026",
+      "regions": [
+        "MENA"
+      ],
+      "modes": [
+        "1v1"
+      ],
+      "year": 2026,
+      "status": "upcoming",
+      "date": "2026-07-17",
+      "source_url": "https://www.challengermode.com/s/Brawlhalla/tournaments/d57d1465-41d8-4d62-e242-08deac38d3d7"
+    }
+  ],
+  "featured_champions": [
+    {
+      "players": "Marckiem00",
+      "region": "NA",
+      "titles": [
+        "Brawlhalla World Championship 2025 — 1v1"
+      ]
+    },
+    {
+      "players": "hideawaybh + Pink | Zen",
+      "region": "NA",
+      "titles": [
+        "Brawlhalla World Championship 2025 — 2v2"
+      ]
+    },
+    {
+      "players": "yüz",
+      "region": "SA",
+      "titles": [
+        "Brawlhalla World Championship 2023 — 1v1",
+        "Brawlhalla World Championship 2024 — 1v1"
+      ]
+    },
+    {
+      "players": "whoiskyna + DMT | lores",
+      "region": "SA",
+      "titles": [
+        "Brawlhalla World Championship 2024 — 2v2"
+      ]
+    },
+    {
+      "players": "Godly + Pink | Zen",
+      "region": "EU / NA",
+      "titles": [
+        "Brawlhalla World Championship 2023 — 2v2"
+      ]
+    },
+    {
+      "players": "Impala",
+      "region": "NA",
+      "titles": [
+        "Brawlhalla World Championship 2022 — 1v1",
+        "DreamHack San Diego 2023 — 1v1"
+      ]
+    },
+    {
+      "players": "Boomie + Snowy",
+      "region": "NA",
+      "titles": [
+        "Brawlhalla World Championship 2022 — 2v2"
+      ]
+    },
+    {
+      "players": "Sandstorm",
+      "region": "NA",
+      "titles": [
+        "Brawlhalla World Championship 2018 — 1v1",
+        "Brawlhalla World Championship 2019 — 1v1",
+        "Brawlhalla World Championship 2019 — 2v2 (with Boomie)"
+      ]
+    }
+  ]
+}
