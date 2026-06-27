@@ -41,7 +41,7 @@ app.set('etag', 'strong');
 app.use(express.json({ limit: '8mb' }));
 app.use((req, res, next) => {
   const isApi = req.path.startsWith('/api/');
-  const isHtml = req.path === '/' || req.path.endsWith('.html') || req.path.startsWith('/player/') || req.path === '/queue' || req.path === '/arena';
+  const isHtml = req.path === '/' || req.path.endsWith('.html') || req.path.startsWith('/player/') || req.path.startsWith('/clan/') || req.path === '/queue' || req.path === '/arena';
   const isVersionedAsset = /\.(?:js|css|svg|png|webp|jpg|jpeg|gif|ico)$/i.test(req.path);
   if (isApi || isHtml) {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -66,6 +66,10 @@ app.use(express.static(path.join(__dirname, 'public'), {
 app.use('/uploads/arena', express.static(WALL_UPLOADS_DIR, { etag: true, maxAge: '30d', immutable: true }));
 
 app.get('/player/:id', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/clan/:id', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -213,7 +217,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await fetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.24'
+          'User-Agent': 'PeakHalla/7.25'
         },
         signal: controller.signal
       });
@@ -255,7 +259,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.24'
+        'User-Agent': 'PeakHalla/7.25'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -293,7 +297,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
   if (corehallaInFlight.has(inFlightKey)) return corehallaInFlight.get(inFlightKey);
 
   const task = (async () => {
-    const payloads = [input, { json: input }];
+    const payloads = [{ json: input }, input];
     let lastError = null;
     for (const payload of payloads) {
       const controller = new AbortController();
@@ -307,7 +311,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             Accept: 'application/json',
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.24'
+            'User-Agent': 'PeakHalla/7.25'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -442,24 +446,80 @@ async function getCorehallaPlayerAliases(playerId, forceFresh = false) {
   return [...new Set(aliases)];
 }
 
-async function searchCorehallaAliases(alias, page = 1) {
-  let payload = await corehallaFetch('searchPlayerAlias', { alias: String(alias), page: String(page) }, 5 * 60_000).catch(() => null);
-  let rows = Array.isArray(payload) ? payload : (payload?.players || payload?.results || payload?.data || []);
-  if (!rows.length) {
-    payload = await corehallaFetch('searchPlayerAlias', { alias: String(alias), page: Number(page) }, 5 * 60_000).catch(() => null);
-    rows = Array.isArray(payload) ? payload : (payload?.players || payload?.results || payload?.data || []);
-  }
-  return rows.map((item) => ({
-    id: Number(item?.playerId ?? item?.player_id ?? item?.brawlhalla_id ?? item?.id),
-    name: sanitizePlayerName(item?.mainAlias ?? item?.main_alias ?? item?.name ?? item?.alias),
-    aliases: [...new Set([item?.mainAlias, ...(item?.otherAliases || item?.aliases || [])].map(sanitizePlayerName).filter(isPlausiblePlayerName))]
-  })).filter((item) => Number.isSafeInteger(item.id) && item.id > 0 && isPlausiblePlayerName(item.name));
+function corehallaRows(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.players)) return payload.players;
+  if (Array.isArray(payload?.results)) return payload.results;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.items)) return payload.items;
+  return [];
 }
 
-async function searchCorehallaAliasesBroad(alias, maxPages = 2) {
+function cleanAliasForSearch(value) {
+  const clean = sanitizePlayerName(value);
+  if (!clean || clean.length > 32 || isGeneratedPlayerName(clean)) return '';
+  return clean;
+}
+
+async function searchCorehallaAliases(alias, page = 1, forceFresh = false) {
+  const pageValues = [String(page), Number(page)];
+  for (const pageValue of pageValues) {
+    const payload = await corehallaFetch(
+      'searchPlayerAlias',
+      { alias: String(alias).trim(), page: pageValue },
+      3 * 60_000,
+      forceFresh
+    ).catch(() => null);
+    const rows = corehallaRows(payload);
+    if (!rows.length) continue;
+
+    return rows.map((item) => {
+      const id = Number(item?.playerId ?? item?.player_id ?? item?.brawlhallaId ?? item?.brawlhalla_id ?? item?.id);
+      const rawAliases = [
+        item?.mainAlias,
+        item?.main_alias,
+        item?.name,
+        item?.alias,
+        ...(Array.isArray(item?.otherAliases) ? item.otherAliases : []),
+        ...(Array.isArray(item?.other_aliases) ? item.other_aliases : []),
+        ...(Array.isArray(item?.aliases) ? item.aliases : [])
+      ];
+      const aliases = [...new Set(rawAliases.map(cleanAliasForSearch).filter(Boolean))];
+      // Corehalla can legitimately return a current alias with one character.
+      // Do not discard that player when the searched old alias is valid.
+      const name = cleanAliasForSearch(item?.mainAlias ?? item?.main_alias ?? item?.name ?? item?.alias)
+        || aliases[0]
+        || `Player ${id}`;
+      return { id, name, aliases };
+    }).filter((item) => Number.isSafeInteger(item.id) && item.id > 0 && item.aliases.length > 0);
+  }
+  return [];
+}
+
+async function searchCorehallaAliasesBroad(alias, maxPages = 8, forceFresh = false) {
+  const needle = normalizeName(alias);
   const pages = Array.from({ length: Math.max(1, maxPages) }, (_, index) => index + 1);
-  const rows = (await Promise.all(pages.map((page) => searchCorehallaAliases(alias, page).catch(() => [])))).flat();
-  return [...new Map(rows.map((item) => [Number(item.id), item])).values()];
+  const pageRows = await Promise.all(
+    pages.map((page) => searchCorehallaAliases(alias, page, forceFresh).catch(() => []))
+  );
+  const merged = new Map();
+  for (const item of pageRows.flat()) {
+    const current = merged.get(Number(item.id));
+    if (!current) {
+      merged.set(Number(item.id), { ...item, aliases: [...item.aliases] });
+    } else {
+      current.aliases = [...new Set([...(current.aliases || []), ...(item.aliases || [])])];
+      if ((!current.name || /^Player \d+$/.test(current.name)) && item.name) current.name = item.name;
+    }
+  }
+  return [...merged.values()].sort((a, b) => {
+    const score = (item) => Math.max(
+      aliasScore(item.name, needle),
+      ...(item.aliases || []).map((name) => aliasScore(name, needle)),
+      0
+    );
+    return score(b) - score(a);
+  });
 }
 
 function legacyField(source, ...keys) {
@@ -803,13 +863,12 @@ function legendImageCandidates(name) {
   const clean = String(name || '').trim();
   const slug = legendSlug(clean);
   if (!clean || !slug) return [];
-  const wikiName = legendWikiName(clean);
+  const version = '7.25.0';
+  // Same-origin proxy endpoints are more reliable than direct wiki images:
+  // no CORS/referrer failures and the browser gets a stable cacheable URL.
   return [
-    `/api/legend-image/${encodeURIComponent(clean)}`,
-    `https://brawlhalla.wiki.gg/wiki/Special:Redirect/file/${encodeURIComponent(`Legends Portrait ${wikiName}.png`)}`,
-    `https://brawlhalla.wiki.gg/wiki/Special:Redirect/file/${encodeURIComponent(`Official Artwork ${wikiName}.png`)}`,
-    `/api/legend-art/${encodeURIComponent(clean)}`,
-    `https://brawlhalla.wiki.gg/wiki/Special:Redirect/file/${encodeURIComponent(`${wikiName}.png`)}`
+    `/api/legend-image/${encodeURIComponent(clean)}?v=${version}`,
+    `/api/legend-art/${encodeURIComponent(clean)}?v=${version}`
   ];
 }
 
@@ -820,25 +879,34 @@ function legendImageUrl(name) {
 async function fetchLegendArtwork(name) {
   const slug = legendSlug(name);
   if (!slug) return null;
-  const cacheKey = `art:${slug}`;
+  const cacheKey = `portrait:${slug}`;
   const now = Date.now();
   const cached = imageCache.get(cacheKey);
   if (cached && cached.expiresAt > now) return cached;
 
-  const wikiName = legendWikiName(name);
-  const urls = [
-    `https://brawlhalla.wiki.gg/wiki/Special:Redirect/file/${encodeURIComponent(`Official Artwork ${wikiName}.png`)}`,
-    `https://brawlhalla.wiki.gg/wiki/Special:Redirect/file/${encodeURIComponent(`Legends Portrait ${wikiName}.png`)}`
+  const cleanName = String(name || '').trim();
+  const wikiName = legendWikiName(cleanName);
+  const compactName = cleanName.replace(/\s+/g, '');
+  const filenames = [
+    `Portrait ${cleanName}.png`,
+    `Portrait ${compactName}.png`,
+    `Portrait ${wikiName}.png`,
+    `Legends Portrait ${cleanName}.png`,
+    `Official Artwork ${cleanName}.png`,
+    `${cleanName}.png`
   ];
+  const urls = [...new Set(filenames)].map((filename) =>
+    `https://brawlhalla.wiki.gg/wiki/Special:Redirect/file/${encodeURIComponent(filename)}`
+  );
 
   for (const url of urls) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5_000);
+    const timeout = setTimeout(() => controller.abort(), 8_000);
     try {
       const response = await fetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.24',
+          'User-Agent': 'PeakHalla/7.25',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -853,7 +921,7 @@ async function fetchLegendArtwork(name) {
       imageCache.set(cacheKey, value);
       return value;
     } catch {
-      // Try the next artwork source.
+      // Try the next portrait source.
     } finally {
       clearTimeout(timeout);
     }
@@ -874,7 +942,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await fetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.24'
+        'User-Agent': 'PeakHalla/7.25'
       },
       signal: controller.signal
     });
@@ -911,54 +979,74 @@ const GUILD_CACHE_TTL_MS = 30 * 60_000;
 const GUILD_DISCOVERY_LIMIT = 72;
 let guildRefreshPromise = null;
 
+const GUILD_ROLE_ORDER = Object.freeze({ Recruit: 0, Member: 1, Officer: 2, Leader: 3 });
+
+function canonicalGuildRole(value) {
+  const key = normalizeName(value).replace(/[^a-z]/g, '');
+  if (key.includes('leader') || key === 'owner') return 'Leader';
+  if (key.includes('officer') || key.includes('admin')) return 'Officer';
+  if (key.includes('recruit')) return 'Recruit';
+  return 'Member';
+}
+
 function normalizeGuildStats(payload = {}) {
   const guild = payload?.guild || payload || {};
-  const id = Number(guild.guild_id ?? guild.id ?? 0);
+  const id = Number(
+    guild.guild_id ?? guild.clan_id ?? guild.guildId ?? guild.clanId ?? guild.id ?? 0
+  );
   if (!Number.isSafeInteger(id) || id <= 0) return null;
   return {
     guild_id: id,
-    name: sanitizePlayerName(guild.name ?? guild.guild_name ?? `Guild ${id}`),
-    create_date: Number(guild.create_date || 0) || null,
-    xp: Number(guild.xp || 0),
+    name: sanitizePlayerName(guild.name ?? guild.guild_name ?? guild.clan_name ?? `Clan ${id}`),
+    create_date: Number(guild.create_date ?? guild.clan_create_date ?? guild.created ?? guild.created_at ?? 0) || null,
+    xp: Number(guild.xp ?? guild.clan_xp ?? guild.lifetime_xp ?? 0),
     legacy_xp: Number(guild.legacy_xp || 0),
-    notice: String(guild.notice || '').trim().slice(0, 240),
+    notice: String(guild.notice || guild.description || '').trim().slice(0, 240),
     tags: Array.isArray(guild.tags) ? guild.tags.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 8) : [],
     discord_invite_code: String(guild.discord_invite_code || '').trim() || null,
-    guild_points: Number(guild.guild_points || 0),
-    rank: Number(guild.rank || 0) || null,
+    guild_points: Number(guild.guild_points ?? guild.points ?? 0),
+    rank: Number(guild.rank ?? guild.position ?? 0) || null,
     is_recruiting: Boolean(guild.is_recruiting),
-    member_count: Number(guild.member_count || 0) || null,
+    member_count: Number(guild.member_count ?? guild.members_count ?? guild.clan?.length ?? guild.members?.length ?? 0) || null,
+    source: guild.source || null,
     updated_at: new Date().toISOString()
   };
 }
 
 function normalizeGuildPlayer(payload = {}) {
   const guild = payload?.guild || payload || {};
-  const id = Number(guild.guild_id ?? guild.id ?? 0);
+  const id = Number(guild.guild_id ?? guild.clan_id ?? guild.id ?? 0);
   if (!Number.isSafeInteger(id) || id <= 0) return null;
   return {
     guild_id: id,
-    guild_name: sanitizePlayerName(guild.guild_name ?? guild.name ?? `Guild ${id}`),
-    personal_xp: Number(guild.personal_xp || 0),
+    guild_name: sanitizePlayerName(guild.guild_name ?? guild.clan_name ?? guild.name ?? `Clan ${id}`),
+    personal_xp: Number(guild.personal_xp || guild.xp || 0),
     personal_xp_this_week: Number(guild.personal_xp_this_week || 0),
-    personal_points: Number(guild.personal_points || 0),
+    personal_points: Number(guild.personal_points || guild.guild_points || 0),
     join_date: Number(guild.join_date || 0) || null,
-    rank: String(guild.rank || 'Member')
+    rank: canonicalGuildRole(guild.rank)
   };
 }
 
 function normalizeGuildMembers(payload = {}) {
-  const rows = Array.isArray(payload) ? payload : (payload?.guild_members || payload?.members || []);
-  const roleOrder = { Leader: 0, Officer: 1, Member: 2 };
+  const rows = Array.isArray(payload)
+    ? payload
+    : (payload?.guild_members || payload?.members || payload?.clan || payload?.guild?.members || payload?.guild?.clan || []);
   return rows.map((item) => ({
-    brawlhalla_id: Number(item?.brawlhalla_id ?? item?.id ?? 0),
-    name: sanitizePlayerName(item?.name || `Player ${item?.brawlhalla_id || item?.id || ''}`),
-    rank: String(item?.rank || 'Member'),
-    join_date: Number(item?.join_date || 0) || null,
-    xp: Number(item?.xp || 0),
-    guild_points: Number(item?.guild_points || 0)
+    brawlhalla_id: Number(item?.brawlhalla_id ?? item?.player_id ?? item?.playerId ?? item?.id ?? 0),
+    name: sanitizePlayerName(item?.name ?? item?.alias ?? `Player ${item?.brawlhalla_id || item?.id || ''}`),
+    rank: canonicalGuildRole(item?.rank ?? item?.role),
+    join_date: Number(item?.join_date ?? item?.joined ?? 0) || null,
+    xp: Number(item?.xp ?? item?.personal_xp ?? 0),
+    guild_points: Number(item?.guild_points ?? item?.personal_points ?? 0)
   })).filter((item) => Number.isSafeInteger(item.brawlhalla_id) && item.brawlhalla_id > 0)
-    .sort((a, b) => (roleOrder[a.rank] ?? 9) - (roleOrder[b.rank] ?? 9) || b.guild_points - a.guild_points || b.xp - a.xp);
+    // Requested visual hierarchy: lowest role first, Leader last.
+    .sort((a, b) =>
+      (GUILD_ROLE_ORDER[a.rank] ?? 1) - (GUILD_ROLE_ORDER[b.rank] ?? 1)
+      || Number(b.guild_points || 0) - Number(a.guild_points || 0)
+      || Number(b.xp || 0) - Number(a.xp || 0)
+      || a.name.localeCompare(b.name)
+    );
 }
 
 async function getPlayerGuild(playerId, ttlMs = 10 * 60_000) {
@@ -974,6 +1062,64 @@ async function getGuildStats(guildId, ttlMs = GUILD_CACHE_TTL_MS) {
 async function getGuildMembers(guildId, ttlMs = 10 * 60_000) {
   const payload = await apiFetch(`/guild/members?guild_id=${encodeURIComponent(guildId)}`, ttlMs).catch(() => null);
   return normalizeGuildMembers(payload);
+}
+
+async function getCorehallaClanRankings(name = '', maxPages = 2, forceFresh = false) {
+  const all = [];
+  for (let page = 1; page <= Math.max(1, maxPages); page += 1) {
+    let payload = await corehallaFetch(
+      'getClansRankings',
+      { name: String(name || ''), page: String(page) },
+      GUILD_CACHE_TTL_MS,
+      forceFresh
+    ).catch(() => null);
+    let rows = corehallaRows(payload);
+    if (!rows.length) {
+      payload = await corehallaFetch(
+        'getClansRankings',
+        { name: String(name || ''), page: Number(page) },
+        GUILD_CACHE_TTL_MS,
+        forceFresh
+      ).catch(() => null);
+      rows = corehallaRows(payload);
+    }
+    if (!rows.length) break;
+    all.push(...rows);
+  }
+
+  const guilds = all.map((row) => normalizeGuildStats({ ...row, source: 'corehalla' })).filter(Boolean);
+  const unique = [...new Map(guilds.map((guild) => [guild.guild_id, guild])).values()]
+    .sort((a, b) => Number(b.xp || 0) - Number(a.xp || 0) || a.name.localeCompare(b.name));
+  return unique.map((guild, index) => ({ ...guild, rank: index + 1 }));
+}
+
+async function getCorehallaClanStats(guildId, forceFresh = false) {
+  const variants = [String(guildId), Number(guildId)];
+  for (const clanId of variants) {
+    const payload = await corehallaFetch(
+      'getClanStats',
+      { clanId },
+      10 * 60_000,
+      forceFresh
+    ).catch(() => null);
+    if (!payload) continue;
+    const guild = normalizeGuildStats({ ...payload, source: 'corehalla' });
+    const members = normalizeGuildMembers(payload);
+    if (guild) return { guild: { ...guild, member_count: guild.member_count || members.length }, members };
+  }
+  return null;
+}
+
+function mergeGuilds(...values) {
+  const guilds = values.filter(Boolean);
+  if (!guilds.length) return null;
+  const merged = { ...guilds[0] };
+  for (const guild of guilds.slice(1)) {
+    for (const [key, value] of Object.entries(guild)) {
+      if (value !== null && value !== undefined && value !== '' && value !== 0 && value !== false) merged[key] = value;
+    }
+  }
+  return merged;
 }
 
 async function rememberGuilds(guilds = []) {
@@ -1000,36 +1146,59 @@ async function readGuildCache() {
   return { updated_at: data?.updated_at || null, guilds };
 }
 
-async function refreshTopGuilds() {
+async function discoverOfficialGuilds() {
+  const pages = [1, 2];
+  const boards = await Promise.all(pages.map((page) => {
+    const params = new URLSearchParams({ page: String(page), max_results: '40', game_mode: '1v1', region: 'ALL', order_by: 'rating' });
+    return apiFetch(`/leaderboard/ranked?${params}`, 5 * 60_000).catch(() => ({ rankings: [] }));
+  }));
+  const playerIds = [...new Set(boards.flatMap((board) =>
+    (board?.rankings || []).flatMap((entry) => (entry.players || []).map((player) => Number(player.id)).filter(Boolean))
+  ))].slice(0, GUILD_DISCOVERY_LIMIT);
+  const playerGuilds = (await mapWithConcurrency(playerIds, 12, (id) => getPlayerGuild(id, GUILD_CACHE_TTL_MS))).filter(Boolean);
+  const guildIds = [...new Set(playerGuilds.map((item) => Number(item.guild_id)).filter(Boolean))];
+  return (await mapWithConcurrency(guildIds, 10, (id) => getGuildStats(id, GUILD_CACHE_TTL_MS))).filter(Boolean);
+}
+
+async function refreshTopGuilds(options = {}) {
   if (guildRefreshPromise) return guildRefreshPromise;
   guildRefreshPromise = (async () => {
-    const pages = [1, 2];
-    const boards = await Promise.all(pages.map((page) => {
-      const params = new URLSearchParams({ page: String(page), max_results: '40', game_mode: '1v1', region: 'ALL', order_by: 'rating' });
-      return apiFetch(`/leaderboard/ranked?${params}`, 5 * 60_000).catch(() => ({ rankings: [] }));
-    }));
-    const playerIds = [...new Set(boards.flatMap((board) => (board?.rankings || []).flatMap((entry) => (entry.players || []).map((player) => Number(player.id)).filter(Boolean))))]
-      .slice(0, GUILD_DISCOVERY_LIMIT);
-    const playerGuilds = (await mapWithConcurrency(playerIds, 12, (id) => getPlayerGuild(id, GUILD_CACHE_TTL_MS))).filter(Boolean);
-    const guildIds = [...new Set(playerGuilds.map((item) => Number(item.guild_id)).filter(Boolean))];
-    const guilds = (await mapWithConcurrency(guildIds, 10, (id) => getGuildStats(id, GUILD_CACHE_TTL_MS))).filter(Boolean);
-    await rememberGuilds(guilds).catch(() => null);
-    const cacheData = await readGuildCache();
-    return cacheData.guilds.sort((a, b) => (Number(a.rank || Infinity) - Number(b.rank || Infinity)) || Number(b.guild_points || 0) - Number(a.guild_points || 0) || Number(b.xp || 0) - Number(a.xp || 0));
+    const query = String(options.query || '');
+    const corehalla = await getCorehallaClanRankings(query, query ? 3 : 2, Boolean(options.force)).catch(() => []);
+    if (corehalla.length) {
+      await rememberGuilds(corehalla).catch(() => null);
+      return corehalla;
+    }
+    const official = await discoverOfficialGuilds();
+    const sorted = official
+      .sort((a, b) => Number(b.xp || 0) - Number(a.xp || 0) || a.name.localeCompare(b.name))
+      .map((guild, index) => ({ ...guild, rank: index + 1 }));
+    await rememberGuilds(sorted).catch(() => null);
+    return sorted;
   })().finally(() => { guildRefreshPromise = null; });
   return guildRefreshPromise;
 }
 
-async function topGuilds({ force = false } = {}) {
+async function topGuilds({ force = false, query = '' } = {}) {
+  const normalizedQuery = normalizeName(query);
+  if (normalizedQuery) {
+    const guilds = await refreshTopGuilds({ force, query });
+    return { guilds, updated_at: new Date().toISOString(), stale: false };
+  }
+
   const cached = await readGuildCache();
   const age = cached.updated_at ? Date.now() - new Date(cached.updated_at).getTime() : Infinity;
-  const sorted = [...cached.guilds].sort((a, b) => (Number(a.rank || Infinity) - Number(b.rank || Infinity)) || Number(b.guild_points || 0) - Number(a.guild_points || 0) || Number(b.xp || 0) - Number(a.xp || 0));
-  if (!force && sorted.length >= 6 && age < GUILD_CACHE_TTL_MS) return { guilds: sorted, updated_at: cached.updated_at, stale: false };
+  const sorted = [...cached.guilds]
+    .sort((a, b) => Number(b.xp || 0) - Number(a.xp || 0) || a.name.localeCompare(b.name))
+    .map((guild, index) => ({ ...guild, rank: index + 1 }));
+  if (!force && sorted.length >= 12 && age < GUILD_CACHE_TTL_MS) {
+    return { guilds: sorted, updated_at: cached.updated_at, stale: false };
+  }
   if (!force && sorted.length) {
-    refreshTopGuilds().catch(() => null);
+    refreshTopGuilds({ force: false }).catch(() => null);
     return { guilds: sorted, updated_at: cached.updated_at, stale: true };
   }
-  const guilds = await refreshTopGuilds();
+  const guilds = await refreshTopGuilds({ force });
   return { guilds, updated_at: new Date().toISOString(), stale: false };
 }
 
@@ -1536,8 +1705,8 @@ async function buildProfileSearchRanking(candidate, query, options = {}) {
     const id = Number(candidate?.id);
     if (!Number.isSafeInteger(id) || id <= 0) return null;
     const knownAliases = [...new Set((candidate.aliases || candidate.names || [])
-      .map((item) => sanitizePlayerName(typeof item === 'string' ? item : item?.name))
-      .filter((name) => isPlausiblePlayerName(name) && !isGeneratedPlayerName(name)))];
+      .map((item) => cleanAliasForSearch(typeof item === 'string' ? item : item?.name))
+      .filter(Boolean))];
     const quick = Boolean(options.quick);
     let lifetime = null;
     let legendMap = new Map();
@@ -1548,8 +1717,7 @@ async function buildProfileSearchRanking(candidate, query, options = {}) {
       ]);
     }
 
-    const currentName = sanitizePlayerName(lifetime?.name || candidate.name || knownAliases[0] || `Player ${id}`);
-    if (!isPlausiblePlayerName(currentName)) return null;
+    const currentName = cleanAliasForSearch(lifetime?.name || candidate.name || knownAliases[0]) || `Player ${id}`;
     const mainStats = [...(lifetime?.legends || [])]
       .filter((legend) => numberOrZero(legend.games) > 0)
       .sort((a, b) => numberOrZero(b.games) - numberOrZero(a.games))[0];
@@ -2138,12 +2306,9 @@ app.get('/api/legend-art/:name', async (req, res) => {
 app.get('/api/legend-image/:name', async (req, res) => {
   const name = String(req.params.name || '').trim().slice(0, 50);
   if (!name) return res.status(404).end();
-  const candidates = [fetchOfficialLegendImage(name), fetchLegendArtwork(name)].map((promise) => promise.then((value) => {
-    if (!value) throw new Error('Image unavailable');
-    return value;
-  }));
-  let image = null;
-  try { image = await Promise.any(candidates); } catch { image = null; }
+  // Prefer the transparent legend portrait. The official splash is only a
+  // fallback, because it is often cropped or blurry inside small cards.
+  const image = await fetchLegendArtwork(name) || await fetchOfficialLegendImage(name);
   if (!image) return res.status(404).end();
   res.setHeader('Content-Type', image.contentType);
   res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=2592000');
@@ -2151,7 +2316,7 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.24.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.25.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
@@ -2177,7 +2342,7 @@ app.get('/api/suggestions', async (req, res, next) => {
     }
     const [official, coreMatches, localMatches, esportsMatch] = await Promise.all([
       /^\d+$/.test(numericId) ? Promise.resolve({ rankings: [] }) : settleWithin(fetchMatches(query), 1600, { rankings: [] }),
-      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 4), 4500, []),
+      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 4, true), 4500, []),
       findAliasMatches(query, 8).catch(() => []),
       /^\d+$/.test(numericId) ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 2600, null)
     ]);
@@ -2208,18 +2373,9 @@ app.get('/api/search', async (req, res, next) => {
       page: '1', max_results: '20', game_mode: mode, region, search: query, order_by: 'rating'
     });
     const numericId = query.replace(/^#/, '');
-    const immediateLocalMatches = /^\d+$/.test(numericId) ? [] : await findAliasMatches(query, 12).catch(() => []);
-    const exactLocalMatches = immediateLocalMatches.filter((item) => (item.matched_names || []).some((name) => normalizeName(name) === normalizeName(query)));
-    if (exactLocalMatches.length) {
-      const localCandidates = exactLocalMatches.map((item) => ({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] }));
-      const localProfiles = (await mapWithConcurrency(localCandidates, 8, (item) => buildProfileSearchRanking(item, query, { quick: true }))).filter(Boolean)
-        .sort((a, b) => Number(b.search_score || 0) - Number(a.search_score || 0));
-      if (localProfiles.length) return res.json({ rankings: localProfiles.slice(0, 12), total_pages: 0, includes_unranked_profiles: true, local_alias_hit: true });
-    }
-
     const [official, coreMatches, localMatches, esportsMatch] = await Promise.all([
       /^\d+$/.test(numericId) ? Promise.resolve({ rankings: [], total_pages: 0 }) : settleWithin(apiFetch(`/leaderboard/ranked?${params}`), 3500, { rankings: [], total_pages: 0 }),
-      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 6), 7000, []),
+      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 6, true), 7000, []),
       findAliasMatches(query, 12).catch(() => []),
       /^\d+$/.test(numericId) ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 3500, null)
     ]);
@@ -2256,11 +2412,16 @@ app.get('/api/clans/top', async (req, res, next) => {
     const query = normalizeName(String(req.query.q || '').slice(0, 60));
     const limit = asInt(req.query.limit, 18, 1, 40);
     const force = String(req.query.refresh || '') === '1';
-    const data = await topGuilds({ force });
+    const data = await topGuilds({ force, query });
     const guilds = query
       ? data.guilds.filter((guild) => normalizeName(guild.name).includes(query) || String(guild.guild_id) === query)
       : data.guilds;
-    res.json({ guilds: guilds.slice(0, limit), updated_at: data.updated_at, stale: data.stale, discovery: 'Top guilds discovered from current all-region ranked players and ordered by official guild rank.' });
+    res.json({
+      guilds: guilds.slice(0, limit),
+      updated_at: data.updated_at,
+      stale: data.stale,
+      discovery: 'Top clans ordered by lifetime XP.'
+    });
   } catch (error) { next(error); }
 });
 
@@ -2268,11 +2429,24 @@ app.get('/api/clans/:id', async (req, res, next) => {
   try {
     const guildId = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
     if (!guildId) return res.status(400).json({ error: 'Invalid guild ID.' });
-    const [guild, members] = await Promise.all([getGuildStats(guildId, 5 * 60_000), getGuildMembers(guildId, 5 * 60_000)]);
-    if (!guild) return res.status(404).json({ error: 'Guild not found.' });
+    const [officialGuild, officialMembers, legacy, cached] = await Promise.all([
+      getGuildStats(guildId, 5 * 60_000),
+      getGuildMembers(guildId, 5 * 60_000),
+      getCorehallaClanStats(guildId, true),
+      readGuildCache()
+    ]);
+    const members = (officialMembers?.length ? officialMembers : legacy?.members || [])
+      .sort((a, b) => (GUILD_ROLE_ORDER[a.rank] ?? 1) - (GUILD_ROLE_ORDER[b.rank] ?? 1) || Number(b.xp || 0) - Number(a.xp || 0));
+    const cachedGuild = cached.guilds.find((item) => Number(item.guild_id) === guildId);
+    const guild = mergeGuilds(legacy?.guild, cachedGuild, officialGuild);
+    if (!guild) return res.status(404).json({ error: 'Clan not found.' });
     const fullGuild = { ...guild, member_count: guild.member_count || members.length };
     await rememberGuild(fullGuild).catch(() => null);
-    res.json({ guild: fullGuild, members });
+    res.json({
+      guild: fullGuild,
+      members,
+      role_order: ['Recruit', 'Member', 'Officer', 'Leader']
+    });
   } catch (error) { next(error); }
 });
 
