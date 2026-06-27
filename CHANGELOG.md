@@ -1,6 +1,10 @@
 # Changelog
 
-## 7.26.0
+## 7.27.0
+- Hid the clans lifetime-XP section from the standalone Arena Wall route.
+- Added a polished clickable clan identity card to player profiles, including clan name, role, and guild ID.
+- Strengthened old-name and unranked-profile discovery with GET, batch GET, POST, and raw tRPC fallbacks for Corehalla alias search.
+- Broadened alias-page lookup and persist successful alias matches locally so repeat searches become faster.
 - Added a complete local portrait pack for all 68 supplied legends, normalized to transparent 256×256 images with consistent centering and sizing.
 - Made local portraits the primary source, with official/API artwork retained as automatic fallbacks for future legends.
 - Improved old-name discovery for unranked and no-placement accounts, including valid one-character current aliases returned by alias search.
@@ -8,7 +12,7 @@
 - Sorted top clans by lifetime XP and normalized the roster hierarchy as Recruit → Member → Officer → Leader.
 - Enforced one Leader per clan display while preferring the official Brawlhalla guild roster whenever it is available.
 - Added clear Current ELO and Peak ELO values to player search results and retained both values in the full player profile.
-- Updated public asset versions and Node package metadata to 7.26.0.
+- Updated public asset versions and Node package metadata to 7.27.0.
 
 ## 7.23.0
 - Rebranded the complete site identity to **PeakHalla** with a new angular PH logo.

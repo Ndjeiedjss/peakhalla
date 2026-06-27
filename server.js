@@ -217,7 +217,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await fetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.26'
+          'User-Agent': 'PeakHalla/7.27'
         },
         signal: controller.signal
       });
@@ -259,7 +259,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.26'
+        'User-Agent': 'PeakHalla/7.27'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -297,21 +297,42 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
   if (corehallaInFlight.has(inFlightKey)) return corehallaInFlight.get(inFlightKey);
 
   const task = (async () => {
-    const payloads = [{ json: input }, input];
+    const normalizedInput = { ...input };
+    if (normalizedInput.page !== undefined) normalizedInput.page = Number(normalizedInput.page) || 1;
+    const cacheBust = forceFresh ? `&_=${Date.now()}` : '';
+    const attempts = [
+      {
+        method: 'GET',
+        url: `${COREHALLA_TRPC_BASE}/${encodeURIComponent(procedure)}?input=${encodeURIComponent(JSON.stringify({ json: normalizedInput }))}${cacheBust}`
+      },
+      {
+        method: 'GET',
+        url: `${COREHALLA_TRPC_BASE}/${encodeURIComponent(procedure)}?batch=1&input=${encodeURIComponent(JSON.stringify({ 0: { json: normalizedInput } }))}${cacheBust}`
+      },
+      {
+        method: 'POST',
+        url: `${COREHALLA_TRPC_BASE}/${encodeURIComponent(procedure)}${forceFresh ? `?_=${Date.now()}` : ''}`,
+        body: JSON.stringify({ json: normalizedInput })
+      },
+      {
+        method: 'GET',
+        url: `${COREHALLA_TRPC_BASE}/${encodeURIComponent(procedure)}?input=${encodeURIComponent(JSON.stringify(normalizedInput))}${cacheBust}`
+      }
+    ];
     let lastError = null;
-    for (const payload of payloads) {
+    for (const attempt of attempts) {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6_000);
+      const timeout = setTimeout(() => controller.abort(), 8_500);
       try {
-        const encodedInput = encodeURIComponent(JSON.stringify(payload));
-        const cacheBust = forceFresh ? `&_=${Date.now()}` : '';
-        const url = `${COREHALLA_TRPC_BASE}/${encodeURIComponent(procedure)}?input=${encodedInput}${cacheBust}`;
-        const response = await fetch(url, {
+        const response = await fetch(attempt.url, {
+          method: attempt.method,
+          body: attempt.body,
           headers: {
             Accept: 'application/json',
+            ...(attempt.body ? { 'Content-Type': 'application/json' } : {}),
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.26'
+            'User-Agent': 'PeakHalla/7.27'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -324,15 +345,18 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
           const error = new Error(body?.error?.json?.message || body?.message || `Corehalla data error (${response.status})`);
           error.status = response.status;
           lastError = error;
-          if (response.status === 400 || response.status === 422) continue;
+          if ([400, 404, 405, 415, 422].includes(response.status)) continue;
           throw error;
         }
         const value = unwrapTrpcPayload(body);
+        if (value === null || value === undefined) {
+          lastError = new Error('Corehalla returned an empty response.');
+          continue;
+        }
         cache.set(key, { value, expiresAt: Date.now() + ttlMs });
         return value;
       } catch (error) {
         lastError = error;
-        if (error.name === 'AbortError') break;
       } finally {
         clearTimeout(timeout);
       }
@@ -462,38 +486,27 @@ function cleanAliasForSearch(value) {
 }
 
 async function searchCorehallaAliases(alias, page = 1, forceFresh = false) {
-  const pageValues = [String(page), Number(page)];
-  for (const pageValue of pageValues) {
-    const payload = await corehallaFetch(
-      'searchPlayerAlias',
-      { alias: String(alias).trim(), page: pageValue },
-      3 * 60_000,
-      forceFresh
-    ).catch(() => null);
-    const rows = corehallaRows(payload);
-    if (!rows.length) continue;
-
-    return rows.map((item) => {
-      const id = Number(item?.playerId ?? item?.player_id ?? item?.brawlhallaId ?? item?.brawlhalla_id ?? item?.id);
-      const rawAliases = [
-        item?.mainAlias,
-        item?.main_alias,
-        item?.name,
-        item?.alias,
-        ...(Array.isArray(item?.otherAliases) ? item.otherAliases : []),
-        ...(Array.isArray(item?.other_aliases) ? item.other_aliases : []),
-        ...(Array.isArray(item?.aliases) ? item.aliases : [])
-      ];
-      const aliases = [...new Set(rawAliases.map(cleanAliasForSearch).filter(Boolean))];
-      // Corehalla can legitimately return a current alias with one character.
-      // Do not discard that player when the searched old alias is valid.
-      const name = cleanAliasForSearch(item?.mainAlias ?? item?.main_alias ?? item?.name ?? item?.alias)
-        || aliases[0]
-        || `Player ${id}`;
-      return { id, name, aliases };
-    }).filter((item) => Number.isSafeInteger(item.id) && item.id > 0 && item.aliases.length > 0);
-  }
-  return [];
+  const payload = await corehallaFetch(
+    'searchPlayerAlias',
+    { alias: String(alias).trim(), page: Number(page) || 1 },
+    3 * 60_000,
+    forceFresh
+  ).catch(() => null);
+  const rows = corehallaRows(payload);
+  if (!rows.length) return [];
+  return rows.map((item) => {
+    const id = Number(item?.playerId ?? item?.player_id ?? item?.brawlhallaId ?? item?.brawlhalla_id ?? item?.id);
+    const rawAliases = [
+      item?.mainAlias, item?.main_alias, item?.name, item?.alias,
+      ...(Array.isArray(item?.otherAliases) ? item.otherAliases : []),
+      ...(Array.isArray(item?.other_aliases) ? item.other_aliases : []),
+      ...(Array.isArray(item?.aliases) ? item.aliases : [])
+    ];
+    const aliases = [...new Set(rawAliases.map(cleanAliasForSearch).filter(Boolean))];
+    const name = cleanAliasForSearch(item?.mainAlias ?? item?.main_alias ?? item?.name ?? item?.alias)
+      || aliases[0] || `Player ${id}`;
+    return { id, name, aliases };
+  }).filter((item) => Number.isSafeInteger(item.id) && item.id > 0 && item.aliases.length > 0);
 }
 
 async function searchCorehallaAliasesBroad(alias, maxPages = 8, forceFresh = false) {
@@ -504,7 +517,7 @@ async function searchCorehallaAliasesBroad(alias, maxPages = 8, forceFresh = fal
   const hasStrongMatch = firstPage.some((item) =>
     normalizeName(item.name) === needle || (item.aliases || []).some((name) => normalizeName(name) === needle)
   );
-  const extraPages = hasStrongMatch ? [] : Array.from({ length: Math.max(0, Math.min(maxPages, 5) - 1) }, (_, index) => index + 2);
+  const extraPages = hasStrongMatch ? [] : Array.from({ length: Math.max(0, Math.min(maxPages, 10) - 1) }, (_, index) => index + 2);
   const extraRows = extraPages.length
     ? (await Promise.all(extraPages.map((page) => searchCorehallaAliases(alias, page, forceFresh).catch(() => [])))).flat()
     : [];
@@ -522,6 +535,16 @@ async function searchCorehallaAliasesBroad(alias, maxPages = 8, forceFresh = fal
     const score = (item) => Math.max(aliasScore(item.name, needle), ...(item.aliases || []).map((name) => aliasScore(name, needle)), 0);
     return score(b) - score(a);
   });
+}
+
+async function rememberCorehallaAliasMatches(matches = []) {
+  const entries = [];
+  for (const match of matches) {
+    const id = Number(match?.id);
+    if (!Number.isSafeInteger(id) || id <= 0) continue;
+    for (const name of [match?.name, ...(match?.aliases || [])]) entries.push({ id, name });
+  }
+  if (entries.length) await storeObservedNamesBatch(entries, 'corehalla-alias-search').catch(() => null);
 }
 
 function legacyField(source, ...keys) {
@@ -865,7 +888,7 @@ function legendImageCandidates(name) {
   const clean = String(name || '').trim();
   const slug = legendSlug(clean);
   if (!clean || !slug) return [];
-  const version = '7.26.0';
+  const version = '7.27.0';
   // User-supplied local portraits are the fastest and most consistent source.
   // The API proxy remains a fallback for future legends not yet in the pack.
   return [
@@ -909,7 +932,7 @@ async function fetchLegendArtwork(name) {
       const response = await fetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.26',
+          'User-Agent': 'PeakHalla/7.27',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -945,7 +968,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await fetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.26'
+        'User-Agent': 'PeakHalla/7.27'
       },
       signal: controller.signal
     });
@@ -2343,7 +2366,7 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.26.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.27.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
@@ -2370,10 +2393,11 @@ app.get('/api/suggestions', async (req, res, next) => {
     }
     const [official, coreMatches, localMatches, esportsMatch] = await Promise.all([
       /^\d+$/.test(numericId) ? Promise.resolve({ rankings: [] }) : settleWithin(fetchMatches(query), 1600, { rankings: [] }),
-      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 4, true), 8000, []),
+      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 8, true), 14000, []),
       findAliasMatches(query, 8).catch(() => []),
       /^\d+$/.test(numericId) ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 2600, null)
     ]);
+    await rememberCorehallaAliasMatches(coreMatches);
     const rankings = await hydrateRankingPlayers(official?.rankings || [], 'suggestion', { includeLegends: false });
     const existingIds = new Set(rankings.flatMap((item) => (item.players || []).map((player) => Number(player.id))));
     const candidates = [];
@@ -2403,10 +2427,11 @@ app.get('/api/search', async (req, res, next) => {
     const numericId = query.replace(/^#/, '');
     const [official, coreMatches, localMatches, esportsMatch] = await Promise.all([
       /^\d+$/.test(numericId) ? Promise.resolve({ rankings: [], total_pages: 0 }) : settleWithin(apiFetch(`/leaderboard/ranked?${params}`), 3500, { rankings: [], total_pages: 0 }),
-      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 5, true), 11000, []),
+      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 10, true), 18000, []),
       findAliasMatches(query, 12).catch(() => []),
       /^\d+$/.test(numericId) ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 3500, null)
     ]);
+    await rememberCorehallaAliasMatches(coreMatches);
     const hydratedOfficial = await hydrateRankingPlayers(official?.rankings || [], 'search', { includeLegends: false });
     const needle = normalizeName(query);
     const officialRankings = hydratedOfficial.filter((item) => (item.players || []).some((player) =>
