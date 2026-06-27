@@ -1844,6 +1844,7 @@ html:not(.is-navigating) body.page-leaving {
 .clan-role { padding: 5px 8px; display: inline-flex; border-radius: 999px; font-size: 8px; font-weight: 800; text-transform: uppercase; }
 .clan-role.leader { color: #ffd68a; background: rgba(255,184,77,.1); border: 1px solid rgba(255,184,77,.2); }
 .clan-role.officer { color: #cbb8ff; background: rgba(139,92,246,.1); border: 1px solid rgba(139,92,246,.2); }
+.clan-role.recruit { color: #b4bbc5; background: rgba(180,187,197,.07); border: 1px solid rgba(180,187,197,.14); }
 .clan-role.member { color: #a9d8c2; background: rgba(47,223,132,.07); border: 1px solid rgba(47,223,132,.14); }
 .clan-modal-status { margin: 20px 0; padding: 18px; color: var(--muted); text-align: center; }
 @keyframes clanFadeIn { from { opacity: 0; } }
@@ -1874,4 +1875,345 @@ html:not(.is-navigating) body.page-leaving {
 @media (prefers-reduced-motion: reduce) {
   .clan-card, .clan-dialog, .clan-modal-backdrop, .clans-loading span, .legend-image-shell::before { animation: none !important; }
   [data-legend-image] { transition: none !important; }
+}
+
+
+/* PeakHalla v7.25 — dedicated clan profiles and reliable legend portraits */
+body.clan-page-mode main > section:not(#clan-page) { display: none !important; }
+body.clan-page-mode #clan-page { display: block !important; }
+body.clan-page-mode footer { display: none !important; }
+body.clan-page-mode .site-header nav a[href="/#clans"] {
+  color: #fff;
+  border-color: rgba(139,92,246,.28);
+  background: rgba(139,92,246,.08);
+}
+
+.clan-page {
+  padding-top: 34px;
+  padding-bottom: 90px;
+}
+.clan-page-toolbar {
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.clan-page-toolbar > a {
+  padding: 10px 13px;
+  color: #d9cff1;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+  font-size: 10px;
+  font-weight: 800;
+  transition: transform .3s cubic-bezier(.16,1,.3,1), border-color .25s ease, background .25s ease;
+}
+.clan-page-toolbar > a:hover {
+  transform: translateX(-2px);
+  border-color: rgba(139,92,246,.34);
+  background: rgba(139,92,246,.08);
+}
+.clan-page-live-pill {
+  padding: 8px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #cfbfff;
+  border: 1px solid rgba(139,92,246,.22);
+  border-radius: 999px;
+  background: rgba(139,92,246,.07);
+  font-size: 8px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.clan-page-live-pill i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #a98bff;
+  box-shadow: 0 0 14px rgba(169,139,255,.8);
+}
+.clan-page-hero {
+  min-height: 230px;
+  padding: clamp(24px, 4vw, 46px);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  overflow: hidden;
+  border: 1px solid rgba(167,139,250,.2);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 78% 15%, rgba(139,92,246,.2), transparent 34%),
+    linear-gradient(135deg, #1c1229, #0e0916);
+  box-shadow: 0 24px 70px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.04);
+  animation: clanPageHeroIn .7s cubic-bezier(.16,1,.3,1) both;
+}
+.clan-page-hero::after {
+  content: '';
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  right: -130px;
+  top: -170px;
+  border: 1px solid rgba(167,139,250,.1);
+  border-radius: 50%;
+  box-shadow: 0 0 0 45px rgba(139,92,246,.025), 0 0 0 95px rgba(139,92,246,.018);
+}
+.clan-page-title { position: relative; z-index: 1; min-width: 0; }
+.clan-page-title h1 {
+  margin: 9px 0 12px;
+  max-width: 850px;
+  overflow-wrap: anywhere;
+  color: #f6f1ff;
+  font: 800 clamp(42px, 7vw, 86px)/.94 var(--display);
+  letter-spacing: -.055em;
+}
+.clan-page-title p { margin: 0; color: #a89db8; font-size: 11px; }
+.clan-page-monogram {
+  width: 112px;
+  height: 112px;
+  z-index: 1;
+  flex: 0 0 112px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 8px;
+  border: 1px solid rgba(167,139,250,.26);
+  border-radius: 31px;
+  background: linear-gradient(145deg, rgba(139,92,246,.22), rgba(255,255,255,.02));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 20px 40px rgba(0,0,0,.27);
+}
+.clan-page-monogram span { color: #d4c2ff; font: 800 35px/1 var(--display); letter-spacing: -.06em; }
+.clan-page-monogram small { color: #867895; font-size: 8px; font-weight: 800; letter-spacing: .18em; }
+.clan-page-status { padding: 18px 0; }
+.clan-page-stats {
+  margin: 18px 0;
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 10px;
+}
+.clan-page-stats article {
+  padding: 18px;
+  min-height: 96px;
+  display: grid;
+  align-content: center;
+  gap: 9px;
+  border: 1px solid var(--line);
+  border-radius: 17px;
+  background: rgba(255,255,255,.027);
+  opacity: 0;
+  transform: translateY(10px);
+  animation: clanStatIn .52s cubic-bezier(.16,1,.3,1) forwards;
+  animation-delay: var(--stat-delay);
+}
+.clan-page-stats article:first-child {
+  border-color: rgba(139,92,246,.28);
+  background: linear-gradient(145deg, rgba(139,92,246,.12), rgba(255,255,255,.02));
+}
+.clan-page-stats span { color: var(--muted); font-size: 8px; font-weight: 700; text-transform: uppercase; }
+.clan-page-stats strong { color: #f3edff; font: 800 clamp(18px,2.2vw,28px)/1 var(--display); }
+
+.clan-role-panel { margin-bottom: 18px; padding: 22px; }
+.clan-role-panel h2 { margin: 6px 0 0; font: 800 clamp(18px,2.4vw,27px)/1.1 var(--display); }
+.clan-role-steps {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 8px;
+}
+.clan-role-step {
+  min-height: 76px;
+  padding: 12px;
+  position: relative;
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.065);
+  border-radius: 14px;
+  background: rgba(255,255,255,.024);
+  opacity: 0;
+  transform: translateX(-8px);
+  animation: clanRoleIn .45s cubic-bezier(.16,1,.3,1) forwards;
+  animation-delay: var(--role-delay);
+}
+.clan-role-step::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: currentColor;
+  opacity: .35;
+}
+.clan-role-step i {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: rgba(255,255,255,.05);
+  font-style: normal;
+  font-size: 9px;
+}
+.clan-role-step b { font-size: 10px; text-transform: uppercase; }
+.clan-role-step small { font: 800 17px/1 var(--display); }
+.clan-role-step.recruit { color: #a5acb8; }
+.clan-role-step.member { color: #82dfb0; }
+.clan-role-step.officer { color: #baa5ff; }
+.clan-role-step.leader { color: #ffd68a; }
+
+.clan-roster-page { padding: 22px; }
+.clan-roster-page-heading { margin-bottom: 18px; }
+.clan-roster-page-heading h2 { margin: 5px 0 0; font: 800 25px/1 var(--display); }
+.clan-member-head,
+.clan-member-card {
+  display: grid;
+  grid-template-columns: minmax(240px,1.3fr) 120px minmax(125px,.7fr) minmax(125px,.7fr) 120px;
+  align-items: center;
+  gap: 12px;
+}
+.clan-member-head {
+  padding: 0 15px 9px;
+  color: #756b84;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .08em;
+}
+.clan-page-members { display: grid; gap: 7px; }
+.clan-member-card {
+  min-height: 76px;
+  padding: 11px 14px;
+  border: 1px solid rgba(255,255,255,.055);
+  border-radius: 14px;
+  background: rgba(255,255,255,.02);
+  opacity: 0;
+  transform: translateY(7px);
+  animation: clanMemberIn .46s cubic-bezier(.16,1,.3,1) forwards;
+  animation-delay: var(--member-delay);
+  transition: transform .3s cubic-bezier(.16,1,.3,1), border-color .25s ease, background .25s ease;
+}
+.clan-member-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(139,92,246,.2);
+  background: rgba(139,92,246,.045);
+}
+.clan-member-player {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: inherit;
+  border: 0;
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+}
+.clan-member-avatar {
+  width: 43px;
+  height: 43px;
+  flex: 0 0 43px;
+  display: grid;
+  place-items: center;
+  color: #c9b5ff;
+  border: 1px solid rgba(139,92,246,.2);
+  border-radius: 13px;
+  background: rgba(139,92,246,.08);
+  font: 800 10px/1 var(--display);
+}
+.clan-member-player > span:last-child { min-width: 0; display: grid; gap: 5px; }
+.clan-member-player strong { overflow: hidden; color: #f0eafa; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.clan-member-player small { color: var(--muted); font-size: 8px; }
+.clan-member-value { display: grid; gap: 5px; }
+.clan-member-value small { color: var(--muted); font-size: 7px; text-transform: uppercase; }
+.clan-member-value b { color: #e8e0f5; font: 800 12px/1 var(--display); }
+.clan-member-joined { color: #94899f; font-size: 9px; }
+.clan-role.recruit { color: #b4bbc5; background: rgba(180,187,197,.07); border: 1px solid rgba(180,187,197,.14); }
+.clan-xp-highlight {
+  border-color: rgba(139,92,246,.22) !important;
+  background: rgba(139,92,246,.08) !important;
+}
+.clan-xp-highlight b { color: #cdbaff; }
+
+.fighter-alias-match {
+  max-width: 100%;
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  overflow: hidden;
+}
+.fighter-alias-match > span { flex: 0 0 auto; color: #9d8daf; font-size: 8px; }
+.fighter-alias-match b {
+  overflow: hidden;
+  color: #cab7ff;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Portraits stay sharp and do not fail while lazy/off-screen. */
+.legend-icon img,
+.row-portrait img,
+.fighter-portrait img,
+.profile-portrait img,
+.mini-portrait img,
+.lifetime-legend-portrait img,
+.teammate-portrait img,
+.suggestion-portrait img {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 3px;
+  object-fit: contain !important;
+  object-position: center bottom !important;
+  image-rendering: auto;
+  filter: drop-shadow(0 7px 10px rgba(0,0,0,.28));
+}
+.legend-image-shell {
+  place-items: center;
+  background: radial-gradient(circle at 50% 22%, rgba(167,139,250,.17), transparent 53%);
+}
+.legend-image-shell .legend-fallback {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #bea7ff;
+  background: linear-gradient(145deg, rgba(139,92,246,.11), rgba(255,255,255,.015));
+  font-size: 12px;
+}
+
+@keyframes clanPageHeroIn { from { opacity: 0; transform: translateY(18px) scale(.99); } }
+@keyframes clanStatIn { to { opacity: 1; transform: translateY(0); } }
+@keyframes clanRoleIn { to { opacity: 1; transform: translateX(0); } }
+@keyframes clanMemberIn { to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 900px) {
+  .clan-page-stats { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .clan-role-steps { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .clan-member-head { display: none; }
+  .clan-member-card {
+    grid-template-columns: minmax(190px,1fr) 100px minmax(100px,.7fr);
+  }
+  .clan-member-card .clan-member-value:nth-of-type(2),
+  .clan-member-joined { display: none; }
+}
+@media (max-width: 620px) {
+  .clan-page { padding-top: 18px; }
+  .clan-page-hero { min-height: 190px; padding: 24px 19px; border-radius: 21px; }
+  .clan-page-title h1 { font-size: clamp(36px,13vw,58px); }
+  .clan-page-monogram { width: 78px; height: 78px; flex-basis: 78px; border-radius: 23px; }
+  .clan-page-monogram span { font-size: 25px; }
+  .clan-page-stats { gap: 7px; }
+  .clan-page-stats article { min-height: 82px; padding: 13px; }
+  .clan-role-panel, .clan-roster-page { padding: 15px; }
+  .clan-role-steps { grid-template-columns: 1fr 1fr; }
+  .clan-member-card { grid-template-columns: 1fr auto; gap: 8px; }
+  .clan-member-card .clan-member-value,
+  .clan-member-joined { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .clan-page-hero, .clan-page-stats article, .clan-role-step, .clan-member-card { animation: none !important; opacity: 1; transform: none; }
 }

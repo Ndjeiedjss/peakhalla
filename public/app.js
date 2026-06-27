@@ -19,7 +19,7 @@ const translations = {
     legendUsed: 'legend used', legendsUsed: 'legends used', noRankedLegends: 'No ranked legend games found.', nameSeen: 'name recorded', namesSeen: 'names recorded', currentName: 'Current', previousName: 'Previous',
     firstSeen: 'First seen', lastSeen: 'Last seen', formerly: 'Formerly', aliasMatch: 'Old-name match', main: 'Main', unknownLegend: 'Main unknown',
     leaderboardPrefix: 'Top players ·', leaderboardSearch: 'Find a rank', leaderboardSearchPlaceholder: 'Search a player', leaderboardSearchTitle: 'Ranking search', emptyData: 'No data available right now.', allRegions: 'All regions',
-    clansTitle: 'Top clans', clansText: 'Official Brawlhalla guilds discovered from current ranked players and ordered by official guild rank.', clanSearch: 'Find a clan', clanSearchPlaceholder: 'Clan name or guild ID', clanRank: 'Clan rank', clanMembers: 'Members', clanPoints: 'Weekly points', clanXp: 'Clan XP', clanRecruiting: 'Recruiting', clanClosed: 'Closed', clanOpen: 'Open clan', clanDetails: 'Clan details', clanRoster: 'Clan roster', clanRole: 'Role', clanJoined: 'Joined', clanMemberXp: 'Member XP', clanNoData: 'No clans have been discovered yet. Refresh in a moment.', clanLoading: 'Discovering top clans…', clanUpdated: 'Updated', clanDiscoveryNote: 'Top clans are discovered from ranked players and sorted using the official guild rank.', clanView: 'View clan',
+    clansTitle: 'Top clans by lifetime XP', clansText: 'Browse the highest-XP Brawlhalla clans, then open a dedicated roster page for every clan.', clanSearch: 'Find a clan', clanSearchPlaceholder: 'Clan name or guild ID', clanRank: 'XP rank', clanMembers: 'Members', clanPoints: 'Weekly points', clanXp: 'Lifetime XP', clanRecruiting: 'Recruiting', clanClosed: 'Closed', clanOpen: 'Open clan', clanDetails: 'Clan profile', clanRoster: 'Clan roster', clanRole: 'Role', clanJoined: 'Joined', clanMemberXp: 'Member XP', clanNoData: 'No clan data is available right now. Refresh in a moment.', clanLoading: 'Loading top clans by XP…', clanUpdated: 'Updated', clanDiscoveryNote: 'Top clans are ordered by lifetime XP.', clanView: 'View clan', clanBack: 'Back to clans', clanRoleOrder: 'Role hierarchy', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'Members are ordered from Recruit to Leader.',
     MiddleEast: 'Middle East', Europe: 'Europe', USEast: 'US East', USWest: 'US West', SouthernAfrica: 'Southern Africa', SoutheastAsia: 'Southeast Asia', Brazil: 'Brazil', Australia: 'Australia', Japan: 'Japan',
     esportsTitle: 'Esports power rankings', esportsText: 'Official competitive names, medals, earnings, and a quick look at major tournament winners.', powerRanking: 'Power ranking', player: 'Player', earnings: 'Earnings',
     officialSource: 'Open official rankings ↗', tournamentList: 'Tournament list', proWinners: 'Pro players & major titles', notExhaustive: 'Featured titles, not a complete career list',
@@ -49,7 +49,7 @@ const translations = {
     legendUsed: 'شخصية مستخدمة', legendsUsed: 'شخصيات مستخدمة', noRankedLegends: 'ما لقينا مباريات رانك على الشخصيات.', nameSeen: 'اسم مسجل', namesSeen: 'أسماء مسجلة', currentName: 'الحالي', previousName: 'قديم',
     firstSeen: 'أول ظهور', lastSeen: 'آخر ظهور', formerly: 'كان اسمه', aliasMatch: 'تطابق اسم قديم', main: 'الأساسية', unknownLegend: 'الشخصية غير معروفة',
     leaderboardPrefix: 'المتصدرين ·', leaderboardSearch: 'ابحث في الترتيب', leaderboardSearchPlaceholder: 'اكتب اسم اللاعب', leaderboardSearchTitle: 'نتيجة الترتيب', emptyData: 'ما فيه بيانات الحين.', allRegions: 'كل المناطق',
-    clansTitle: 'أفضل الكلانات', clansText: 'كلانات براولهالا الرسمية المكتشفة من اللاعبين المصنفين والمرتبة حسب ترتيب الكلان الرسمي.', clanSearch: 'ابحث عن كلان', clanSearchPlaceholder: 'اسم الكلان أو رقم Guild ID', clanRank: 'ترتيب الكلان', clanMembers: 'الأعضاء', clanPoints: 'نقاط الأسبوع', clanXp: 'خبرة الكلان', clanRecruiting: 'يقبل أعضاء', clanClosed: 'مغلق', clanOpen: 'كلان مفتوح', clanDetails: 'تفاصيل الكلان', clanRoster: 'أعضاء الكلان', clanRole: 'الرتبة', clanJoined: 'تاريخ الانضمام', clanMemberXp: 'خبرة العضو', clanNoData: 'ما اكتشفنا كلانات للحين، جرّب تحديث بعد شوي.', clanLoading: 'نكتشف أفضل الكلانات…', clanUpdated: 'آخر تحديث', clanDiscoveryNote: 'يتم اكتشاف الكلانات من اللاعبين المصنفين وترتيبها حسب ترتيب الكلان الرسمي.', clanView: 'افتح الكلان',
+    clansTitle: 'أفضل الكلانات حسب الخبرة', clansText: 'تصفح كلانات براولهالا الأعلى في Lifetime XP وافتح صفحة مستقلة ومنظمة لكل كلان.', clanSearch: 'ابحث عن كلان', clanSearchPlaceholder: 'اسم الكلان أو رقم Guild ID', clanRank: 'ترتيب الخبرة', clanMembers: 'الأعضاء', clanPoints: 'نقاط الأسبوع', clanXp: 'Lifetime XP', clanRecruiting: 'يقبل أعضاء', clanClosed: 'مغلق', clanOpen: 'كلان مفتوح', clanDetails: 'صفحة الكلان', clanRoster: 'أعضاء الكلان', clanRole: 'الرتبة', clanJoined: 'تاريخ الانضمام', clanMemberXp: 'خبرة العضو', clanNoData: 'بيانات الكلانات غير متاحة الآن، جرّب التحديث بعد قليل.', clanLoading: 'نحمّل أفضل الكلانات حسب الخبرة…', clanUpdated: 'آخر تحديث', clanDiscoveryNote: 'الكلانات مرتبة حسب Lifetime XP.', clanView: 'افتح الكلان', clanBack: 'الرجوع للكلانات', clanRoleOrder: 'تسلسل الرتب', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'الأعضاء مرتبون من Recruit إلى Leader.',
     MiddleEast: 'الشرق الأوسط', Europe: 'أوروبا', USEast: 'شرق أمريكا', USWest: 'غرب أمريكا', SouthernAfrica: 'جنوب أفريقيا', SoutheastAsia: 'جنوب شرق آسيا', Brazil: 'البرازيل', Australia: 'أستراليا', Japan: 'اليابان',
     esportsTitle: 'باور رانكنق المحترفين', esportsText: 'أسماء المحترفين، الميداليات، الأرباح، وأهم البطولات اللي فازوا فيها.', powerRanking: 'الباور رانكنق', player: 'اللاعب', earnings: 'الأرباح',
     officialSource: 'افتح الترتيب الرسمي ↗', tournamentList: 'قائمة البطولات', proWinners: 'المحترفين وأهم ألقابهم', notExhaustive: 'ألقاب مختارة، مو كل مسيرة اللاعب',
@@ -68,14 +68,18 @@ if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
 const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, leaderboardSearchTimer: null, leaderboardSearchController: null, queueMode: '1v1', queueRegion: 'ME', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, selectedClan: null };
 const playerPathMatch = location.pathname.match(/^\/player\/(\d+)\/?$/);
+const clanPathMatch = location.pathname.match(/^\/clan\/(\d+)\/?$/);
 const standalonePlayerId = playerPathMatch ? playerPathMatch[1] : null;
+const standaloneClanId = clanPathMatch ? clanPathMatch[1] : null;
 const isStandalonePlayerPage = Boolean(standalonePlayerId);
+const isClanPage = Boolean(standaloneClanId);
 const isLiveQueuePage = /^\/queue\/?$/.test(location.pathname);
 const isArenaPage = /^\/arena\/?$/.test(location.pathname);
 if (isStandalonePlayerPage) document.body.classList.add('player-page-mode', 'page-entering');
+if (isClanPage) document.body.classList.add('clan-page-mode', 'page-entering');
 if (isLiveQueuePage) document.body.classList.add('live-queue-page-mode', 'page-entering');
 if (isArenaPage) document.body.classList.add('arena-page-mode', 'page-entering');
-if (isStandalonePlayerPage || isLiveQueuePage || isArenaPage) { const brandLink = document.querySelector('.brand'); if (brandLink) brandLink.href = '/'; }
+if (isStandalonePlayerPage || isClanPage || isLiveQueuePage || isArenaPage) { const brandLink = document.querySelector('.brand'); if (brandLink) brandLink.href = '/'; }
 const els = {
   form: $('#search-form'), name: $('#player-name'), region: $('#search-region'), mode: $('#search-mode'), suggestions: $('#search-suggestions'), status: $('#status'),
   resultsSection: $('#search-results'), resultsGrid: $('#results-grid'), resultCount: $('#result-count'), profile: $('#player-profile'), accountShowcase: $('#account-showcase'), profileAliases: $('#player-aliases'),
@@ -83,7 +87,7 @@ const els = {
   leaderboardMode: $('#leaderboard-mode'), leaderboardSearch: $('#leaderboard-search'), leaderboardTitle: $('#leaderboard-title'), languageToggle: $('#language-toggle'), rankedNav: $('#ranked-nav-dropdown'), rankedToggle: $('#ranked-nav-toggle'), rankedMenu: $('#ranked-nav-menu'), rankedModeLabel: $('#ranked-mode-label'), queueNav: $('#queue-nav-dropdown'), queueToggle: $('#queue-nav-toggle'), queueMenu: $('#queue-nav-menu'), queueModeLabel: $('#queue-mode-label'), playerPeakRating: $('#player-peak-rating'), eloGap: $('#elo-gap'), rankProgressFill: $('#rank-progress-fill'),
   esportsRegion: $('#esports-region'), esportsMode: $('#esports-mode'), powerBody: $('#power-ranking-body'), esportsUpdated: $('#esports-updated'),
   tournamentList: $('#tournament-list'), tournamentRegionLabel: $('#tournament-region-label'), championsGrid: $('#champions-grid'), esportsSource: $('#esports-source'),
-  clansGrid: $('#clans-grid'), clansSearch: $('#clans-search'), clansRefresh: $('#clans-refresh'), clansUpdated: $('#clans-updated'), clanModal: $('#clan-modal'), clanModalName: $('#clan-modal-name'), clanModalMeta: $('#clan-modal-meta'), clanModalStats: $('#clan-modal-stats'), clanMembersBody: $('#clan-members-body'), clanMemberCount: $('#clan-member-count'), clanModalStatus: $('#clan-modal-status'),
+  clansGrid: $('#clans-grid'), clansSearch: $('#clans-search'), clansRefresh: $('#clans-refresh'), clansUpdated: $('#clans-updated'), clanPage: $('#clan-page'), clanPageName: $('#clan-page-name'), clanPageMeta: $('#clan-page-meta'), clanPageStats: $('#clan-page-stats'), clanPageStatus: $('#clan-page-status'), clanPageMembers: $('#clan-page-members'), clanPageMemberCount: $('#clan-page-member-count'), clanPageRoles: $('#clan-page-roles'), clanModal: $('#clan-modal'), clanModalName: $('#clan-modal-name'), clanModalMeta: $('#clan-modal-meta'), clanModalStats: $('#clan-modal-stats'), clanMembersBody: $('#clan-members-body'), clanMemberCount: $('#clan-member-count'), clanModalStatus: $('#clan-modal-status'),
   careerModal: $('#esports-player-modal'), careerName: $('#career-player-name'), careerMeta: $('#career-player-meta'), careerStatus: $('#career-status'),
   careerContent: $('#career-content'), careerSummary: $('#career-summary'), careerList: $('#career-placement-list'), careerCount: $('#career-count'), careerSource: $('#career-source'),
   lifetimeSummary: $('#lifetime-summary-grid'), lifetimeLegends: $('#lifetime-legends-grid'), lifetimeLegendsCount: $('#lifetime-legends-count'), legendStatsSearch: $('#legend-stats-search'), legendStatsFilter: $('#legend-stats-filter'), legendStatsSort: $('#legend-stats-sort'), refreshPlayerStats: $('#refresh-player-stats'), statsSourceNote: $('#stats-source-note'), statsAccuracyNote: $('#stats-accuracy-note'), teammatesPanel: $('#teammates-panel'), teammatesGrid: $('#teammates-grid'), teammatesCount: $('#teammates-count'), queuePage: $('#live-queue-page'), queueRegion: $('#queue-region'), queueRefresh: $('#queue-refresh'), queueList: $('#queue-activity-list'), queueStatus: $('#queue-status'), queueActiveCount: $('#queue-active-count'), queueScanMeta: $('#queue-scan-meta'), arenaPage: $('#arena-page'), arenaAuthPanel: $('#arena-auth-panel'), arenaAuthForm: $('#arena-auth-form'), arenaUsername: $('#arena-username'), arenaPassword: $('#arena-password'), arenaAuthSubmit: $('#arena-auth-submit'), arenaAuthStatus: $('#arena-auth-status'), arenaComposer: $('#arena-composer'), arenaCurrentUser: $('#arena-current-user'), arenaUserAvatar: $('#arena-user-avatar'), arenaLogout: $('#arena-logout'), arenaPostForm: $('#arena-post-form'), arenaImageInput: $('#arena-image-input'), arenaImagePreview: $('#arena-image-preview'), arenaUploadPrompt: $('#arena-upload-prompt'), arenaCaption: $('#arena-caption'), arenaPostSubmit: $('#arena-post-submit'), arenaPostStatus: $('#arena-post-status'), arenaFeed: $('#arena-feed'), arenaRefresh: $('#arena-refresh')
@@ -123,14 +127,27 @@ function applyLanguage() {
   if (state.currentPlayer) renderPlayer(state.currentPlayer, false);
   if (isLiveQueuePage) {
     if (state.queueData) renderLiveQueue(state.queueData);
-  } else if (!isStandalonePlayerPage && !isArenaPage) {
+  } else if (!isStandalonePlayerPage && !isClanPage && !isArenaPage) {
     loadLeaderboard();
     if (state.clansData) renderClans(state.clansData); else window.setTimeout(() => loadClans(), 850);
     if (state.esportsData) renderEsports(state.esportsData); else loadEsports();
   }
   if (isArenaPage) { renderArenaAccount(); renderArenaPosts(); }
+  if (isClanPage && state.selectedClan) renderClanPage(state.selectedClan);
   if (state.esportsCareer && !els.careerModal.hidden) renderCareer(state.esportsCareer);
 }
+
+const legendImageObserver = 'IntersectionObserver' in window
+  ? new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const image = entry.target;
+        image.dataset.imageVisible = '1';
+        armLegendImageTimeout(image);
+        legendImageObserver.unobserve(image);
+      }
+    }, { rootMargin: '280px 0px' })
+  : null;
 
 function clearLegendImageTimer(image) {
   const timer = Number(image?.dataset?.imageTimer || 0);
@@ -153,7 +170,7 @@ function handleLegendImageError(image) {
     image.dataset.imageIndex = String(nextIndex);
     image.classList.remove('is-loaded');
     image.src = candidates[nextIndex];
-    armLegendImageTimeout(image);
+    if (image.dataset.imageVisible === '1' || image.loading === 'eager') armLegendImageTimeout(image);
     return;
   }
   image.hidden = true;
@@ -164,9 +181,14 @@ function handleLegendImageError(image) {
 function armLegendImageTimeout(image) {
   clearLegendImageTimer(image);
   if (image.complete && image.naturalWidth > 0) return handleLegendImageLoad(image);
+  // Do not mark lazy off-screen images as failed before the browser starts them.
+  if (image.loading === 'lazy' && image.dataset.imageVisible !== '1') {
+    legendImageObserver?.observe(image);
+    return;
+  }
   const timer = window.setTimeout(() => {
     if (!image.complete || image.naturalWidth === 0) handleLegendImageError(image);
-  }, 3200);
+  }, 10_000);
   image.dataset.imageTimer = String(timer);
 }
 window.handleLegendImageError = handleLegendImageError;
@@ -175,10 +197,13 @@ window.handleLegendImageLoad = handleLegendImageLoad;
 function legendImageMarkup(legend, options = {}) {
   const name = legend?.name || options.fallbackName || '';
   const fallback = escapeHtml(initials(name || 'BH'));
-  const candidates = Array.isArray(legend?.image_candidates) ? [...new Set(legend.image_candidates.filter(Boolean))] : (legend?.image_url ? [legend.image_url] : []);
+  const candidates = Array.isArray(legend?.image_candidates)
+    ? [...new Set(legend.image_candidates.filter(Boolean))]
+    : (legend?.image_url ? [legend.image_url] : []);
   if (!candidates.length) return `<span class="legend-image-shell is-fallback"><span class="legend-fallback">${fallback}</span></span>`;
-  const lazy = options.lazy === false ? 'loading="eager" fetchpriority="high"' : 'loading="lazy" fetchpriority="low"';
-  return `<span class="legend-image-shell"><img src="${escapeHtml(candidates[0])}" alt="${escapeHtml(name)}" ${lazy} decoding="async" referrerpolicy="no-referrer" data-legend-image data-image-candidates='${escapeHtml(JSON.stringify(candidates))}' data-image-index="0" onload="handleLegendImageLoad(this)" onerror="handleLegendImageError(this)"><span class="legend-fallback" hidden>${fallback}</span></span>`;
+  const eager = options.lazy === false;
+  const loading = eager ? 'loading="eager" fetchpriority="high" data-image-visible="1"' : 'loading="lazy" fetchpriority="low"';
+  return `<span class="legend-image-shell"><img src="${escapeHtml(candidates[0])}" alt="${escapeHtml(name)}" ${loading} decoding="async" data-legend-image data-image-candidates='${escapeHtml(JSON.stringify(candidates))}' data-image-index="0" onload="handleLegendImageLoad(this)" onerror="handleLegendImageError(this)"><span class="legend-fallback" hidden>${fallback}</span></span>`;
 }
 
 function portraitMarkup(legend, className = 'row-portrait', options = {}) {
@@ -188,6 +213,7 @@ function portraitMarkup(legend, className = 'row-portrait', options = {}) {
 function activateImageFallbacks() {
   document.querySelectorAll('[data-legend-image]').forEach((image) => {
     if (image.complete && image.naturalWidth > 0) handleLegendImageLoad(image);
+    else if (image.loading === 'lazy' && image.dataset.imageVisible !== '1') legendImageObserver?.observe(image);
     else armLegendImageTimeout(image);
   });
 }
@@ -339,8 +365,14 @@ function setupPlayerPrefetch(container, selector, datasetKey) {
 
 function playerCard(item, player) {
   const mainLegend = player.main_legend; const rank = item.rank ? `#${number(item.rank)}` : '—';
-  const matchedAlias = (player.matched_aliases || []).find((name) => normalize(name) !== normalize(player.username));
-  const matchLine = matchedAlias ? `<span class="fighter-alias-match">${escapeHtml(t('oldNameMatch'))}: <b>${escapeHtml(matchedAlias)}</b></span>` : '';
+  const matchedAliases = [...new Set((player.matched_aliases || []).filter((name) => normalize(name) !== normalize(player.username)))];
+  const allAliases = [...new Set([
+    ...matchedAliases,
+    ...(player.known_names || []).map((item) => typeof item === 'string' ? item : item?.name)
+  ].filter((name) => name && normalize(name) !== normalize(player.username)))];
+  const matchLine = allAliases.length
+    ? `<span class="fighter-alias-match"><span>${escapeHtml(t('knownNames'))}</span><b>${allAliases.slice(0, 10).map(escapeHtml).join(' · ')}</b></span>`
+    : '';
   return `<button class="fighter-card" data-player-id="${Number(player.id)}">
     ${portraitMarkup(mainLegend || { name: player.username }, 'fighter-portrait')}
     <span class="fighter-data">
@@ -855,22 +887,23 @@ function scheduleLeaderboardSearch() {
 
 function clanDate(timestamp) {
   if (!Number(timestamp)) return '—';
-  return new Date(Number(timestamp) * 1000).toLocaleDateString(state.language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  const milliseconds = Number(timestamp) > 10_000_000_000 ? Number(timestamp) : Number(timestamp) * 1000;
+  return new Date(milliseconds).toLocaleDateString(state.language === 'ar' ? 'ar-SA' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 function clanCard(guild, index) {
   const tags = (guild.tags || []).slice(0, 3).map((tag) => `<span>${escapeHtml(tag)}</span>`).join('');
-  return `<button class="clan-card" type="button" data-clan-id="${Number(guild.guild_id)}" style="--clan-delay:${Math.min(index, 15) * 45}ms">
+  return `<button class="clan-card" type="button" data-clan-id="${Number(guild.guild_id)}" style="--clan-delay:${Math.min(index, 15) * 42}ms">
     <span class="clan-rank">${guild.rank ? `#${number(guild.rank)}` : '—'}</span>
-    <span class="clan-card-copy"><span class="clan-name-line"><strong>${escapeHtml(guild.name || `Guild ${guild.guild_id}`)}</strong><em class="${guild.is_recruiting ? 'open' : ''}">${escapeHtml(guild.is_recruiting ? t('clanRecruiting') : t('clanClosed'))}</em></span><small>ID ${number(guild.guild_id)}${guild.notice ? ` · ${escapeHtml(guild.notice)}` : ''}</small><span class="clan-tags">${tags}</span></span>
-    <span class="clan-card-metrics"><span><small>${escapeHtml(t('clanMembers'))}</small><b>${number(guild.member_count, '—')}</b></span><span><small>${escapeHtml(t('clanPoints'))}</small><b>${number(guild.guild_points, '0')}</b></span><span><small>${escapeHtml(t('clanXp'))}</small><b>${number(guild.xp, '0')}</b></span></span>
+    <span class="clan-card-copy"><span class="clan-name-line"><strong>${escapeHtml(guild.name || `Clan ${guild.guild_id}`)}</strong>${guild.is_recruiting ? `<em class="open">${escapeHtml(t('clanRecruiting'))}</em>` : ''}</span><small>ID ${number(guild.guild_id)}${guild.notice ? ` · ${escapeHtml(guild.notice)}` : ''}</small><span class="clan-tags">${tags}</span></span>
+    <span class="clan-card-metrics"><span class="clan-xp-highlight"><small>${escapeHtml(t('clanXp'))}</small><b>${number(guild.xp, '0')}</b></span><span><small>${escapeHtml(t('clanMembers'))}</small><b>${number(guild.member_count, '—')}</b></span><span><small>${escapeHtml(t('clanPoints'))}</small><b>${number(guild.guild_points, '0')}</b></span></span>
     <span class="clan-arrow">→</span>
   </button>`;
 }
 
 function renderClans(data = {}) {
   state.clansData = data;
-  const guilds = data.guilds || [];
+  const guilds = [...(data.guilds || [])].sort((a, b) => Number(b.xp || 0) - Number(a.xp || 0));
   if (els.clansUpdated) els.clansUpdated.textContent = data.updated_at ? `${t('clanUpdated')}: ${shortDate(data.updated_at)}` : '';
   if (!els.clansGrid) return;
   els.clansGrid.innerHTML = guilds.length ? guilds.map(clanCard).join('') : `<p class="empty-copy">${escapeHtml(t('clanNoData'))}</p>`;
@@ -901,7 +934,18 @@ function clanRoleClass(role = '') {
   const key = normalize(role);
   if (key === 'leader') return 'leader';
   if (key === 'officer') return 'officer';
+  if (key === 'recruit') return 'recruit';
   return 'member';
+}
+
+function clanRoleLabel(role = '') {
+  const key = clanRoleClass(role);
+  return {
+    recruit: t('clanRecruit'),
+    member: t('clanMember'),
+    officer: t('clanOfficer'),
+    leader: t('clanLeader')
+  }[key];
 }
 
 function closeClanModal() {
@@ -910,36 +954,73 @@ function closeClanModal() {
   document.body.classList.remove('modal-open');
 }
 
-async function openClan(guildId) {
-  if (!els.clanModal || !guildId) return;
-  els.clanModal.hidden = false;
-  document.body.classList.add('modal-open');
-  els.clanModalName.textContent = t('clanDetails');
-  els.clanModalMeta.textContent = `Guild ID ${guildId}`;
-  els.clanModalStats.innerHTML = '';
-  els.clanMembersBody.innerHTML = '';
-  els.clanModalStatus.hidden = false;
-  els.clanModalStatus.textContent = t('clanLoading');
+function openClan(guildId) {
+  if (!guildId) return;
+  document.body.classList.add('page-leaving');
+  window.setTimeout(() => { location.href = `/clan/${encodeURIComponent(guildId)}`; }, 230);
+}
+
+function renderClanPage(data = {}) {
+  if (!els.clanPage) return;
+  state.selectedClan = data;
+  const guild = data.guild || {};
+  const roleOrder = { Recruit: 0, Member: 1, Officer: 2, Leader: 3 };
+  const members = [...(data.members || [])].sort((left, right) =>
+    (roleOrder[left.rank] ?? 1) - (roleOrder[right.rank] ?? 1)
+    || Number(right.xp || 0) - Number(left.xp || 0)
+  );
+  els.clanPage.hidden = false;
+  els.clanPageName.textContent = guild.name || `Clan ${standaloneClanId || ''}`;
+  els.clanPageMeta.textContent = [
+    guild.rank ? `${t('clanRank')} #${number(guild.rank)}` : null,
+    `Guild ID ${number(guild.guild_id || standaloneClanId)}`,
+    guild.create_date ? clanDate(guild.create_date) : null
+  ].filter(Boolean).join(' · ');
+  document.title = `${guild.name || 'Clan'} — PeakHalla`;
+  els.clanPageStats.innerHTML = [
+    [t('clanXp'), number(guild.xp, '0')],
+    [t('clanMembers'), number(guild.member_count || members.length, '0')],
+    [t('clanPoints'), number(guild.guild_points, '0')],
+    [t('clanRank'), guild.rank ? `#${number(guild.rank)}` : '—']
+  ].map(([label, value], index) => `<article style="--stat-delay:${index * 60}ms"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></article>`).join('');
+
+  const counts = members.reduce((acc, member) => {
+    const role = clanRoleClass(member.rank);
+    acc[role] = (acc[role] || 0) + 1;
+    return acc;
+  }, {});
+  els.clanPageRoles.innerHTML = ['recruit', 'member', 'officer', 'leader'].map((role, index) =>
+    `<span class="clan-role-step ${role}" style="--role-delay:${index * 70}ms"><i>${index + 1}</i><b>${escapeHtml(clanRoleLabel(role))}</b><small>${number(counts[role] || 0)}</small></span>`
+  ).join('');
+
+  if (els.clanPageMemberCount) els.clanPageMemberCount.textContent = `${number(members.length)} ${t('clanMembers')}`;
+  els.clanPageMembers.innerHTML = members.length ? members.map((member, index) => `
+    <article class="clan-member-card" style="--member-delay:${Math.min(index, 24) * 28}ms">
+      <button type="button" class="clan-member-player" data-clan-player-id="${Number(member.brawlhalla_id)}">
+        <span class="clan-member-avatar">${escapeHtml(initials(member.name))}</span>
+        <span><strong>${escapeHtml(member.name || `Player ${member.brawlhalla_id}`)}</strong><small>BH ID ${number(member.brawlhalla_id)}</small></span>
+      </button>
+      <span class="clan-role ${clanRoleClass(member.rank)}">${escapeHtml(clanRoleLabel(member.rank))}</span>
+      <span class="clan-member-value"><small>${escapeHtml(t('clanMemberXp'))}</small><b>${number(member.xp, '0')}</b></span>
+      <span class="clan-member-value"><small>${escapeHtml(t('clanPoints'))}</small><b>${number(member.guild_points, '0')}</b></span>
+      <span class="clan-member-joined">${escapeHtml(clanDate(member.join_date))}</span>
+    </article>`).join('') : `<p class="empty-copy">${escapeHtml(t('emptyData'))}</p>`;
+  els.clanPageMembers.querySelectorAll('[data-clan-player-id]').forEach((button) =>
+    button.addEventListener('click', () => navigateToPlayer(button.dataset.clanPlayerId))
+  );
+  els.clanPageStatus.hidden = true;
+}
+
+async function loadStandaloneClan() {
+  if (!isClanPage || !standaloneClanId || !els.clanPage) return;
+  els.clanPage.hidden = false;
+  els.clanPageStatus.hidden = false;
+  els.clanPageStatus.innerHTML = `<div class="clans-loading"><span></span><strong>${escapeHtml(t('clanLoading'))}</strong></div>`;
   try {
-    const data = await getJson(`/api/clans/${encodeURIComponent(guildId)}`);
-    state.selectedClan = data;
-    const guild = data.guild || {};
-    const members = data.members || [];
-    els.clanModalName.textContent = guild.name || `Guild ${guildId}`;
-    els.clanModalMeta.textContent = [guild.rank ? `${t('clanRank')} #${number(guild.rank)}` : null, guild.is_recruiting ? t('clanOpen') : t('clanClosed'), guild.create_date ? clanDate(guild.create_date) : null].filter(Boolean).join(' · ');
-    els.clanModalStats.innerHTML = [
-      [t('clanMembers'), number(guild.member_count || members.length, '0')],
-      [t('clanPoints'), number(guild.guild_points, '0')],
-      [t('clanXp'), number(guild.xp, '0')],
-      [t('clanRank'), guild.rank ? `#${number(guild.rank)}` : '—']
-    ].map(([label, value]) => `<article><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></article>`).join('');
-    if (els.clanMemberCount) els.clanMemberCount.textContent = `${number(members.length)} ${t('clanMembers')}`;
-    els.clanMembersBody.innerHTML = members.length ? members.map((member) => `<tr><td><button type="button" class="clan-member-player" data-clan-player-id="${Number(member.brawlhalla_id)}"><strong>${escapeHtml(member.name || `Player ${member.brawlhalla_id}`)}</strong><small>BH ID ${number(member.brawlhalla_id)}</small></button></td><td><span class="clan-role ${clanRoleClass(member.rank)}">${escapeHtml(member.rank || 'Member')}</span></td><td>${number(member.guild_points, '0')}</td><td>${number(member.xp, '0')}</td><td>${escapeHtml(clanDate(member.join_date))}</td></tr>`).join('') : `<tr><td colspan="5" class="empty-copy">${escapeHtml(t('emptyData'))}</td></tr>`;
-    els.clanMembersBody.querySelectorAll('[data-clan-player-id]').forEach((button) => button.addEventListener('click', () => navigateToPlayer(button.dataset.clanPlayerId)));
-    els.clanModalStatus.hidden = true;
+    renderClanPage(await getJson(`/api/clans/${encodeURIComponent(standaloneClanId)}`));
   } catch (error) {
-    els.clanModalStatus.hidden = false;
-    els.clanModalStatus.textContent = error.message || t('friendlyProblem');
+    els.clanPageStatus.hidden = false;
+    els.clanPageStatus.innerHTML = `<p class="empty-copy">${escapeHtml(error.message || t('friendlyProblem'))}</p>`;
   }
 }
 
@@ -1066,7 +1147,7 @@ function toggleRankedMenu() {
 
 async function chooseRankedMode(mode) {
   if (!['1v1', '2v2', '3v3'].includes(mode)) return;
-  if (isLiveQueuePage || isStandalonePlayerPage || isArenaPage) {
+  if (isLiveQueuePage || isStandalonePlayerPage || isClanPage || isArenaPage) {
     document.body.classList.add('page-leaving');
     window.setTimeout(() => { location.href = `/?ranked=${encodeURIComponent(mode)}#leaderboard`; }, 260);
     return;
@@ -1825,6 +1906,7 @@ setupScrollReveal();
 els.rankedMenu?.querySelectorAll('[data-ranked-mode]').forEach((button) => button.classList.toggle('selected', button.dataset.rankedMode === (els.mode?.value || '1v1')));
 if (isLiveQueuePage) setupLiveQueuePage();
 if (isArenaPage) setupArenaPage();
+if (isClanPage) loadStandaloneClan();
 applyLanguage();
 requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('page-entering')));
 function resetBrowserNavigationState() {
@@ -1857,4 +1939,4 @@ const playerFromUrl = pageParams.get('player');
 const rankedFromUrl = pageParams.get('ranked');
 if (standalonePlayerId) loadPlayer(standalonePlayerId);
 else if (playerFromUrl && /^\d+$/.test(playerFromUrl)) navigateToPlayer(playerFromUrl);
-else if (!isLiveQueuePage && !isArenaPage && ['1v1', '2v2', '3v3'].includes(rankedFromUrl)) window.setTimeout(() => chooseRankedMode(rankedFromUrl), 180);
+else if (!isLiveQueuePage && !isClanPage && !isArenaPage && ['1v1', '2v2', '3v3'].includes(rankedFromUrl)) window.setTimeout(() => chooseRankedMode(rankedFromUrl), 180);
