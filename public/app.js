@@ -575,12 +575,38 @@ function canonicalWeaponName(name = '') {
   return CANONICAL_WEAPON_NAMES[key] || raw;
 }
 
+const WEAPON_ICON_FILES = Object.freeze({
+  Hammer: 'hammer.svg',
+  Sword: 'sword.svg',
+  Blasters: 'blasters.svg',
+  'Rocket Lance': 'rocket-lance.svg',
+  Spear: 'spear.svg',
+  Katars: 'katars.svg',
+  Axe: 'axe.svg',
+  Bow: 'bow.svg',
+  Gauntlets: 'gauntlets.svg',
+  Scythe: 'scythe.svg',
+  Cannon: 'cannon.svg',
+  Orb: 'orb.svg',
+  Greatsword: 'greatsword.svg',
+  'Battle Boots': 'battle-boots.svg',
+  Chakram: 'chakram.svg'
+});
+
 function weaponGlyph(name = '') {
   const canonical = canonicalWeaponName(name);
   const map = {
-    Hammer: '🔨', Sword: '⚔', Blasters: '🔫', 'Rocket Lance': '🚀', Spear: '🗡', Katars: '🗡', Axe: '🪓', Bow: '🏹', Gauntlets: '🥊', Scythe: '☾', Cannon: '💥', Orb: '🔮', Greatsword: '⚔', 'Battle Boots': '🥾', Chakram: '◉'
+    Hammer: 'H', Sword: 'S', Blasters: 'B', 'Rocket Lance': 'RL', Spear: 'SP', Katars: 'K', Axe: 'A', Bow: 'BW', Gauntlets: 'G', Scythe: 'SC', Cannon: 'C', Orb: 'O', Greatsword: 'GS', 'Battle Boots': 'BB', Chakram: 'CH'
   };
-  return map[canonical] || '✦';
+  return map[canonical] || '•';
+}
+
+function weaponIconMarkup(name = '') {
+  const canonical = canonicalWeaponName(name);
+  const file = WEAPON_ICON_FILES[canonical];
+  const fallback = escapeHtml(weaponGlyph(canonical));
+  if (!file) return `<span class="weapon-icon-fallback">${fallback}</span>`;
+  return `<img class="weapon-icon-image" src="/assets/weapons/${file}" alt="" aria-hidden="true" loading="lazy" decoding="async" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="weapon-icon-fallback" hidden>${fallback}</span>`;
 }
 
 function weaponSlug(name = '') {
@@ -598,7 +624,7 @@ function legendShowcase(topLegends = []) {
 
 function weaponShowcase(weapons = []) {
   const items = weapons.slice(0, 3);
-  return `<article class="showcase-card showcase-weapons"><span class="showcase-label">${escapeHtml(t('mainWeapons'))}</span><div class="weapon-grid">${items.map((weapon) => `<div class="weapon-tile weapon-${escapeHtml(weaponSlug(weapon.name))}"><span class="weapon-glyph">${escapeHtml(weaponGlyph(weapon.name))}</span><div><strong>${escapeHtml(canonicalWeaponName(weapon.name))}</strong><small>${escapeHtml(weapon.time_held_display || '—')} · ${number(weapon.kos)} ${escapeHtml(t('kos'))}</small></div></div>`).join('')}</div></article>`;
+  return `<article class="showcase-card showcase-weapons"><span class="showcase-label">${escapeHtml(t('mainWeapons'))}</span><div class="weapon-grid">${items.map((weapon) => `<div class="weapon-tile weapon-${escapeHtml(weaponSlug(weapon.name))}"><span class="weapon-glyph">${weaponIconMarkup(weapon.name)}</span><div><strong>${escapeHtml(canonicalWeaponName(weapon.name))}</strong><small>${escapeHtml(weapon.time_held_display || '—')} · ${number(weapon.kos)} ${escapeHtml(t('kos'))}</small></div></div>`).join('')}</div></article>`;
 }
 
 function renderPlayerClan(guild) {
@@ -679,7 +705,7 @@ function legendMetric(label, value) {
 }
 
 function weaponDetail(stats = {}) {
-  return `<article class="legend-weapon-card"><div class="legend-weapon-name"><span class="weapon-glyph">${escapeHtml(weaponGlyph(stats.name))}</span><strong>${escapeHtml(canonicalWeaponName(stats.name || '—'))}</strong></div><div class="legend-mini-grid">${legendMetric(t('damageDealt'), number(stats.damage))}${legendMetric(t('kos'), number(stats.kos))}${legendMetric(t('gameTime'), escapeHtml(stats.time_held_display || '—'))}</div></article>`;
+  return `<article class="legend-weapon-card"><div class="legend-weapon-name"><span class="weapon-glyph">${weaponIconMarkup(stats.name)}</span><strong>${escapeHtml(canonicalWeaponName(stats.name || '—'))}</strong></div><div class="legend-mini-grid">${legendMetric(t('damageDealt'), number(stats.damage))}${legendMetric(t('kos'), number(stats.kos))}${legendMetric(t('gameTime'), escapeHtml(stats.time_held_display || '—'))}</div></article>`;
 }
 
 function lifetimeLegendCard(legend) {

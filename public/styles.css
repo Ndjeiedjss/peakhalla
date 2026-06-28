@@ -247,7 +247,13 @@ nav a:hover { color: white; }
 .mini-portrait img { width: 118%; height: 118%; object-fit: contain; object-position: center bottom; }
 .weapon-grid { margin-top: 14px; display: grid; gap: 10px; }
 .weapon-tile { padding: 10px 12px; display: grid; grid-template-columns: 44px 1fr; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,.04); border-radius: 12px; background: rgba(255,255,255,.02); }
-.weapon-glyph { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; background: linear-gradient(180deg, rgba(139,92,246,.28), rgba(139,92,246,.08)); font-size: 20px; }
+.weapon-glyph { width: 44px; height: 44px; display: grid; place-items: center; overflow: hidden; border: 1px solid rgba(167,139,250,.14); border-radius: 12px; background: linear-gradient(145deg, rgba(139,92,246,.30), rgba(73,42,118,.13)); box-shadow: inset 0 1px 0 rgba(255,255,255,.045); }
+.weapon-icon-image { width: 29px; height: 29px; display: block; object-fit: contain; transform: translateZ(0); filter: drop-shadow(0 5px 10px rgba(0,0,0,.24)); transition: transform .28s cubic-bezier(.2,.8,.2,1), filter .28s ease; }
+.weapon-icon-fallback { color: #c3924a; font: 800 10px/1 var(--display); letter-spacing: -.02em; }
+.weapon-tile { transition: transform .24s cubic-bezier(.2,.8,.2,1), border-color .24s ease, background .24s ease; }
+.weapon-tile:hover { transform: translateY(-2px); border-color: rgba(167,139,250,.20); background: rgba(139,92,246,.045); }
+.weapon-tile:hover .weapon-icon-image { transform: translateY(-1px) scale(1.08) rotate(-2deg); filter: drop-shadow(0 7px 12px rgba(0,0,0,.30)); }
+.legend-weapon-name .weapon-glyph { flex: 0 0 44px; }
 .weapon-tile strong { display: block; font-size: 13px; line-height: 1.1; }
 .weapon-tile small { display: block; margin-top: 4px; color: var(--muted); font-size: 9px; }
 .stat-card { min-height: 112px; padding: 18px; border: 1px solid var(--line); border-radius: 13px; background: var(--panel); }
