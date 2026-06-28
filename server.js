@@ -235,6 +235,8 @@ async function saveAliasesToDatabase(entries, source = 'profile') {
       `, [entry.id, entry.name, normalized]);
     }
     await client.query('COMMIT');
+    nameHistorySearchCache = { expiresAt: 0, value: null };
+    invalidateProfileSearchCacheForNames(cleanEntries.map((entry) => entry.name));
   } catch (error) {
     await client.query('ROLLBACK').catch(() => null);
     dbLastError = error;
@@ -1001,6 +1003,16 @@ function profileSearchCacheKey(kind, query, region = 'ALL', mode = '1v1') {
   return `${kind}:${normalizeName(query)}:${String(region).toUpperCase()}:${mode}`;
 }
 
+function invalidateProfileSearchCacheForNames(names = []) {
+  const needles = [...new Set((Array.isArray(names) ? names : [names])
+    .map((name) => normalizeName(name))
+    .filter((name) => name.length >= 2))];
+  if (!needles.length) return;
+  for (const key of profileSearchResponseCache.keys()) {
+    if (needles.some((needle) => key.includes(`:${needle}:`))) profileSearchResponseCache.delete(key);
+  }
+}
+
 function getCachedProfileSearch(kind, query, region = 'ALL', mode = '1v1') {
   const key = profileSearchCacheKey(kind, query, region, mode);
   const cached = profileSearchResponseCache.get(key);
@@ -1015,7 +1027,13 @@ function getCachedProfileSearch(kind, query, region = 'ALL', mode = '1v1') {
 function setCachedProfileSearch(kind, query, region, mode, value) {
   const key = profileSearchCacheKey(kind, query, region, mode);
   const resultCount = (value?.rankings || []).reduce((sum, item) => sum + (item?.players?.length || 0), 0);
-  const ttl = resultCount > 0 ? PROFILE_SEARCH_RESPONSE_TTL_MS : 8_000;
+  // Never cache an empty player search. A profile may be indexed seconds later
+  // after somebody opens it by BH ID, and stale empty results made it look lost.
+  if (resultCount <= 0) {
+    profileSearchResponseCache.delete(key);
+    return value;
+  }
+  const ttl = PROFILE_SEARCH_RESPONSE_TTL_MS;
   profileSearchResponseCache.set(key, { value, expiresAt: Date.now() + ttl });
   if (profileSearchResponseCache.size > 250) {
     const oldest = profileSearchResponseCache.keys().next().value;
@@ -3502,6 +3520,43 @@ app.get('/api/search', async (req, res, next) => {
     const isNumeric = /^\d+$/.test(numericId);
     const localMatches = isNumeric ? [] : await findAliasMatches(query, 18).catch(() => []);
     const exactLocal = hasExactAliasMatch(localMatches, query);
+
+    // A profile already indexed by PeakHalla should be returned from PostgreSQL
+    // immediately, including unranked profiles with no ELO.
+    if (!isNumeric && exactLocal) {
+      const exactCandidates = localMatches
+        .filter((item) => (item.names || []).some((name) => normalizeName(name?.name) === normalizeName(query)))
+        .map((item) => ({
+          id: item.id,
+          name: item.names?.[0]?.name || query,
+          aliases: item.names?.map((name) => name.name) || [],
+          profile: item.profile || null
+        }))
+        .slice(0, 8);
+      const exactProfiles = (await mapWithConcurrency(exactCandidates, 8, (item) =>
+        buildProfileSearchRanking(item, query, {
+          quick: true,
+          mode,
+          region,
+          lifetimeTimeoutMs: 450,
+          rankTimeoutMs: 450,
+          legendMapTimeoutMs: 350,
+          legendTimeoutMs: 350
+        })
+      )).filter(Boolean);
+      if (exactProfiles.length) {
+        const payload = {
+          rankings: sortSearchRankings(exactProfiles, query).slice(0, 24),
+          total_pages: 0,
+          includes_unranked_profiles: exactProfiles.some((item) => item.profile_only),
+          alias_lookup: true,
+          exact_alias_hit: true,
+          database_first: true
+        };
+        return res.json(setCachedProfileSearch('search', query, region, mode, payload));
+      }
+    }
+
     const params = new URLSearchParams({
       page: '1', max_results: '20', game_mode: mode, region, search: query, order_by: 'rating'
     });
@@ -4682,7 +4737,15 @@ app.get('/api/player/:id', async (req, res, next) => {
       numberOrZero(player.lifetime_games) > 0 ||
       numberOrZero(player.rating) > 0
     );
-    if (hasMeaningfulProfileData) setCachedProfileResponse(id, payload);
+    if (hasMeaningfulProfileData) {
+      setCachedProfileResponse(id, payload);
+      // Await one database write so an unranked profile becomes searchable
+      // immediately after the first successful profile view.
+      await saveProfileToDatabase(id, payload).catch((error) => {
+        console.warn(`Could not synchronously index player ${id}:`, error.message);
+      });
+      invalidateProfileSearchCacheForNames([player.name, ...knownNames.map((item) => item?.name)]);
+    }
 
     res.setHeader('X-Stats-Source', coreStats ? 'Brawlhalla-plus-fresh-Corehalla-highest-progression' : (fast ? 'Brawlhalla-fast' : 'Brawlhalla-live'));
     res.setHeader('X-Stats-Fetched-At', player.updated_at);

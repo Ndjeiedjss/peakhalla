@@ -1,9 +1,1 @@
-PEAKHALLA v7.47 OFFICIAL-ONLY TRIAL
-
-1) Upload server.js to the repository root (next to package.json).
-2) Upload public/app.js and public/index.html inside the public folder.
-3) Commit and wait for Railway deployment success.
-4) Hard refresh with Ctrl + Shift + R.
-
-Default: official Brawlhalla sources only.
-Quick switch back without changing files: add Railway variable PEAKHALLA_DATA_MODE=hybrid and redeploy.
+Upload server.js, package.json, and package-lock.json to the repository root. Do not put them inside public. CHANGELOG.md is optional.
