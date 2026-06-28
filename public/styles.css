@@ -3135,3 +3135,19 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
   .arena-global-login span { font-size: 20px; }
   .arena-notification-panel { position: fixed; inset-inline: 12px; inset-block-start: 78px; width: auto; }
 }
+
+
+/* PeakHalla v7.53 — cleaner clan hero and account-only header slot */
+.clan-page-hero {
+  justify-content: flex-start;
+}
+.clan-page-title {
+  width: 100%;
+  max-width: none;
+}
+.clan-page-monogram {
+  display: none !important;
+}
+.arena-global-login[hidden] {
+  display: none !important;
+}

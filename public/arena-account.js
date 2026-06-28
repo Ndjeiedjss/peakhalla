@@ -58,7 +58,9 @@
 
   function renderAccount(user, unread = 0) {
     currentUser = user || null;
-    loginLink.hidden = Boolean(currentUser);
+    root.hidden = !currentUser;
+    // Keep the guest Arena shortcut hidden; the main Arena Wall nav link remains available.
+    loginLink.hidden = true;
     userWrap.hidden = !currentUser;
     if (!currentUser) {
       panel.hidden = true;
