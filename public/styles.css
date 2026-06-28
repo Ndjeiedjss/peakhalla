@@ -2496,3 +2496,46 @@ body.player-page-mode #clans { display: none !important; }
   .leader-region-chip { min-width: 36px; padding-inline: 6px; }
   .leader-elo-metric b { font-size: 14px; }
 }
+
+
+/* v7.34 — clean rank column (scope is shown in the heading/filter, not repeated per row) */
+.leader-rank {
+  width: auto !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  align-self: stretch;
+  gap: 0 !important;
+  color: #847793;
+  font: 800 24px/1 var(--display) !important;
+}
+.leader-rank small { display: none !important; }
+.leader-rank b {
+  display: block;
+  color: inherit;
+  font: inherit;
+  letter-spacing: -.03em;
+  white-space: nowrap;
+}
+.leader-row:nth-child(1) .leader-rank { color: #d7c7ff; }
+.leader-row:nth-child(2) .leader-rank { color: #b9aac8; }
+.leader-row:nth-child(3) .leader-rank { color: #aa7ddd; }
+
+@media (min-width: 1001px) {
+  .leader-row {
+    grid-template-columns: 64px minmax(240px,1fr) 95px 95px minmax(168px,1.05fr) 90px 110px;
+  }
+}
+@media (max-width: 1000px) {
+  .leader-row { grid-template-columns: 54px minmax(190px,1fr) 82px minmax(145px,.9fr) 82px; }
+}
+@media (max-width: 680px) {
+  .leader-row { grid-template-columns: 44px minmax(0,1fr) 68px; }
+  .leader-rank { font-size: 20px !important; }
+}
+@media (max-width: 420px) {
+  .leader-row { grid-template-columns: 40px minmax(0,1fr) 62px; }
+  .leader-rank { font-size: 18px !important; }
+}
