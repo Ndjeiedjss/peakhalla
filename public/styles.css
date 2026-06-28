@@ -38,7 +38,7 @@ img { display: block; }
 .brand { position: relative; display: flex; align-items: center; gap: 12px; isolation: isolate; border-radius: 14px; }
 .brand::before { content: ''; position: absolute; inset: 6px 2px 6px -6px; z-index: -1; opacity: 0; border-radius: 999px; background: rgba(139,92,246,.20); filter: blur(16px); transform: scale(.82); transition: opacity .5s ease, transform .8s cubic-bezier(.16,1,.3,1); }
 .brand-mark-wrap { position: relative; width: 46px; height: 46px; flex: 0 0 46px; overflow: hidden; border-radius: 16px; background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015)); box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 12px 24px rgba(8,5,14,.28); animation: brandMarkIn 1s cubic-bezier(.16,1,.3,1) both, brandFloat 7s ease-in-out 1.2s infinite; }
-.brand-logo { width: 46px; height: 46px; transition: transform .8s cubic-bezier(.16,1,.3,1), filter .8s ease; will-change: transform, filter; }
+.brand-logo { display: block; width: 46px; height: 46px; transition: transform .8s cubic-bezier(.16,1,.3,1), filter .8s ease; will-change: transform, filter; }
 .brand-sheen { position: absolute; top: -14px; bottom: -14px; left: -70%; width: 16px; opacity: .72; background: linear-gradient(90deg, transparent, rgba(255,255,255,.68), transparent); transform: rotate(18deg); pointer-events: none; }
 .brand-wordmark { display: flex; flex-direction: column; gap: 2px; line-height: 1; animation: brandTextIn .92s .14s cubic-bezier(.16,1,.3,1) both; }
 .brand strong { font: 800 19px/1 var(--display); letter-spacing: -.04em; }
@@ -336,7 +336,7 @@ tr:last-child td { border-bottom: 0; }
 .site-footer::before { content: ''; position: absolute; top: -1px; left: 50%; width: min(420px, 55vw); height: 1px; background: linear-gradient(90deg, transparent, rgba(167,139,250,.7), transparent); transform: translateX(-50%); }
 .site-footer-inner { min-height: 118px; padding-block: 26px 32px; display: grid; grid-template-columns: auto minmax(260px,1fr) auto; align-items: center; gap: 30px; color: #81758f; font-size: 10px; }
 .footer-brand { display: flex; align-items: center; gap: 10px; border-radius: 11px; }
-.footer-brand img { width: 34px; height: 34px; opacity: .9; }
+.footer-brand img, .footer-brand svg { width: 34px; height: 34px; opacity: .9; flex: 0 0 34px; }
 .footer-brand > span { display: flex; flex-direction: column; }
 .footer-brand strong { color: var(--text); font: 700 14px/1 var(--display); letter-spacing: -.025em; }
 .footer-brand strong span { color: var(--accent-2); }
@@ -809,11 +809,8 @@ body.page-leaving { opacity: 0; transform: translateY(-10px) scale(.995); filter
 .player-page-toolbar { display: none; margin-bottom: 14px; align-items: center; justify-content: space-between; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
 .player-page-toolbar a { height: 40px; padding: 0 14px; display: inline-flex; align-items: center; gap: 9px; color: var(--text); border: 1px solid var(--line); border-radius: 12px; background: var(--panel); letter-spacing: 0; font-size: 11px; transition: transform .2s ease, border-color .2s ease, background .2s ease; }
 .player-page-toolbar a:hover { transform: translateX(-3px); border-color: var(--accent); background: var(--panel-2); }
-body.player-page-mode #home,
-body.player-page-mode #search-results,
-body.player-page-mode #leaderboard,
-body.player-page-mode #esports,
-body.player-page-mode #about,
+body.player-page-mode main > section:not(#player-profile),
+body.player-page-mode #status,
 body.player-page-mode footer { display: none !important; }
 body.player-page-mode #player-profile { padding-top: 34px; padding-bottom: 90px; }
 body.player-page-mode .player-page-toolbar { display: flex; }
@@ -2333,3 +2330,8 @@ body.clan-page-mode .site-header nav a[href="/#clans"] {
 @media (max-width: 760px) {
   .player-clan-card { width: 100%; margin-top: 11px; }
 }
+
+
+/* PeakHalla v7.29 — dedicated profile isolation and inline brand mark */
+body.player-page-mode #clans { display: none !important; }
+.footer-logo { display: block; }

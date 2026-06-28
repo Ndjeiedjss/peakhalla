@@ -3231,8 +3231,10 @@ app.get('/api/player/:id', async (req, res, next) => {
     };
 
     if (playerGuild?.guild_id) {
-      const guildSnapshot = await getGuildStats(playerGuild.guild_id, GUILD_CACHE_TTL_MS).catch(() => null);
-      if (guildSnapshot) rememberGuild(guildSnapshot).catch(() => null);
+      // Clan enrichment must never delay the player profile response.
+      getGuildStats(playerGuild.guild_id, GUILD_CACHE_TTL_MS)
+        .then((guildSnapshot) => guildSnapshot ? rememberGuild(guildSnapshot) : null)
+        .catch(() => null);
     }
     if (fast) storeObservedNamesBatch([{ id, name: player.name }], 'profile-fast').catch(() => null);
     else await storeObservedNamesBatch([{ id, name: player.name }], 'profile');
@@ -3267,10 +3269,6 @@ app.use((error, _req, res, _next) => {
   res.status(status).json({ error: message });
 });
 
-function windowlessWarmGuilds() {
-  setTimeout(() => refreshTopGuilds().catch((error) => console.warn('Guild discovery warmup failed:', error.message)), 2500);
-}
-
 async function startServer() {
   try {
     await cleanAllNameHistory();
@@ -3280,7 +3278,6 @@ async function startServer() {
 
   app.listen(PORT, () => {
     console.log(`PeakHalla running on http://localhost:${PORT}`);
-    windowlessWarmGuilds();
   });
 }
 

@@ -3,7 +3,10 @@ services:
     name: peakhalla-tracker
     runtime: node
     plan: free
-    buildCommand: npm install
+    buildCommand: npm install --package-lock=false --registry=https://registry.npmjs.org --omit=dev --no-audit --no-fund
     startCommand: npm start
     healthCheckPath: /api/health
     autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22.22.0

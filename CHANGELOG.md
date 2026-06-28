@@ -1,3 +1,13 @@
+# PeakHalla Changelog
+
+## 7.29.0
+- Fixed the Clans section appearing below standalone player profiles.
+- Made clan discovery lazy and removed heavy startup warm-up requests.
+- Prevented clan enrichment from delaying player profile responses.
+- Added request timeouts so loading states cannot hang indefinitely.
+- Embedded the header/footer logo directly in the page so it always renders on the custom domain.
+- Updated canonical and social URLs to `https://peakhalla.com`.
+
 # Changelog
 
 ## 7.28.0

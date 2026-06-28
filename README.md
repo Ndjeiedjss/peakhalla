@@ -44,3 +44,10 @@ npm.cmd start
 Open `http://localhost:3001`.
 
 To preserve Arena Wall accounts and images when upgrading, copy `data/arena-users.json`, `data/arena-posts.json`, and `uploads/arena` from the previous version.
+
+
+## v7.24 highlights
+- Global all-region player search from the homepage.
+- Unranked and old-name profile fallback.
+- Official Brawlhalla guild/clan discovery and roster details.
+- Faster, smoother legend image loading and fallbacks.

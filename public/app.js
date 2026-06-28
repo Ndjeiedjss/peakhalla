@@ -66,7 +66,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, leaderboardSearchTimer: null, leaderboardSearchController: null, queueMode: '1v1', queueRegion: 'ME', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, selectedClan: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, leaderboardSearchTimer: null, leaderboardSearchController: null, queueMode: '1v1', queueRegion: 'ME', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
 const playerPathMatch = location.pathname.match(/^\/player\/(\d+)\/?$/);
 const clanPathMatch = location.pathname.match(/^\/clan\/(\d+)\/?$/);
 const standalonePlayerId = playerPathMatch ? playerPathMatch[1] : null;
@@ -129,7 +129,7 @@ function applyLanguage() {
     if (state.queueData) renderLiveQueue(state.queueData);
   } else if (!isStandalonePlayerPage && !isClanPage && !isArenaPage) {
     loadLeaderboard();
-    if (state.clansData) renderClans(state.clansData); else window.setTimeout(() => loadClans(), 850);
+    if (state.clansData) renderClans(state.clansData); else scheduleClanSectionLoad();
     if (state.esportsData) renderEsports(state.esportsData); else loadEsports();
   }
   if (isArenaPage) { renderArenaAccount(); renderArenaPosts(); }
@@ -226,10 +226,31 @@ function formerNames(player) {
 function showStatus(message, type = 'loading') { els.status.hidden = false; els.status.className = `status shell ${type}`; els.status.textContent = message; }
 function hideStatus() { els.status.hidden = true; }
 async function getJson(url, options = {}) {
-  const response = await fetch(url, { cache: 'no-store', headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' }, signal: options.signal });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || t('fetchError'));
-  return data;
+  const controller = new AbortController();
+  const timeoutMs = Number(options.timeoutMs || 15000);
+  let timedOut = false;
+  const abortFromCaller = () => controller.abort();
+  if (options.signal) {
+    if (options.signal.aborted) controller.abort();
+    else options.signal.addEventListener('abort', abortFromCaller, { once: true });
+  }
+  const timer = window.setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
+  try {
+    const response = await fetch(url, { cache: 'no-store', headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' }, signal: controller.signal });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || t('fetchError'));
+    return data;
+  } catch (error) {
+    if (timedOut) {
+      const timeoutError = new Error(t('friendlyProblem'));
+      timeoutError.name = 'TimeoutError';
+      throw timeoutError;
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+    options.signal?.removeEventListener('abort', abortFromCaller);
+  }
 }
 
 function playerPayloadSignature(data = {}) {
@@ -919,6 +940,25 @@ function clanCard(guild, index) {
   </button>`;
 }
 
+function scheduleClanSectionLoad() {
+  if (isStandalonePlayerPage || isClanPage || isLiveQueuePage || isArenaPage || state.clansLoadStarted || state.clansData || !els.clansGrid) return;
+  const section = document.querySelector('#clans');
+  if (!section || !('IntersectionObserver' in window)) {
+    state.clansLoadStarted = true;
+    loadClans();
+    return;
+  }
+  if (state.clansObserver) return;
+  state.clansObserver = new IntersectionObserver((entries) => {
+    if (!entries.some((entry) => entry.isIntersecting)) return;
+    state.clansObserver?.disconnect();
+    state.clansObserver = null;
+    state.clansLoadStarted = true;
+    loadClans();
+  }, { rootMargin: '500px 0px' });
+  state.clansObserver.observe(section);
+}
+
 function renderClans(data = {}) {
   state.clansData = data;
   const guilds = [...(data.guilds || [])].sort((a, b) => Number(b.xp || 0) - Number(a.xp || 0));
@@ -929,22 +969,29 @@ function renderClans(data = {}) {
 }
 
 async function loadClans(options = {}) {
-  if (!els.clansGrid) return;
+  if (!els.clansGrid || isStandalonePlayerPage) return;
+  state.clansLoadStarted = true;
   const query = els.clansSearch?.value.trim() || '';
   state.clansController?.abort();
-  state.clansController = new AbortController();
+  const controller = new AbortController();
+  state.clansController = controller;
+  let timedOut = false;
+  const timer = window.setTimeout(() => { timedOut = true; controller.abort(); }, 12000);
   if (!state.clansData || options.refresh) els.clansGrid.innerHTML = `<div class="clans-loading"><span></span><strong>${escapeHtml(t('clanLoading'))}</strong></div>`;
   try {
     const params = new URLSearchParams({ limit: '24' });
     if (query) params.set('q', query);
     if (options.refresh) params.set('refresh', '1');
-    const response = await fetch(`/api/clans/top?${params}`, { headers: { Accept: 'application/json' }, signal: state.clansController.signal });
+    const response = await fetch(`/api/clans/top?${params}`, { headers: { Accept: 'application/json' }, signal: controller.signal });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || t('fetchError'));
     renderClans(data);
   } catch (error) {
-    if (error.name === 'AbortError') return;
+    if (error.name === 'AbortError' && !timedOut) return;
     els.clansGrid.innerHTML = `<p class="empty-copy">${escapeHtml(t('friendlyProblem'))}</p>`;
+  } finally {
+    window.clearTimeout(timer);
+    if (state.clansController === controller) state.clansController = null;
   }
 }
 
