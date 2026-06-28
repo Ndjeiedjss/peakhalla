@@ -66,7 +66,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, queueMode: '1v1', queueRegion: 'ME', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
 const playerPathMatch = location.pathname.match(/^\/player\/(\d+)\/?$/);
 const clanPathMatch = location.pathname.match(/^\/clan\/(\d+)\/?$/);
 const standalonePlayerId = playerPathMatch ? playerPathMatch[1] : null;
@@ -1708,7 +1708,7 @@ function toggleQueueMenu() {
   els.queueNav?.classList.toggle('open', opening);
 }
 
-function navigateToQueue(mode = '1v1', region = state.queueRegion || 'ME') {
+function navigateToQueue(mode = '1v1', region = state.queueRegion || 'EU') {
   if (!['1v1', '2v2', '3v3'].includes(mode)) mode = '1v1';
   const params = new URLSearchParams({ mode, region });
   document.body.classList.add('page-leaving');
@@ -1717,7 +1717,7 @@ function navigateToQueue(mode = '1v1', region = state.queueRegion || 'ME') {
 
 function chooseQueueMode(mode) {
   closeQueueMenu();
-  navigateToQueue(mode, state.queueRegion || 'ME');
+  navigateToQueue(mode, state.queueRegion || 'EU');
 }
 
 function queueRelativeTime(timestamp) {
@@ -1847,7 +1847,7 @@ function setupLiveQueuePage() {
   const params = new URLSearchParams(location.search);
   state.queueMode = ['1v1', '2v2', '3v3'].includes(params.get('mode')) ? params.get('mode') : '1v1';
   const regions = ['US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'];
-  state.queueRegion = regions.includes(params.get('region')) ? params.get('region') : 'ME';
+  state.queueRegion = regions.includes(params.get('region')) ? params.get('region') : 'EU';
   if (els.queueRegion) {
     els.queueRegion.value = state.queueRegion;
     els.queueRegion._motionSync?.();
@@ -2202,7 +2202,7 @@ function enhanceSelect(select) {
   const optionMarkup = (option) => {
     if (!isLeaderboardRegion) return `<span>${escapeHtml(option?.textContent || '')}</span><b>✓</b>`;
     const code = option?.value || 'ALL';
-    const scope = code === 'ALL' ? (state.language === 'ar' ? 'العالم' : 'WORLD') : code;
+    const scope = code === 'ALL' ? (state.language === 'ar' ? 'عالمي' : 'Global') : code;
     return `<span class="region-option-copy"><strong>${escapeHtml(regionLabel(code))}</strong><small>${escapeHtml(scope)}</small></span><b>✓</b>`;
   };
 
@@ -2231,7 +2231,7 @@ function enhanceSelect(select) {
     const selected = select.options[select.selectedIndex];
     if (isLeaderboardRegion) {
       const code = selected?.value || 'ALL';
-      trigger.innerHTML = `<span class="region-trigger-copy"><strong>${escapeHtml(regionLabel(code))}</strong><small>${escapeHtml(code === 'ALL' ? (state.language === 'ar' ? 'العالم' : 'WORLD') : code)}</small></span><b>⌄</b>`;
+      trigger.innerHTML = `<span class="region-trigger-copy"><strong>${escapeHtml(regionLabel(code))}</strong><small>${escapeHtml(code === 'ALL' ? (state.language === 'ar' ? 'عالمي' : 'Global') : code)}</small></span><b>⌄</b>`;
       [...menu.querySelectorAll('button')].forEach((button, index) => {
         button.innerHTML = optionMarkup(select.options[index]);
         button.classList.toggle('selected', button.dataset.value === select.value);

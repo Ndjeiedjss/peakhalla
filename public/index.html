@@ -62,8 +62,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="/styles.css?v=7.53.0" as="style">
-  <link rel="stylesheet" href="/styles.css?v=7.53.0">
+  <link rel="preload" href="/styles.css?v=7.54.0" as="style">
+  <link rel="stylesheet" href="/styles.css?v=7.54.0">
 </head>
 <body>
   <header class="site-header">
@@ -247,8 +247,8 @@
         <label class="compact-field queue-region-field">
           <span data-i18n="region">Region</span>
           <select id="queue-region">
+            <option value="EU" selected>Europe · EU</option>
             <option value="ME">Middle East · ME</option>
-            <option value="EU">Europe · EU</option>
             <option value="US-E">US East · US-E</option>
             <option value="US-W">US West · US-W</option>
             <option value="SEA">Southeast Asia · SEA</option>
@@ -409,7 +409,6 @@
           <p><span data-i18n="playerIdLabel">BH ID</span> <b id="player-id">—</b><span class="dot">•</span><span data-i18n="updatedLabel">Updated</span> <b id="updated-at">—</b></p>
           <div id="player-aliases" class="profile-aliases" hidden></div>
           <button id="player-clan-card" class="player-clan-card" type="button" hidden>
-            <span class="player-clan-mark" aria-hidden="true">PH</span>
             <span class="player-clan-copy"><small data-i18n="playerClan">PLAYER CLAN</small><strong id="player-clan-name">—</strong><em id="player-clan-role">—</em></span>
             <span class="player-clan-arrow" aria-hidden="true">→</span>
           </button>
@@ -510,8 +509,16 @@
       <div class="section-heading stacked-mobile esports-main-heading">
         <div><span class="eyebrow">COMPETITIVE</span><h2 data-i18n="esportsHubTitle">PeakHalla Esports</h2><p class="section-copy" data-i18n="esportsHubText">Official power rankings and a live tournament directory for Brawlhalla esports.</p></div>
         <div class="esports-view-switch" role="tablist" aria-label="Esports views">
-          <button class="active" type="button" data-esports-tab="power" role="tab" aria-selected="true"><span>01</span><strong data-i18n="powerRanking">Power rankings</strong></button>
-          <button type="button" data-esports-tab="tournaments" role="tab" aria-selected="false"><span>02</span><strong data-i18n="tournamentsNav">Tournaments</strong></button>
+          <button class="active" type="button" data-esports-tab="power" role="tab" aria-selected="true">
+            <span class="esports-switch-icon" aria-hidden="true">↗</span>
+            <span class="esports-switch-copy"><small>RANKINGS</small><strong data-i18n="powerRanking">Power rankings</strong></span>
+            <i aria-hidden="true">01</i>
+          </button>
+          <button type="button" data-esports-tab="tournaments" role="tab" aria-selected="false">
+            <span class="esports-switch-icon" aria-hidden="true">◆</span>
+            <span class="esports-switch-copy"><small>EVENTS</small><strong data-i18n="tournamentsNav">Tournaments</strong></span>
+            <i aria-hidden="true">02</i>
+          </button>
         </div>
       </div>
 
@@ -663,8 +670,8 @@
       </a>
     </div>
   </footer>
-  <script src="/app.js?v=7.53.0" defer></script>
-  <script src="/arena-v72.js?v=7.53.0" defer></script>
-  <script src="/arena-account.js?v=7.53.0" defer></script>
+  <script src="/app.js?v=7.54.0" defer></script>
+  <script src="/arena-v72.js?v=7.54.0" defer></script>
+  <script src="/arena-account.js?v=7.54.0" defer></script>
 </body>
 </html>

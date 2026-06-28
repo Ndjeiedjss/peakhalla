@@ -2380,7 +2380,7 @@ body.clan-page-mode .site-header nav a[href="/#clans"] {
   margin-top: 14px;
   padding: 11px 13px;
   display: grid;
-  grid-template-columns: 38px minmax(0,1fr) 24px;
+  grid-template-columns: minmax(0,1fr) 24px;
   align-items: center;
   gap: 11px;
   color: inherit;
@@ -2401,7 +2401,8 @@ body.clan-page-mode .site-header nav a[href="/#clans"] {
 }
 .player-clan-card:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; }
 .player-clan-mark {
-  width: 38px; height: 38px; display: grid; place-items: center;
+  display: none !important;
+  width: 38px; height: 38px; place-items: center;
   border: 1px solid rgba(174,132,255,.34); border-radius: 12px;
   background: rgba(139,92,246,.16); color: #d9c8ff;
   font: 800 10px/1 var(--display); letter-spacing: .08em;
@@ -3150,4 +3151,79 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
 }
 .arena-global-login[hidden] {
   display: none !important;
+}
+
+
+/* PeakHalla v7.54 — refined esports selector, global label, and icon-free clan link */
+.player-clan-card {
+  grid-template-columns: minmax(0, 1fr) 26px;
+  padding: 13px 15px;
+  gap: 13px;
+}
+.player-clan-copy { padding-inline-start: 2px; }
+.player-clan-copy small { color: #aa9abd; }
+.player-clan-copy strong { font-size: 13px; }
+
+.esports-view-switch {
+  width: min(100%, 560px);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 8px;
+  border-color: rgba(167,139,250,.18);
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255,255,255,.025), transparent), rgba(12,7,20,.86);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 18px 50px rgba(0,0,0,.16);
+}
+.esports-view-switch button {
+  min-height: 72px;
+  padding: 11px 14px;
+  position: relative;
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  border-radius: 16px;
+  isolation: isolate;
+}
+.esports-view-switch button::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; opacity: 0;
+  background: radial-gradient(circle at 20% 15%, rgba(189,167,255,.24), transparent 42%);
+  transition: opacity .32s ease;
+}
+.esports-view-switch button::after {
+  content: ''; position: absolute; inset: auto 16px 0; height: 2px; opacity: 0; transform: scaleX(.35);
+  border-radius: 999px; background: linear-gradient(90deg, transparent, #a78bfa, transparent);
+  transition: opacity .3s ease, transform .38s cubic-bezier(.16,1,.3,1);
+}
+.esports-view-switch button:hover::before, .esports-view-switch button.active::before { opacity: 1; }
+.esports-view-switch button.active::after { opacity: 1; transform: scaleX(1); }
+.esports-view-switch button:hover { transform: translateY(-2px); }
+.esports-view-switch button.active {
+  border-color: rgba(167,139,250,.5);
+  background: linear-gradient(135deg, rgba(139,92,246,.24), rgba(70,35,130,.10));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 14px 34px rgba(74,38,138,.20);
+}
+.esports-view-switch .esports-switch-icon {
+  width: 42px; height: 42px; display: grid; place-items: center; color: #e7ddff;
+  border: 1px solid rgba(190,170,255,.24); border-radius: 13px;
+  background: linear-gradient(145deg, rgba(139,92,246,.25), rgba(139,92,246,.08));
+  font: 800 17px/1 var(--display);
+  transition: transform .35s cubic-bezier(.16,1,.3,1), box-shadow .3s ease;
+}
+.esports-view-switch button:hover .esports-switch-icon, .esports-view-switch button.active .esports-switch-icon {
+  transform: rotate(-4deg) scale(1.05); box-shadow: 0 9px 24px rgba(139,92,246,.22);
+}
+.esports-switch-copy { min-width: 0; display: grid; gap: 5px; text-align: start; }
+.esports-view-switch .esports-switch-copy small { color: #81748f; font: 800 7px/1 var(--sans); letter-spacing: .16em; }
+.esports-view-switch .esports-switch-copy strong { overflow: hidden; color: #ddd4ea; font: 750 13px/1.15 var(--display); text-overflow: ellipsis; white-space: nowrap; }
+.esports-view-switch button.active .esports-switch-copy strong { color: #fff; }
+.esports-view-switch button > i { color: #756783; font: 800 9px/1 var(--sans); font-style: normal; letter-spacing: .08em; }
+.esports-view-switch button.active > i { color: #cdbdff; }
+@media (max-width: 620px) {
+  .esports-view-switch { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; padding: 6px; border-radius: 17px; }
+  .esports-view-switch button { min-height: 60px; padding: 8px; grid-template-columns: 34px minmax(0,1fr); gap: 8px; border-radius: 12px; }
+  .esports-view-switch .esports-switch-icon { width: 34px; height: 34px; border-radius: 10px; font-size: 14px; }
+  .esports-view-switch button > i, .esports-view-switch .esports-switch-copy small { display: none; }
+  .esports-view-switch .esports-switch-copy strong { font-size: 11px; white-space: normal; }
 }
