@@ -2773,3 +2773,96 @@ body.player-page-mode #clans { display: none !important; }
   .tournament-directory-card { min-height: 165px; padding: 17px; grid-template-columns: 32px minmax(0,1fr) 26px; gap: 10px; }
   .tournament-card-copy h4 { font-size: 17px; }
 }
+
+/* PeakHalla v7.45 — dedicated esports pages and stable navigation */
+.esports-nav-dropdown { isolation: isolate; }
+.esports-nav-dropdown::after {
+  content: '';
+  position: absolute;
+  z-index: 49;
+  top: 100%;
+  left: -34px;
+  right: -34px;
+  height: 22px;
+  pointer-events: none;
+}
+.esports-nav-dropdown.open::after,
+.esports-nav-dropdown:hover::after { pointer-events: auto; }
+.esports-nav-menu {
+  top: calc(100% + 12px);
+  transition: opacity .24s ease, transform .34s cubic-bezier(.16,1,.3,1), visibility .24s ease;
+}
+.esports-nav-dropdown.open .esports-nav-menu,
+.esports-nav-dropdown:hover .esports-nav-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+.esports-nav-dropdown.pinned .nav-dropdown-toggle {
+  color: #fff;
+  border-color: rgba(139,92,246,.42);
+  background: linear-gradient(135deg,rgba(139,92,246,.18),rgba(139,92,246,.07));
+  box-shadow: 0 12px 32px rgba(74,35,137,.18);
+}
+.esports-nav-menu button {
+  position: relative;
+  overflow: hidden;
+}
+.esports-nav-menu button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: linear-gradient(110deg,transparent 10%,rgba(167,139,250,.10) 48%,transparent 85%);
+  transform: translateX(-100%);
+  transition: transform .55s cubic-bezier(.16,1,.3,1), opacity .25s ease;
+}
+.esports-nav-menu button:hover::before {
+  opacity: 1;
+  transform: translateX(100%);
+}
+
+body:not(.esports-page-mode) #esports { display: none !important; }
+body.esports-page-mode main > section:not(#esports),
+body.esports-page-mode footer { display: none !important; }
+body.esports-page-mode #esports {
+  display: block !important;
+  min-height: calc(100vh - 72px);
+  padding-top: 38px;
+  padding-bottom: 90px;
+  animation: esportsPageEnter .52s cubic-bezier(.16,1,.3,1) both;
+}
+body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
+  color: #fff;
+  border-color: rgba(139,92,246,.34);
+  background: rgba(139,92,246,.10);
+}
+@keyframes esportsPageEnter {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.tournament-mode-field { min-width: 145px; }
+.tournament-card-badges .tournament-mode-badge {
+  color: #aef7d5;
+  border-color: rgba(52,211,153,.22);
+  background: rgba(52,211,153,.07);
+  font-weight: 800;
+  letter-spacing: .06em;
+}
+
+@media (max-width: 920px) {
+  body.esports-page-mode #esports { padding-top: 24px; }
+  .tournament-mode-field { flex: 1; min-width: 130px; }
+}
+@media (max-width: 620px) {
+  .esports-nav-menu { width: min(292px, calc(100vw - 24px)); }
+  .tournament-mode-field { width: 100%; min-width: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.esports-page-mode #esports,
+  .esports-nav-menu,
+  .esports-nav-menu button,
+  .esports-nav-menu button::before { animation: none !important; transition: none !important; }
+}

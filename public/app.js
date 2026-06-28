@@ -21,7 +21,7 @@ const translations = {
     leaderboardPrefix: 'Top players ·', leaderboardSearch: 'Find a rank', leaderboardSearchPlaceholder: 'Search a player', leaderboardSearchTitle: 'Ranking search', emptyData: 'No data available right now.', allRegions: 'All regions', loadMorePlayers: 'Load next 20 players', loadingMorePlayers: 'Loading 20 more…', playersShown: 'players shown',
     clansTitle: 'Top clans by lifetime XP', clansText: 'Browse the highest-XP Brawlhalla clans, then open a dedicated roster page for every clan.', clanSearch: 'Find a clan', clanSearchPlaceholder: 'Clan name or guild ID', clanRank: 'XP rank', clanTier: 'Tier', clanMembers: 'Members', clanPoints: 'Weekly points', clanXp: 'Lifetime XP', clanRecruiting: 'Recruiting', clanClosed: 'Closed', clanOpen: 'Open clan', clanDetails: 'Clan profile', clanRoster: 'Clan roster', clanRole: 'Role', clanJoined: 'Joined', clanMemberXp: 'Member XP', clanNoData: 'No clan data is available right now. Refresh in a moment.', clanLoading: 'Loading top clans by XP…', clanUpdated: 'Updated', clanDiscoveryNote: 'Top clans are ordered by lifetime XP.', clanView: 'View clan', clanBack: 'Back to clans', clanRoleOrder: 'Role hierarchy', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'Members are ordered from Recruit to Leader.', playerClan: 'PLAYER CLAN', viewClanProfile: 'Open clan profile', noClan: 'No clan',
     MiddleEast: 'Middle East', Europe: 'Europe', USEast: 'US East', USWest: 'US West', SouthernAfrica: 'Southern Africa', SoutheastAsia: 'Southeast Asia', Brazil: 'Brazil', Australia: 'Australia', Japan: 'Japan',
-    esportsHubTitle: 'PeakHalla Esports', esportsHubText: 'Official power rankings and a live tournament directory for Brawlhalla esports.', esportsTitle: 'Esports power rankings', esportsText: 'Official competitive names, medals, earnings, and major tournament results.', powerRanking: 'Power rankings', player: 'Player', earnings: 'Earnings', tournamentDirectory: 'Tournament directory', tournamentDirectoryText: 'New Brawlhalla tournament announcements are checked automatically and added here.', liveTournamentFeed: 'LIVE TOURNAMENT FEED', autoUpdating: 'AUTO UPDATING', officialTournaments: 'Official tournaments', communityTournaments: 'Community tournaments', tournamentRegion: 'Tournament region', loadingTournaments: 'Loading tournaments…', noTournaments: 'No tournaments matched these filters yet.', tournamentEvents: 'events', tournamentSource: 'Open tournament', announced: 'Announced',
+    esportsHubTitle: 'PeakHalla Esports', esportsHubText: 'Official power rankings and a live tournament directory for Brawlhalla esports.', esportsTitle: 'Esports power rankings', esportsText: 'Official competitive names, medals, earnings, and major tournament results.', powerRanking: 'Power rankings', player: 'Player', earnings: 'Earnings', tournamentDirectory: 'Tournament directory', tournamentDirectoryText: 'New Brawlhalla tournament announcements are checked automatically and added here.', liveTournamentFeed: 'LIVE TOURNAMENT FEED', autoUpdating: 'AUTO UPDATING', officialTournaments: 'Official tournaments', communityTournaments: 'Community tournaments', tournamentRegion: 'Tournament region', tournamentMode: 'Tournament mode', allTournamentModes: 'All modes', loadingTournaments: 'Loading tournaments…', noTournaments: 'No tournaments matched these filters yet.', tournamentEvents: 'events', tournamentSource: 'Open tournament', announced: 'Announced',
     officialSource: 'Open official rankings ↗', tournamentList: 'Tournament list', proWinners: 'Pro players & major titles', notExhaustive: 'Featured titles, not a complete career list',
     rankingsUpdated: 'Updated', noPowerData: 'No official ranking data came back right now. Try Refresh in a moment.', title: 'title', titles: 'titles',
     viewCareer: 'View tournament career', tournamentCareer: 'TOURNAMENT CAREER', loadingCareer: 'Loading tournament history…',
@@ -51,7 +51,7 @@ const translations = {
     leaderboardPrefix: 'المتصدرين ·', leaderboardSearch: 'ابحث في الترتيب', leaderboardSearchPlaceholder: 'اكتب اسم اللاعب', leaderboardSearchTitle: 'نتيجة الترتيب', emptyData: 'ما فيه بيانات الحين.', allRegions: 'كل المناطق', loadMorePlayers: 'اعرض 20 لاعب إضافي', loadingMorePlayers: 'نحمّل 20 لاعب إضافي…', playersShown: 'لاعب معروض',
     clansTitle: 'أفضل الكلانات حسب الخبرة', clansText: 'تصفح كلانات براولهالا الأعلى في Lifetime XP وافتح صفحة مستقلة ومنظمة لكل كلان.', clanSearch: 'ابحث عن كلان', clanSearchPlaceholder: 'اسم الكلان أو رقم Guild ID', clanRank: 'ترتيب الخبرة', clanTier: 'المستوى', clanMembers: 'الأعضاء', clanPoints: 'نقاط الأسبوع', clanXp: 'Lifetime XP', clanRecruiting: 'يقبل أعضاء', clanClosed: 'مغلق', clanOpen: 'كلان مفتوح', clanDetails: 'صفحة الكلان', clanRoster: 'أعضاء الكلان', clanRole: 'الرتبة', clanJoined: 'تاريخ الانضمام', clanMemberXp: 'خبرة العضو', clanNoData: 'بيانات الكلانات غير متاحة الآن، جرّب التحديث بعد قليل.', clanLoading: 'نحمّل أفضل الكلانات حسب الخبرة…', clanUpdated: 'آخر تحديث', clanDiscoveryNote: 'الكلانات مرتبة حسب Lifetime XP.', clanView: 'افتح الكلان', clanBack: 'الرجوع للكلانات', clanRoleOrder: 'تسلسل الرتب', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'الأعضاء مرتبون من Recruit إلى Leader.', playerClan: 'كلان اللاعب', viewClanProfile: 'افتح صفحة الكلان', noClan: 'بدون كلان',
     MiddleEast: 'الشرق الأوسط', Europe: 'أوروبا', USEast: 'شرق أمريكا', USWest: 'غرب أمريكا', SouthernAfrica: 'جنوب أفريقيا', SoutheastAsia: 'جنوب شرق آسيا', Brazil: 'البرازيل', Australia: 'أستراليا', Japan: 'اليابان',
-    esportsHubTitle: 'بطولات PeakHalla', esportsHubText: 'الباور رانكنق الرسمي ودليل مباشر للبطولات الرسمية وبطولات الكومينيتي.', esportsTitle: 'باور رانكنق المحترفين', esportsText: 'ترتيب اللاعبين الرسمي، الميداليات، الأرباح، ونتائج البطولات الكبرى.', powerRanking: 'الباور رانكنق', player: 'اللاعب', earnings: 'الأرباح', tournamentDirectory: 'دليل البطولات', tournamentDirectoryText: 'يتم فحص إعلانات بطولات براولهالا تلقائيًا وإضافة البطولات الجديدة هنا.', liveTournamentFeed: 'تحديث البطولات المباشر', autoUpdating: 'تحديث تلقائي', officialTournaments: 'البطولات الرسمية', communityTournaments: 'بطولات الكومينيتي', tournamentRegion: 'ريجون البطولة', loadingTournaments: 'نحمّل البطولات…', noTournaments: 'ما فيه بطولات مطابقة للفلاتر حاليًا.', tournamentEvents: 'بطولة', tournamentSource: 'افتح البطولة', announced: 'تاريخ الإعلان',
+    esportsHubTitle: 'بطولات PeakHalla', esportsHubText: 'الباور رانكنق الرسمي ودليل مباشر للبطولات الرسمية وبطولات الكومينيتي.', esportsTitle: 'باور رانكنق المحترفين', esportsText: 'ترتيب اللاعبين الرسمي، الميداليات، الأرباح، ونتائج البطولات الكبرى.', powerRanking: 'الباور رانكنق', player: 'اللاعب', earnings: 'الأرباح', tournamentDirectory: 'دليل البطولات', tournamentDirectoryText: 'يتم فحص إعلانات بطولات براولهالا تلقائيًا وإضافة البطولات الجديدة هنا.', liveTournamentFeed: 'تحديث البطولات المباشر', autoUpdating: 'تحديث تلقائي', officialTournaments: 'البطولات الرسمية', communityTournaments: 'بطولات الكومينيتي', tournamentRegion: 'ريجون البطولة', tournamentMode: 'نمط البطولة', allTournamentModes: 'كل الأنماط', loadingTournaments: 'نحمّل البطولات…', noTournaments: 'ما فيه بطولات مطابقة للفلاتر حاليًا.', tournamentEvents: 'بطولة', tournamentSource: 'افتح البطولة', announced: 'تاريخ الإعلان',
     officialSource: 'افتح الترتيب الرسمي ↗', tournamentList: 'قائمة البطولات', proWinners: 'المحترفين وأهم ألقابهم', notExhaustive: 'ألقاب مختارة، مو كل مسيرة اللاعب',
     rankingsUpdated: 'آخر تحديث', noPowerData: 'ما رجعت بيانات الترتيب الرسمي الحين. جرّب تحدث بعد شوي.', title: 'لقب', titles: 'ألقاب',
     viewCareer: 'شوف بطولاته', tournamentCareer: 'مسيرة البطولات', loadingCareer: 'نجيب بطولات اللاعب…',
@@ -66,7 +66,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', tournamentType: 'official', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, queueMode: '1v1', queueRegion: 'ME', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, queueMode: '1v1', queueRegion: 'ME', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
 const playerPathMatch = location.pathname.match(/^\/player\/(\d+)\/?$/);
 const clanPathMatch = location.pathname.match(/^\/clan\/(\d+)\/?$/);
 const standalonePlayerId = playerPathMatch ? playerPathMatch[1] : null;
@@ -75,17 +75,21 @@ const isStandalonePlayerPage = Boolean(standalonePlayerId);
 const isClanPage = Boolean(standaloneClanId);
 const isLiveQueuePage = /^\/queue\/?$/.test(location.pathname);
 const isArenaPage = /^\/arena\/?$/.test(location.pathname);
+const esportsPathMatch = location.pathname.match(/^\/esports\/(power|tournaments)\/?$/);
+const esportsRouteView = esportsPathMatch ? esportsPathMatch[1] : null;
+const isEsportsPage = Boolean(esportsRouteView);
 if (isStandalonePlayerPage) document.body.classList.add('player-page-mode', 'page-entering');
 if (isClanPage) document.body.classList.add('clan-page-mode', 'page-entering');
 if (isLiveQueuePage) document.body.classList.add('live-queue-page-mode', 'page-entering');
 if (isArenaPage) document.body.classList.add('arena-page-mode', 'page-entering');
-if (isStandalonePlayerPage || isClanPage || isLiveQueuePage || isArenaPage) { const brandLink = document.querySelector('.brand'); if (brandLink) brandLink.href = '/'; }
+if (isEsportsPage) document.body.classList.add('esports-page-mode', `esports-${esportsRouteView}-page`, 'page-entering');
+if (isStandalonePlayerPage || isClanPage || isLiveQueuePage || isArenaPage || isEsportsPage) { const brandLink = document.querySelector('.brand'); if (brandLink) brandLink.href = '/'; }
 const els = {
   form: $('#search-form'), name: $('#player-name'), region: $('#search-region'), mode: null, suggestions: $('#search-suggestions'), status: $('#status'),
   resultsSection: $('#search-results'), resultsGrid: $('#results-grid'), resultCount: $('#result-count'), profile: $('#player-profile'), accountShowcase: $('#account-showcase'), profileAliases: $('#player-aliases'), playerClanCard: $('#player-clan-card'), playerClanName: $('#player-clan-name'), playerClanRole: $('#player-clan-role'),
   leaderboard: $('#leaderboard-list'), refreshLeaderboard: $('#refresh-leaderboard'), leaderboardRegion: $('#leaderboard-region'),
   leaderboardMode: $('#leaderboard-mode'), leaderboardSearch: $('#leaderboard-search'), leaderboardTitle: $('#leaderboard-title'), leaderboardLoadMore: $('#leaderboard-load-more'), leaderboardPageStatus: $('#leaderboard-page-status'), languageToggle: $('#language-toggle'), rankedNav: $('#ranked-nav-dropdown'), rankedToggle: $('#ranked-nav-toggle'), rankedMenu: $('#ranked-nav-menu'), rankedModeLabel: $('#ranked-mode-label'), queueNav: $('#queue-nav-dropdown'), queueToggle: $('#queue-nav-toggle'), queueMenu: $('#queue-nav-menu'), queueModeLabel: $('#queue-mode-label'), playerPeakRating: $('#player-peak-rating'), eloGap: $('#elo-gap'), rankProgressFill: $('#rank-progress-fill'),
-  esportsRegion: $('#esports-region'), esportsMode: $('#esports-mode'), powerBody: $('#power-ranking-body'), esportsUpdated: $('#esports-updated'), esportsNav: $('#esports-nav-dropdown'), esportsToggle: $('#esports-nav-toggle'), esportsMenu: $('#esports-nav-menu'), esportsPowerView: $('#esports-power-view'), esportsTournamentsView: $('#esports-tournaments-view'), tournamentDirectoryRegion: $('#tournament-directory-region'), tournamentDirectoryList: $('#tournament-directory-list'), tournamentDirectoryUpdated: $('#tournament-directory-updated'), tournamentDirectoryCount: $('#tournament-directory-count'), tournamentDirectoryRefresh: $('#tournament-directory-refresh'), championsGrid: $('#champions-grid'), esportsSource: $('#esports-source'),
+  esportsRegion: $('#esports-region'), esportsMode: $('#esports-mode'), powerBody: $('#power-ranking-body'), esportsUpdated: $('#esports-updated'), esportsNav: $('#esports-nav-dropdown'), esportsToggle: $('#esports-nav-toggle'), esportsMenu: $('#esports-nav-menu'), esportsPowerView: $('#esports-power-view'), esportsTournamentsView: $('#esports-tournaments-view'), tournamentDirectoryRegion: $('#tournament-directory-region'), tournamentDirectoryMode: $('#tournament-directory-mode'), tournamentDirectoryList: $('#tournament-directory-list'), tournamentDirectoryUpdated: $('#tournament-directory-updated'), tournamentDirectoryCount: $('#tournament-directory-count'), tournamentDirectoryRefresh: $('#tournament-directory-refresh'), championsGrid: $('#champions-grid'), esportsSource: $('#esports-source'),
   clansGrid: $('#clans-grid'), clansSearch: $('#clans-search'), clansRefresh: $('#clans-refresh'), clansUpdated: $('#clans-updated'), clanPage: $('#clan-page'), clanPageName: $('#clan-page-name'), clanPageMeta: $('#clan-page-meta'), clanPageStats: $('#clan-page-stats'), clanPageStatus: $('#clan-page-status'), clanPageMembers: $('#clan-page-members'), clanPageMemberCount: $('#clan-page-member-count'), clanPageRoles: $('#clan-page-roles'), clanModal: $('#clan-modal'), clanModalName: $('#clan-modal-name'), clanModalMeta: $('#clan-modal-meta'), clanModalStats: $('#clan-modal-stats'), clanMembersBody: $('#clan-members-body'), clanMemberCount: $('#clan-member-count'), clanModalStatus: $('#clan-modal-status'),
   careerModal: $('#esports-player-modal'), careerName: $('#career-player-name'), careerMeta: $('#career-player-meta'), careerStatus: $('#career-status'),
   careerContent: $('#career-content'), careerSummary: $('#career-summary'), careerList: $('#career-placement-list'), careerCount: $('#career-count'), careerSource: $('#career-source'),
@@ -122,16 +126,16 @@ function applyLanguage() {
   document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   els.languageToggle.innerHTML = isArabic ? '<span>EN</span><b>AR</b>' : '<b>EN</b><span>AR</span>';
-  [els.region, els.mode, els.leaderboardRegion, els.leaderboardMode, els.esportsRegion, els.esportsMode, els.tournamentDirectoryRegion, els.queueRegion].forEach((select) => select?._motionSync?.());
+  [els.region, els.mode, els.leaderboardRegion, els.leaderboardMode, els.esportsRegion, els.esportsMode, els.tournamentDirectoryRegion, els.tournamentDirectoryMode, els.queueRegion].forEach((select) => select?._motionSync?.());
   localStorage.setItem('nad-bh-language', state.language);
   if (state.currentPlayer) renderPlayer(state.currentPlayer, false);
   if (isLiveQueuePage) {
     if (state.queueData) renderLiveQueue(state.queueData);
+  } else if (isEsportsPage) {
+    showEsportsView(esportsRouteView, { scroll: false });
   } else if (!isStandalonePlayerPage && !isClanPage && !isArenaPage) {
     loadLeaderboard();
     if (state.clansData) renderClans(state.clansData); else scheduleClanSectionLoad();
-    if (state.esportsData) renderEsports(state.esportsData); else loadEsports();
-    if (state.tournamentData) renderTournamentDirectory(state.tournamentData);
   }
   if (isArenaPage) { renderArenaAccount(); renderArenaPosts(); }
   if (isClanPage && state.selectedClan) renderClanPage(state.selectedClan);
@@ -1321,21 +1325,76 @@ function tournamentRegionName(code) {
   return labels[code] || code;
 }
 
-function closeEsportsMenu() {
+function cancelEsportsMenuClose() {
+  window.clearTimeout(state.esportsMenuTimer);
+  state.esportsMenuTimer = null;
+}
+
+function closeEsportsMenu(options = {}) {
   if (!els.esportsNav || !els.esportsToggle) return;
-  els.esportsNav.classList.remove('open');
+  if (state.esportsMenuPinned && !options.force) return;
+  cancelEsportsMenuClose();
+  state.esportsMenuPinned = false;
+  els.esportsNav.classList.remove('open', 'pinned');
   els.esportsToggle.setAttribute('aria-expanded', 'false');
   els.esportsMenu?.setAttribute('aria-hidden', 'true');
 }
 
-function toggleEsportsMenu(force) {
+function openEsportsMenu(options = {}) {
   if (!els.esportsNav || !els.esportsToggle) return;
+  cancelEsportsMenuClose();
   closeRankedMenu();
   closeQueueMenu();
-  const opening = typeof force === 'boolean' ? force : !els.esportsNav.classList.contains('open');
-  els.esportsNav.classList.toggle('open', opening);
-  els.esportsToggle.setAttribute('aria-expanded', String(opening));
-  els.esportsMenu?.setAttribute('aria-hidden', String(!opening));
+  if (options.pin) state.esportsMenuPinned = true;
+  els.esportsNav.classList.add('open');
+  els.esportsNav.classList.toggle('pinned', state.esportsMenuPinned);
+  els.esportsToggle.setAttribute('aria-expanded', 'true');
+  els.esportsMenu?.setAttribute('aria-hidden', 'false');
+}
+
+function scheduleEsportsMenuClose(delay = 260) {
+  cancelEsportsMenuClose();
+  if (state.esportsMenuPinned) return;
+  state.esportsMenuTimer = window.setTimeout(() => closeEsportsMenu({ force: true }), delay);
+}
+
+function toggleEsportsMenu() {
+  if (!els.esportsNav || !els.esportsToggle) return;
+  if (els.esportsNav.classList.contains('open') && state.esportsMenuPinned) {
+    closeEsportsMenu({ force: true });
+    return;
+  }
+  openEsportsMenu({ pin: true });
+}
+
+function esportsRoute(view = 'power') {
+  return view === 'tournaments' ? '/esports/tournaments' : '/esports/power';
+}
+
+function navigateEsportsView(view = 'power') {
+  if (!['power', 'tournaments'].includes(view)) view = 'power';
+  const destination = esportsRoute(view);
+  if (location.pathname === destination || location.pathname === `${destination}/`) {
+    showEsportsView(view, { scroll: false });
+    closeEsportsMenu({ force: true });
+    return;
+  }
+  document.body.classList.add('page-leaving');
+  window.setTimeout(() => { location.href = destination; }, 220);
+}
+
+function syncEsportsPageUrl() {
+  if (!isEsportsPage) return;
+  const params = new URLSearchParams();
+  if (state.esportsView === 'power') {
+    params.set('region', els.esportsRegion?.value || 'NA');
+    params.set('mode', els.esportsMode?.value || '1v1');
+  } else {
+    params.set('type', state.tournamentType || 'official');
+    params.set('region', els.tournamentDirectoryRegion?.value || 'ALL');
+    params.set('mode', state.tournamentMode || 'ALL');
+  }
+  history.replaceState(null, '', `${esportsRoute(state.esportsView)}?${params}`);
 }
 
 function showEsportsView(view = 'power', options = {}) {
@@ -1349,21 +1408,27 @@ function showEsportsView(view = 'power', options = {}) {
     button.setAttribute('aria-selected', String(active));
   });
   els.esportsMenu?.querySelectorAll('[data-esports-view]').forEach((button) => button.classList.toggle('selected', button.dataset.esportsView === view));
-  closeEsportsMenu();
-  if (view === 'tournaments' && !state.tournamentData) loadTournamentDirectory();
-  if (view === 'power' && !state.esportsData) loadEsports();
+  closeEsportsMenu({ force: true });
+  if (view === 'tournaments') {
+    document.title = 'Brawlhalla Tournaments — PeakHalla';
+    if (!state.tournamentData || options.refresh) loadTournamentDirectory({ refresh: options.refresh });
+  } else {
+    document.title = 'Brawlhalla Esports Power Rankings — PeakHalla';
+    if (!state.esportsData || options.refresh) loadEsports();
+  }
   if (options.scroll !== false) document.querySelector('#esports')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function tournamentCard(event, index) {
   const regions = Array.isArray(event.regions) && event.regions.length ? event.regions : ['GLOBAL'];
+  const modes = Array.isArray(event.modes) && event.modes.length ? event.modes : ['1v1', '2v2'];
   const primaryRegion = regions[0] || 'GLOBAL';
   const date = event.date ? shortDate(event.date) : '';
   const category = event.category === 'community' ? t('communityTournaments') : t('officialTournaments');
   const sourceHost = (() => { try { return new URL(event.source_url).hostname.replace(/^www\./, ''); } catch { return ''; } })();
   const linkStart = event.source_url ? `<a href="${escapeHtml(event.source_url)}" target="_blank" rel="noopener noreferrer" class="tournament-directory-card">` : '<article class="tournament-directory-card">';
   const linkEnd = event.source_url ? '</a>' : '</article>';
-  return `${linkStart}<span class="tournament-card-number">${String(index + 1).padStart(2, '0')}</span><div class="tournament-card-copy"><div class="tournament-card-badges"><b class="event-region">${escapeHtml(tournamentRegionName(primaryRegion))}</b><em>${escapeHtml(category)}</em></div><h4>${escapeHtml(event.name || 'Brawlhalla Tournament')}</h4><p>${escapeHtml(event.note || event.description || '')}</p><div class="tournament-card-meta">${date ? `<span>${escapeHtml(t('announced'))}: ${escapeHtml(date)}</span>` : ''}${sourceHost ? `<span>${escapeHtml(sourceHost)}</span>` : ''}</div></div><span class="tournament-card-arrow">↗</span>${linkEnd}`;
+  return `${linkStart}<span class="tournament-card-number">${String(index + 1).padStart(2, '0')}</span><div class="tournament-card-copy"><div class="tournament-card-badges"><b class="event-region">${escapeHtml(tournamentRegionName(primaryRegion))}</b>${modes.map((mode) => `<em class="tournament-mode-badge">${escapeHtml(mode)}</em>`).join('')}<em>${escapeHtml(category)}</em></div><h4>${escapeHtml(event.name || 'Brawlhalla Tournament')}</h4><p>${escapeHtml(event.note || event.description || '')}</p><div class="tournament-card-meta">${date ? `<span>${escapeHtml(t('announced'))}: ${escapeHtml(date)}</span>` : ''}${sourceHost ? `<span>${escapeHtml(sourceHost)}</span>` : ''}</div></div><span class="tournament-card-arrow">↗</span>${linkEnd}`;
 }
 
 function renderTournamentDirectory(data = {}) {
@@ -1378,7 +1443,9 @@ function renderTournamentDirectory(data = {}) {
 async function loadTournamentDirectory(options = {}) {
   if (!els.tournamentDirectoryList) return;
   const region = els.tournamentDirectoryRegion?.value || 'ALL';
-  const params = new URLSearchParams({ type: state.tournamentType || 'official', region });
+  const mode = state.tournamentMode || els.tournamentDirectoryMode?.value || 'ALL';
+  const params = new URLSearchParams({ type: state.tournamentType || 'official', region, mode });
+  syncEsportsPageUrl();
   if (options.refresh) params.set('refresh', '1');
   els.tournamentDirectoryList.innerHTML = `<div class="tournament-directory-loading"><span></span><strong>${escapeHtml(t('loadingTournaments'))}</strong></div>`;
   if (els.tournamentDirectoryRefresh) els.tournamentDirectoryRefresh.disabled = true;
@@ -1470,6 +1537,7 @@ async function openEsportsCareer(name, region = '') {
 }
 
 async function loadEsports() {
+  syncEsportsPageUrl();
   const params = new URLSearchParams({ region: els.esportsRegion.value, mode: els.esportsMode.value });
   els.powerBody.innerHTML = '<tr><td colspan="7"><div class="table-loading"></div></td></tr>';
   try { renderEsports(await getJson(`/api/esports?${params}`)); }
@@ -2082,7 +2150,7 @@ function enhanceSelect(select) {
 }
 
 function setupMotionSelects() {
-  [els.region, els.mode, els.leaderboardRegion, els.leaderboardMode, els.esportsRegion, els.esportsMode, els.tournamentDirectoryRegion, els.queueRegion].forEach(enhanceSelect);
+  [els.region, els.mode, els.leaderboardRegion, els.leaderboardMode, els.esportsRegion, els.esportsMode, els.tournamentDirectoryRegion, els.tournamentDirectoryMode, els.queueRegion].forEach(enhanceSelect);
 }
 
 const revealSelector = [
@@ -2150,7 +2218,7 @@ function setupScrollReveal() {
   mutationObserver.observe(document.querySelector('main') || document.body, { childList: true, subtree: true });
 }
 
-document.querySelectorAll('[data-esports-tab]').forEach((button) => button.addEventListener('click', () => showEsportsView(button.dataset.esportsTab)));
+document.querySelectorAll('[data-esports-tab]').forEach((button) => button.addEventListener('click', () => navigateEsportsView(button.dataset.esportsTab)));
 document.querySelectorAll('[data-tournament-type]').forEach((button) => button.addEventListener('click', () => {
   state.tournamentType = button.dataset.tournamentType || 'official';
   document.querySelectorAll('[data-tournament-type]').forEach((item) => {
@@ -2160,14 +2228,31 @@ document.querySelectorAll('[data-tournament-type]').forEach((button) => button.a
   });
   loadTournamentDirectory();
 }));
+document.querySelectorAll('[data-tournament-mode]').forEach((button) => button.addEventListener('click', () => {
+  state.tournamentMode = button.dataset.tournamentMode || 'ALL';
+  if (els.tournamentDirectoryMode) els.tournamentDirectoryMode.value = state.tournamentMode;
+  document.querySelectorAll('[data-tournament-mode]').forEach((item) => {
+    const active = item === button;
+    item.classList.toggle('active', active);
+    item.setAttribute('aria-selected', String(active));
+  });
+  loadTournamentDirectory();
+}));
 els.tournamentDirectoryRegion?.addEventListener('change', () => loadTournamentDirectory());
+els.tournamentDirectoryMode?.addEventListener('change', () => {
+  state.tournamentMode = els.tournamentDirectoryMode.value || 'ALL';
+  document.querySelectorAll('[data-tournament-mode]').forEach((item) => item.classList.toggle('active', item.dataset.tournamentMode === state.tournamentMode));
+  loadTournamentDirectory();
+});
 els.tournamentDirectoryRefresh?.addEventListener('click', () => loadTournamentDirectory({ refresh: true }));
 els.esportsToggle?.addEventListener('click', (event) => { event.stopPropagation(); toggleEsportsMenu(); });
-els.esportsNav?.addEventListener('mouseenter', () => toggleEsportsMenu(true));
-els.esportsNav?.addEventListener('mouseleave', () => toggleEsportsMenu(false));
+els.esportsNav?.addEventListener('mouseenter', () => openEsportsMenu());
+els.esportsNav?.addEventListener('mouseleave', () => scheduleEsportsMenuClose());
+els.esportsMenu?.addEventListener('mouseenter', cancelEsportsMenuClose);
+els.esportsMenu?.addEventListener('mouseleave', () => scheduleEsportsMenuClose());
 els.esportsMenu?.addEventListener('click', (event) => {
   const button = event.target.closest('[data-esports-view]');
-  if (button) showEsportsView(button.dataset.esportsView);
+  if (button) navigateEsportsView(button.dataset.esportsView);
 });
 
 els.powerBody.addEventListener('click', (event) => {
@@ -2218,7 +2303,7 @@ els.queueRefresh?.addEventListener('click', () => loadLiveQueue());
 document.addEventListener('click', (event) => {
   if (els.rankedNav && !els.rankedNav.contains(event.target)) closeRankedMenu();
   if (els.queueNav && !els.queueNav.contains(event.target)) closeQueueMenu();
-  if (els.esportsNav && !els.esportsNav.contains(event.target)) closeEsportsMenu();
+  if (els.esportsNav && !els.esportsNav.contains(event.target)) closeEsportsMenu({ force: true });
   if (!event.target.closest('.main-field')) hideSuggestions();
   document.querySelectorAll('.motion-select.open').forEach((item) => { if (!item.contains(event.target)) item.classList.remove('open'); });
 });
@@ -2306,6 +2391,34 @@ els.arenaFeed?.addEventListener('submit', (event) => {
   submitArenaComment(form);
 });
 
+if (isEsportsPage) {
+  const params = new URLSearchParams(location.search);
+  state.esportsView = esportsRouteView;
+  if (esportsRouteView === 'power') {
+    const region = params.get('region');
+    const mode = params.get('mode');
+    if (els.esportsRegion && ['NA','EU','SA','SEA','MENA'].includes(region)) els.esportsRegion.value = region;
+    if (els.esportsMode && ['1v1','2v2'].includes(mode)) els.esportsMode.value = mode;
+  } else {
+    const type = params.get('type');
+    const region = params.get('region');
+    const mode = params.get('mode');
+    if (['official','community'].includes(type)) state.tournamentType = type;
+    if (els.tournamentDirectoryRegion && ['ALL','NA','EU','SA','SEA','MENA','AUS','JPN'].includes(region)) els.tournamentDirectoryRegion.value = region;
+    if (['ALL','1v1','2v2'].includes(mode)) state.tournamentMode = mode;
+    if (els.tournamentDirectoryMode) els.tournamentDirectoryMode.value = state.tournamentMode;
+    document.querySelectorAll('[data-tournament-type]').forEach((button) => {
+      const active = button.dataset.tournamentType === state.tournamentType;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', String(active));
+    });
+    document.querySelectorAll('[data-tournament-mode]').forEach((button) => {
+      const active = button.dataset.tournamentMode === state.tournamentMode;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', String(active));
+    });
+  }
+}
 if (els.rankedModeLabel) els.rankedModeLabel.textContent = els.leaderboardMode?.value || '1v1';
 setupMotionSelects();
 setupScrollReveal();
@@ -2326,7 +2439,7 @@ function resetBrowserNavigationState() {
   body.style.removeProperty('pointer-events');
   closeRankedMenu?.();
   closeQueueMenu?.();
-  closeEsportsMenu?.();
+  closeEsportsMenu?.({ force: true });
 }
 
 // Browsers can restore a page from the back/forward cache with the old
@@ -2347,4 +2460,4 @@ const playerFromUrl = pageParams.get('player');
 const rankedFromUrl = pageParams.get('ranked');
 if (standalonePlayerId) loadPlayer(standalonePlayerId);
 else if (playerFromUrl && /^\d+$/.test(playerFromUrl)) navigateToPlayer(playerFromUrl);
-else if (!isLiveQueuePage && !isClanPage && !isArenaPage && ['1v1', '2v2', '3v3'].includes(rankedFromUrl)) window.setTimeout(() => chooseRankedMode(rankedFromUrl), 180);
+else if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && ['1v1', '2v2', '3v3'].includes(rankedFromUrl)) window.setTimeout(() => chooseRankedMode(rankedFromUrl), 180);
