@@ -243,7 +243,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await fetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.42'
+          'User-Agent': 'PeakHalla/7.43'
         },
         signal: controller.signal
       });
@@ -285,7 +285,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.42'
+        'User-Agent': 'PeakHalla/7.43'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -364,7 +364,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             ...(attempt.body ? { 'Content-Type': 'application/json' } : {}),
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.42'
+            'User-Agent': 'PeakHalla/7.43'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -1007,7 +1007,7 @@ async function fetchLegendArtwork(name) {
       const response = await fetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.42',
+          'User-Agent': 'PeakHalla/7.43',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -1043,7 +1043,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await fetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.42'
+        'User-Agent': 'PeakHalla/7.43'
       },
       signal: controller.signal
     });
@@ -2663,7 +2663,7 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.42.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.43.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
@@ -3374,40 +3374,95 @@ app.get('/api/player/:id/history', async (req, res) => {
 
 
 function playerRefId(player = {}) {
-  return Number(player.id ?? player.brawlhalla_id ?? player.brawlhallaId ?? player.player_id ?? 0);
+  return Number(
+    player.id ?? player.brawlhalla_id ?? player.brawlhallaId ?? player.player_id ??
+    player.playerId ?? player.bh_id ?? player.bhId ?? 0
+  );
 }
 
 function playerRefName(player = {}) {
-  return String(player.username ?? player.name ?? player.player_name ?? '').trim();
+  return String(
+    player.username ?? player.name ?? player.player_name ?? player.playerName ??
+    player.alias ?? ''
+  ).trim();
+}
+
+function flatTeamPlayers(team = {}) {
+  const firstId = Number(
+    team.brawlhalla_id_one ?? team.brawlhallaIdOne ?? team.player_one_id ??
+    team.playerOneId ?? team.player1_id ?? team.player1Id ?? team.bh_id_one ?? 0
+  );
+  const secondId = Number(
+    team.brawlhalla_id_two ?? team.brawlhallaIdTwo ?? team.player_two_id ??
+    team.playerTwoId ?? team.player2_id ?? team.player2Id ?? team.bh_id_two ?? 0
+  );
+  if (!(firstId > 0) && !(secondId > 0)) return [];
+  return [
+    {
+      id: firstId,
+      username: team.username_one ?? team.usernameOne ?? team.player_one_name ??
+        team.playerOneName ?? team.player1_name ?? team.player1Name ?? ''
+    },
+    {
+      id: secondId,
+      username: team.username_two ?? team.usernameTwo ?? team.player_two_name ??
+        team.playerTwoName ?? team.player2_name ?? team.player2Name ?? ''
+    }
+  ].filter((player) => Number(player.id) > 0);
+}
+
+function teamPlayers(value = {}) {
+  const candidates = [
+    value.players,
+    value.team?.players,
+    value.members,
+    value.team_members,
+    value.teamMembers,
+    value.roster
+  ];
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate) && candidate.length >= 2) return candidate;
+  }
+  return flatTeamPlayers(value);
+}
+
+function looksLikeTeamRow(value = {}) {
+  const players = teamPlayers(value);
+  if (players.length >= 2) return true;
+  return [
+    'team_rating', 'teamRating', 'team_elo', 'teamElo', 'peak_rating', 'best_rating',
+    'team_peak_rating', 'teamPeakRating', 'teamname', 'team_name'
+  ].some((key) => value[key] !== undefined);
 }
 
 function collectTeamRows(payload, playerId) {
   const rows = [];
   const seenObjects = new Set();
+  const seenRows = new Set();
+  const numericPlayerId = Number(playerId);
+
+  function pushRow(value) {
+    if (!value || typeof value !== 'object' || !looksLikeTeamRow(value)) return;
+    const players = teamPlayers(value);
+    if (players.length < 2 || !players.some((player) => playerRefId(player) === numericPlayerId)) return;
+    const ids = players.map(playerRefId).filter((id) => id > 0).sort((a, b) => a - b);
+    const signature = `${ids.join(':')}:${Number(value.rating ?? value.team_rating ?? value.teamRating ?? value.elo ?? value.team_elo ?? 0)}:${Number(value.games ?? value.team_games ?? 0)}`;
+    if (seenRows.has(signature)) return;
+    seenRows.add(signature);
+    rows.push({ ...value, players });
+  }
 
   function visit(value, depth = 0) {
-    if (depth > 7 || value == null) return;
+    if (depth > 10 || value == null) return;
     if (Array.isArray(value)) {
       for (const item of value) visit(item, depth + 1);
       return;
     }
     if (typeof value !== 'object' || seenObjects.has(value)) return;
     seenObjects.add(value);
-
-    const players = Array.isArray(value.players)
-      ? value.players
-      : Array.isArray(value.team?.players)
-        ? value.team.players
-        : Array.isArray(value.members)
-          ? value.members
-          : null;
-
-    if (players?.length >= 2 && players.some((player) => playerRefId(player) === Number(playerId))) {
-      rows.push({ ...value, players });
-    }
-
+    pushRow(value);
     for (const [key, child] of Object.entries(value)) {
-      if (['legends', 'region_ranks'].includes(key)) continue;
+      if (['legends', 'region_ranks', 'regionRanks', 'weapons'].includes(key)) continue;
       if (Array.isArray(child) || (child && typeof child === 'object')) visit(child, depth + 1);
     }
   }
@@ -3417,61 +3472,109 @@ function collectTeamRows(payload, playerId) {
 }
 
 function normalizeTeamRow(team = {}) {
+  const wins = Number(team.wins ?? team.team_wins ?? team.teamWins ?? 0) || 0;
+  const explicitLosses = Number(team.losses ?? team.team_losses ?? team.teamLosses);
+  const explicitGames = Number(team.games ?? team.team_games ?? team.teamGames ?? team.matches);
+  const losses = Number.isFinite(explicitLosses)
+    ? Math.max(0, explicitLosses)
+    : Math.max(0, (Number.isFinite(explicitGames) ? explicitGames : wins) - wins);
+  const games = Number.isFinite(explicitGames) ? Math.max(0, explicitGames) : wins + losses;
   return {
-    players: Array.isArray(team.players) ? team.players : [],
-    rating: Number(team.rating ?? team.team_rating ?? team.elo ?? team.team_elo) || null,
-    peak_rating: Number(team.best_rating ?? team.peak_rating ?? team.team_peak_rating ?? team.peak_elo) || null,
-    tier: team.tier ?? team.team_tier ?? null,
-    rank: Number(team.rank ?? team.team_rank) || null,
-    region: team.region ?? team.server ?? null,
-    wins: Number(team.wins ?? team.team_wins) || 0,
-    losses: Number(team.losses ?? team.team_losses) || 0
+    players: teamPlayers(team),
+    rating: Number(team.rating ?? team.team_rating ?? team.teamRating ?? team.elo ?? team.team_elo ?? team.teamElo) || null,
+    peak_rating: Number(team.best_rating ?? team.bestRating ?? team.peak_rating ?? team.peakRating ?? team.team_peak_rating ?? team.teamPeakRating ?? team.peak_elo) || null,
+    tier: team.tier ?? team.team_tier ?? team.teamTier ?? null,
+    rank: Number(team.global_rank ?? team.globalRank ?? team.rank ?? team.team_rank ?? team.teamRank) || null,
+    region: team.region ?? team.server ?? team.region_code ?? team.regionCode ?? null,
+    wins,
+    losses,
+    games
   };
 }
+
+function teammateRefsFromRows(rows, playerId) {
+  const refs = [];
+  const numericPlayerId = Number(playerId);
+  for (const rawRow of rows) {
+    const team = normalizeTeamRow(rawRow);
+    const current = team.players.find((player) => playerRefId(player) === numericPlayerId);
+    if (!current) continue;
+    for (const teammate of team.players) {
+      const teammateId = playerRefId(teammate);
+      if (!Number.isSafeInteger(teammateId) || teammateId <= 0 || teammateId === numericPlayerId) continue;
+      refs.push({
+        id: teammateId,
+        name: playerRefName(teammate) || `Player ${teammateId}`,
+        team_rating: team.rating,
+        team_peak_rating: team.peak_rating,
+        team_tier: team.tier,
+        team_rank: team.rank,
+        region: team.region,
+        wins: team.wins,
+        games: team.games,
+        losses: team.losses
+      });
+    }
+  }
+  return refs;
+}
+
+async function fetchPlayerTeamSources(id, forceFresh = false) {
+  const fetchOfficial = (endpoint, ttl = 30_000) => forceFresh
+    ? apiFetchFresh(endpoint).catch(() => null)
+    : apiFetch(endpoint, ttl).catch(() => null);
+  const [teamsPayload, ranked2v2Payload, allStatsPayload, coreStatsPayload] = await Promise.all([
+    fetchOfficial(`/player/teams?brawlhalla_id=${id}`, 30_000),
+    fetchOfficial(`/player/stats?brawlhalla_id=${id}&mode=ranked_2v2`, 30_000),
+    fetchOfficial(`/player/stats?brawlhalla_id=${id}&mode=all`, 5 * 60_000),
+    getCorehallaPlayerStats(id, forceFresh).catch(() => null)
+  ]);
+  return [
+    ['official-player-teams', teamsPayload],
+    ['official-ranked-2v2', ranked2v2Payload],
+    ['official-all-stats', allStatsPayload],
+    ['corehalla-player-stats', coreStatsPayload]
+  ];
+}
+
+app.get('/api/player/:id/portrait', async (req, res, next) => {
+  try {
+    const id = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
+    if (!id) return res.status(400).json({ error: 'Invalid player ID.' });
+    const cachedPlayer = getCachedProfileResponse(id)?.player || await getDiskCachedProfileResponse(id).then((payload) => payload?.player || null).catch(() => null);
+    const mainLegend = cachedPlayer?.main_legend || await settleWithin(getMainLegendSummary(id), 5_500, null);
+    res.setHeader('Cache-Control', mainLegend ? 'private, max-age=600, stale-while-revalidate=3600' : 'no-store');
+    res.json({ player_id: id, main_legend: mainLegend || null });
+  } catch (error) {
+    next(error);
+  }
+});
 
 app.get('/api/player/:id/teammates', async (req, res, next) => {
   try {
     const id = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
     if (!id) return res.status(400).json({ error: 'Invalid player ID.' });
+    const forceFresh = String(req.query.refresh || '') === '1';
 
-    const teamsResponse = await apiFetch(`/player/teams?brawlhalla_id=${id}`, 60_000).catch(() => null);
-    const teams = Array.isArray(teamsResponse?.teams?.ranked_2v2)
-      ? teamsResponse.teams.ranked_2v2
-      : Array.isArray(teamsResponse?.ranked_2v2)
-        ? teamsResponse.ranked_2v2
-        : [];
+    let sources = await fetchPlayerTeamSources(id, forceFresh);
+    let collected = sources.flatMap(([source, payload]) => collectTeamRows(payload, id).map((row) => ({ ...row, __source: source })));
+    if (!collected.length && !forceFresh) {
+      sources = await fetchPlayerTeamSources(id, true);
+      collected = sources.flatMap(([source, payload]) => collectTeamRows(payload, id).map((row) => ({ ...row, __source: source })));
+    }
 
-    const refs = teams.map((team) => {
-      const firstId = Number(team.brawlhalla_id_one || 0);
-      const secondId = Number(team.brawlhalla_id_two || 0);
-      const teammateId = firstId === id ? secondId : firstId;
-      const teammateName = firstId === id ? team.username_two : team.username_one;
-      const regionRank = Array.isArray(team.region_ranks)
-        ? team.region_ranks.find((rank) => String(rank.region).toUpperCase() === String(team.region).toUpperCase())?.rank
-        : null;
-      return {
-        id: teammateId,
-        name: teammateName || `Player ${teammateId}`,
-        team_rating: Number(team.rating) || null,
-        team_peak_rating: Number(team.peak_rating) || null,
-        team_tier: team.tier || null,
-        team_rank: Number(team.global_rank || regionRank) || null,
-        region: team.region || null,
-        wins: Number(team.wins) || 0,
-        games: Number(team.games) || 0,
-        losses: Math.max(0, Number(team.games || 0) - Number(team.wins || 0))
-      };
-    }).filter((item) => Number.isSafeInteger(item.id) && item.id > 0 && item.id !== id);
-
+    const refs = teammateRefsFromRows(collected, id);
     const bestByPlayer = new Map();
     for (const item of refs) {
       const previous = bestByPlayer.get(item.id);
-      if (!previous || Number(item.team_rating || 0) > Number(previous.team_rating || 0)) bestByPlayer.set(item.id, item);
+      const itemScore = Number(item.team_rating || 0) * 10_000 + Number(item.games || 0);
+      const previousScore = Number(previous?.team_rating || 0) * 10_000 + Number(previous?.games || 0);
+      if (!previous || itemScore > previousScore) bestByPlayer.set(item.id, item);
     }
 
-    const teammates = await mapWithConcurrency([...bestByPlayer.values()], 10, async (item) => {
+    const teammates = await mapWithConcurrency([...bestByPlayer.values()], 6, async (item) => {
       const cachedPlayer = getCachedProfileResponse(item.id)?.player || null;
-      const mainLegend = cachedPlayer?.main_legend || await settleWithin(getMainLegendSummary(item.id), 700, null);
+      const mainLegend = cachedPlayer?.main_legend || await settleWithin(getMainLegendSummary(item.id), 2_500, null);
       return {
         ...item,
         name: cachedPlayer?.name || item.name,
@@ -3480,13 +3583,19 @@ app.get('/api/player/:id/teammates', async (req, res, next) => {
       };
     });
 
-    teammates.sort((a, b) => Number(b.team_rating || 0) - Number(a.team_rating || 0));
-    res.setHeader('Cache-Control', 'private, max-age=30, stale-while-revalidate=120');
+    teammates.sort((a, b) =>
+      Number(b.team_rating || 0) - Number(a.team_rating || 0) ||
+      Number(b.games || 0) - Number(a.games || 0)
+    );
+    const usedSources = [...new Set(collected.map((row) => row.__source).filter(Boolean))];
+    res.setHeader('Cache-Control', teammates.length ? 'private, max-age=30, stale-while-revalidate=120' : 'no-store');
     res.json({
       player_id: id,
       teammates,
-      source: 'official-player-teams',
-      current_season_only: true
+      source: usedSources.join('+') || 'no-current-team-source',
+      sources_checked: sources.map(([source, payload]) => ({ source, available: Boolean(payload) })),
+      current_season_only: true,
+      refreshed: forceFresh
     });
   } catch (error) {
     next(error);
