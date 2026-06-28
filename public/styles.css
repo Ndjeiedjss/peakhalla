@@ -26,6 +26,24 @@ a { color: inherit; text-decoration: none; }
 button, input, select { font: inherit; }
 button { cursor: pointer; }
 img { display: block; }
+.legend-image-shell img { opacity: 0; transform: scale(.94); transition: opacity .28s ease, transform .38s cubic-bezier(.16,1,.3,1); }
+.legend-image-shell.is-loaded img { opacity: 1; transform: scale(1); }
+.search-suggestion[data-needs-portrait="1"] .suggestion-portrait,
+.fighter-card[data-needs-portrait="1"] .fighter-portrait { position: relative; }
+.search-suggestion[data-needs-portrait="1"] .suggestion-portrait::after,
+.fighter-card[data-needs-portrait="1"] .fighter-portrait::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 2px solid rgba(167,139,250,.18);
+  border-top-color: rgba(167,139,250,.85);
+  border-radius: 50%;
+  animation: portraitSpin .8s linear infinite;
+  pointer-events: none;
+}
+.search-suggestion[data-needs-portrait="0"] .suggestion-portrait::after,
+.fighter-card[data-needs-portrait="0"] .fighter-portrait::after { display: none; }
+@keyframes portraitSpin { to { transform: rotate(360deg); } }
 [hidden] { display: none !important; }
 .shell { width: min(1180px, calc(100% - 32px)); margin-inline: auto; }
 .section { padding-top: 88px; scroll-margin-top: 90px; }
@@ -354,9 +372,32 @@ tr:last-child td { border-bottom: 0; }
 .footer-creator:hover, .footer-creator:focus-visible { border-color: rgba(139,92,246,.65); background: rgba(139,92,246,.08); transform: translateY(-2px); }
 .footer-brand:focus-visible, .footer-creator:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 4px; }
 
-.is-arabic { font-family: "Cairo", sans-serif; }
-.is-arabic h1, .is-arabic h2, .is-arabic h3, .is-arabic .brand strong, .is-arabic .fighter-data h3, .is-arabic .profile-identity h2, .is-arabic .champion-card strong { font-family: "Cairo", sans-serif; letter-spacing: 0; }
-.is-arabic .hero h1 { line-height: 1.02; }
+.is-arabic {
+  --body: "Cairo", sans-serif;
+  --display: "Cairo", sans-serif;
+  font-family: var(--body);
+}
+.is-arabic button,
+.is-arabic input,
+.is-arabic select,
+.is-arabic textarea,
+.is-arabic nav,
+.is-arabic .header-actions { font-family: var(--body); }
+.is-arabic h1,
+.is-arabic h2,
+.is-arabic h3,
+.is-arabic .fighter-data h3,
+.is-arabic .profile-identity h2,
+.is-arabic .champion-card strong { font-family: var(--display); letter-spacing: 0; }
+.is-arabic .brand strong { font-family: "Space Grotesk", sans-serif; }
+.is-arabic .brand small { font-family: "Inter", sans-serif; }
+.is-arabic nav { gap: 18px; }
+.is-arabic nav a,
+.is-arabic .nav-dropdown-toggle,
+.is-arabic .discord-link,
+.is-arabic .donation-link,
+.is-arabic .live-pill { white-space: nowrap; line-height: 1.3; }
+.is-arabic .hero h1 { line-height: 1.08; }
 
 @media (max-width: 1000px) {
   nav { display: none; }

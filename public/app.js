@@ -66,7 +66,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, queueMode: '1v1', queueRegion: 'ME', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, queueMode: '1v1', queueRegion: 'ME', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
 const playerPathMatch = location.pathname.match(/^\/player\/(\d+)\/?$/);
 const clanPathMatch = location.pathname.match(/^\/clan\/(\d+)\/?$/);
 const standalonePlayerId = playerPathMatch ? playerPathMatch[1] : null;
@@ -393,6 +393,39 @@ function setupPlayerPrefetch(container, selector, datasetKey) {
   }
 }
 
+function patchPlayerPortrait(button, legend, portraitSelector) {
+  if (!button || !legend) return;
+  const portrait = button.querySelector(portraitSelector);
+  if (!portrait || button.dataset.needsPortrait !== '1') return;
+  portrait.innerHTML = legendImageMarkup(legend, { lazy: false, fallbackName: legend.name });
+  button.dataset.needsPortrait = '0';
+  const label = button.querySelector('.suggestion-copy small');
+  if (label && !label.textContent.includes(':')) {
+    const region = button.dataset.playerRegion || '—';
+    label.textContent = `${legend.name || t('unknownLegend')} · ${region}`;
+  }
+  activateImageFallbacks();
+}
+
+function enrichRenderedPortraits(container, buttonSelector, portraitSelector, concurrency = 3) {
+  if (!container) return;
+  const queue = [...container.querySelectorAll(buttonSelector)]
+    .filter((button) => button.dataset.needsPortrait === '1' && Number(button.dataset.playerId) > 0);
+  let cursor = 0;
+  const worker = async () => {
+    while (cursor < queue.length) {
+      const button = queue[cursor++];
+      const id = Number(button.dataset.playerId);
+      const data = await prefetchPlayerProfile(id).catch(() => null);
+      if (!button.isConnected) continue;
+      const legend = data?.player?.main_legend || null;
+      patchPlayerPortrait(button, legend, portraitSelector);
+      if (!legend) button.dataset.needsPortrait = '0';
+    }
+  };
+  Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, worker)).catch(() => null);
+}
+
 function playerCard(item, player) {
   const mainLegend = player.main_legend; const rank = item.rank ? `#${number(item.rank)}` : '—';
   const matchedAliases = [...new Set((player.matched_aliases || []).filter((name) => normalize(name) !== normalize(player.username)))];
@@ -403,7 +436,7 @@ function playerCard(item, player) {
   const matchLine = allAliases.length
     ? `<span class="fighter-alias-match"><span>${escapeHtml(t('knownNames'))}</span><b>${allAliases.slice(0, 10).map(escapeHtml).join(' · ')}</b></span>`
     : '';
-  return `<button class="fighter-card" data-player-id="${Number(player.id)}">
+  return `<button class="fighter-card" data-player-id="${Number(player.id)}" data-needs-portrait="${mainLegend ? '0' : '1'}">
     ${portraitMarkup(mainLegend || { name: player.username }, 'fighter-portrait')}
     <span class="fighter-data">
       <span class="fighter-top"><span>${escapeHtml(item.region || '—')}</span><span>BH ${Number(player.id)}</span></span>
@@ -440,6 +473,7 @@ function renderSearchResults(rankings = []) {
   }));
   setupPlayerPrefetch(els.resultsGrid, '[data-player-id]', 'playerId');
   activateImageFallbacks();
+  enrichRenderedPortraits(els.resultsGrid, '.fighter-card[data-player-id]', '.fighter-portrait', 4);
   els.resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -722,6 +756,47 @@ function teammateCard(item) {
   </button>`;
 }
 
+function makeTeammateSeedPayload(item = {}) {
+  const id = Number(item.id);
+  const name = String(item.name || `Player ${id}`);
+  return {
+    seed_only: true,
+    player: {
+      brawlhalla_id: id,
+      name,
+      level: null,
+      xp_percentage: null,
+      account_xp: null,
+      game_time_seconds: 0,
+      game_time_display: '—',
+      lifetime_games: null,
+      lifetime_wins: null,
+      lifetime_win_rate: null,
+      rating: null,
+      peak_rating: null,
+      tier: 'Loading…',
+      region: item.region || '—',
+      global_rank: null,
+      region_ranks: [],
+      ranked_games: null,
+      ranked_wins: null,
+      ranked_win_rate: null,
+      main_legend: item.main_legend || null,
+      top_legends: item.main_legend ? [{ ...item.main_legend, games: 0 }] : [],
+      main_weapons: [],
+      lifetime_totals: {},
+      lifetime_legends: [],
+      legends: [],
+      guild: null,
+      data_quality: { source: 'Instant 2v2 teammate preview · live profile loading', live_fetch: false },
+      updated_at: new Date().toISOString()
+    },
+    history: [],
+    known_names: [{ name, is_current: true }],
+    background_refresh_recommended: true
+  };
+}
+
 async function loadTeammates(id) {
   if (!els.teammatesGrid) return;
   els.teammatesCount.textContent = '';
@@ -731,7 +806,11 @@ async function loadTeammates(id) {
     const teammates = data.teammates || [];
     els.teammatesCount.textContent = teammates.length ? `${number(teammates.length)} ${t('twoVTwoPartners')}` : '';
     els.teammatesGrid.innerHTML = teammates.length ? teammates.map(teammateCard).join('') : `<p class="empty-copy">${escapeHtml(t('noTeammates'))}</p>`;
-    els.teammatesGrid.querySelectorAll('[data-teammate-id]').forEach((button) => button.addEventListener('click', () => navigateToPlayer(button.dataset.teammateId)));
+    const teammateSeeds = new Map(teammates.map((item) => [Number(item.id), makeTeammateSeedPayload(item)]));
+    els.teammatesGrid.querySelectorAll('[data-teammate-id]').forEach((button) => button.addEventListener('click', () => {
+      const id = Number(button.dataset.teammateId);
+      navigateToPlayer(id, teammateSeeds.get(id));
+    }));
     activateImageFallbacks();
     registerScrollReveal(els.teammatesPanel);
   } catch {
@@ -812,7 +891,10 @@ function mergeRankedPreview(data, preview) {
   for (const field of rankedFields) {
     if (source[field] !== undefined && source[field] !== null && source[field] !== '' && source[field] !== '—') target[field] = source[field];
   }
-  target.updated_at = source.updated_at || target.updated_at;
+  if ((!target.name || /^Player\s+\d+$/i.test(target.name)) && source.name) target.name = source.name;
+  if (!target.main_legend && source.main_legend) target.main_legend = source.main_legend;
+  if (!target.guild && source.guild) target.guild = source.guild;
+  target.updated_at = target.updated_at || source.updated_at;
   return data;
 }
 
@@ -821,11 +903,13 @@ async function loadPlayer(id, options = {}) {
   const manualRefresh = Boolean(options.refresh);
   const backgroundRefresh = Boolean(options.background);
   let renderedInstantData = false;
+  let renderedSeedOnly = false;
   try {
     if (!silent && !manualRefresh && !backgroundRefresh) {
       const cached = readPlayerNavigationSeed(id) || readPlayerBrowserCache(id);
       if (cached) {
-        renderPlayer(cached, options.shouldScroll !== false, { refreshSecondary: !cached.seed_only });
+        renderedSeedOnly = Boolean(cached.seed_only);
+        renderPlayer(cached, options.shouldScroll !== false, { refreshSecondary: !renderedSeedOnly });
         state.playerSignature = playerPayloadSignature(cached);
         renderedInstantData = true;
         hideStatus();
@@ -848,12 +932,12 @@ async function loadPlayer(id, options = {}) {
     const changed = signature !== state.playerSignature;
     const shouldRender = silent ? changed : (!renderedInstantData || changed || manualRefresh);
     if (shouldRender) {
-      renderPlayer(data, renderedInstantData ? false : options.shouldScroll !== false, { refreshSecondary: !silent && !renderedInstantData });
+      renderPlayer(data, renderedInstantData ? false : options.shouldScroll !== false, { refreshSecondary: !silent && (!renderedInstantData || renderedSeedOnly) });
       state.playerSignature = signature;
     } else {
       state.currentPlayer = data;
     }
-    history.replaceState(null, '', `/?player=${encodeURIComponent(id)}`);
+    history.replaceState(null, '', `/player/${encodeURIComponent(id)}`);
 
     if (options.autoVerify !== false && !manualRefresh && !backgroundRefresh) {
       window.clearTimeout(state.playerAutoRefreshTimer);
@@ -1764,7 +1848,7 @@ function renderSuggestions(rankings = [], query = '') {
   if (!state.suggestionItems.length) {
     els.suggestions.innerHTML = `<div class="suggestion-empty">${escapeHtml(t('noSearchResults'))}</div>`;
   } else {
-    els.suggestions.innerHTML = state.suggestionItems.map((item, index) => `<button type="button" class="search-suggestion" role="option" data-suggestion-index="${index}">
+    els.suggestions.innerHTML = state.suggestionItems.map((item, index) => `<button type="button" class="search-suggestion" role="option" data-suggestion-index="${index}" data-player-id="${Number(item.id)}" data-player-region="${escapeHtml(item.region)}" data-needs-portrait="${item.main_legend ? '0' : '1'}">
       ${portraitMarkup(item.main_legend || { name: item.name }, 'suggestion-portrait')}
       <span class="suggestion-copy"><strong>${escapeHtml(item.name)}</strong><small>${item.matched_alias && normalize(item.matched_alias) !== normalize(item.name) ? `${escapeHtml(t('oldNameMatch'))}: ${escapeHtml(item.matched_alias)}` : `${escapeHtml(item.main_legend?.name || t('unknownLegend'))} · ${escapeHtml(item.region)}`}</small></span>
       <span class="suggestion-meta"><b>${number(item.elo)}</b><small>${Number.isFinite(Number(item.elo)) ? 'ELO' : 'PROFILE'}</small></span>
@@ -1772,24 +1856,32 @@ function renderSuggestions(rankings = [], query = '') {
   }
   els.suggestions.hidden = false;
   els.name?.setAttribute('aria-expanded', 'true');
-  state.suggestionItems.slice(0, 3).forEach((item) => prefetchPlayerProfile(item.id));
   activateImageFallbacks();
+  enrichRenderedPortraits(els.suggestions, '.search-suggestion[data-player-id]', '.suggestion-portrait', 3);
 }
 
 async function loadSearchSuggestions() {
   const query = els.name?.value.trim() || '';
   if (query.length < 2) { hideSuggestions(); return; }
+  const requestId = ++state.suggestionRequestId;
   state.suggestionController?.abort();
   state.suggestionController = new AbortController();
-  const params = new URLSearchParams({ q: query });
+  const params = new URLSearchParams({ q: query, _: String(Date.now()) });
   try {
-    const response = await fetch(`/api/suggestions?${params}`, { headers: { Accept: 'application/json' }, signal: state.suggestionController.signal });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'Search failed');
-    if (query !== (els.name?.value.trim() || '')) return;
+    const data = await getJson(`/api/suggestions?${params}`, {
+      signal: state.suggestionController.signal,
+      timeoutMs: 7000
+    });
+    if (requestId !== state.suggestionRequestId || query !== (els.name?.value.trim() || '')) return;
     renderSuggestions(data.rankings || [], query);
   } catch (error) {
-    if (error.name !== 'AbortError') hideSuggestions();
+    if (error.name === 'AbortError' || requestId !== state.suggestionRequestId) return;
+    // A temporary upstream timeout should not erase valid suggestions that are
+    // already visible for the same input.
+    if (!state.suggestionItems.length) {
+      els.suggestions.innerHTML = `<div class="suggestion-empty">${escapeHtml(t('friendlyProblem'))}</div>`;
+      els.suggestions.hidden = false;
+    }
   }
 }
 
