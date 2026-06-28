@@ -62,8 +62,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="/styles.css?v=7.45.0" as="style">
-  <link rel="stylesheet" href="/styles.css?v=7.45.0">
+  <link rel="preload" href="/styles.css?v=7.46.0" as="style">
+  <link rel="stylesheet" href="/styles.css?v=7.46.0">
 </head>
 <body>
   <header class="site-header">
@@ -499,7 +499,8 @@
       <div id="esports-power-view" class="esports-view-panel">
         <div class="esports-subheading stacked-mobile">
           <div><span class="eyebrow">OFFICIAL TABLE</span><h3 data-i18n="esportsTitle">Esports power rankings</h3><p class="section-copy" data-i18n="esportsText">Official competitive names, medals, earnings, and major tournament results.</p></div>
-          <div class="toolbar">
+          <div class="toolbar esports-power-toolbar">
+            <label class="compact-field power-search-field"><span data-i18n="powerSearch">Find a player</span><span class="leaderboard-search-box"><i>⌕</i><input id="power-ranking-search" type="search" autocomplete="off" data-i18n-placeholder="powerSearchPlaceholder" placeholder="Search the power ranking"></span></label>
             <label class="compact-field"><span data-i18n="region">Region</span><select id="esports-region"><option value="NA">North America</option><option value="EU">Europe</option><option value="SA">South America</option><option value="SEA">Southeast Asia</option><option value="MENA">MENA</option></select></label>
             <label class="compact-field"><span data-i18n="gameMode">Mode</span><select id="esports-mode"><option value="1v1">1v1</option><option value="2v2">2v2</option></select></label>
           </div>
@@ -507,6 +508,10 @@
         <article class="panel power-panel esports-power-card">
           <div class="panel-heading"><div><span class="eyebrow">POWER RANK</span><h3 data-i18n="powerRanking">Power ranking</h3></div><span id="esports-updated" class="muted"></span></div>
           <div class="table-wrap"><table class="power-table"><thead><tr><th>#</th><th data-i18n="player">Player</th><th data-i18n="earnings">Earnings</th><th>TOP 8</th><th>🥇</th><th>🥈</th><th>🥉</th></tr></thead><tbody id="power-ranking-body"></tbody></table></div>
+          <div class="power-pagination">
+            <span id="power-ranking-page-status" class="muted"></span>
+            <button id="power-ranking-load-more" class="secondary-button power-load-more" type="button" hidden><span data-i18n="loadMorePowerPlayers">Load 20 more players</span><b>↓</b></button>
+          </div>
           <a id="esports-source" class="source-link" href="https://www.brawlhalla.com/rankings/esports" target="_blank" rel="noopener noreferrer" data-i18n="officialSource">Open official rankings ↗</a>
         </article>
         <article class="panel champions-panel">
@@ -639,7 +644,7 @@
       </a>
     </div>
   </footer>
-  <script src="/app.js?v=7.45.0" defer></script>
+  <script src="/app.js?v=7.46.0" defer></script>
   <script src="/arena-v72.js?v=7.32.0" defer></script>
 </body>
 </html>

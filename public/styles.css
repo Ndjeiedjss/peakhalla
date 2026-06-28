@@ -2866,3 +2866,118 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
   .esports-nav-menu button,
   .esports-nav-menu button::before { animation: none !important; transition: none !important; }
 }
+
+/* PeakHalla v7.46 — polished navigation, resilient search and power ranking pagination */
+.site-header .header-inner {
+  width: min(1480px, calc(100% - 28px));
+  gap: clamp(12px, 1.35vw, 24px);
+}
+.site-header nav {
+  min-width: 0;
+  flex: 1 1 auto;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px;
+  border: 1px solid rgba(139,92,246,.10);
+  border-radius: 14px;
+  background: rgba(255,255,255,.012);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+}
+.site-header nav > a,
+.site-header .nav-dropdown-toggle {
+  min-height: 39px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  line-height: 1;
+  transition: color .25s ease, background .25s ease, border-color .25s ease, transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s ease;
+}
+.site-header nav > a:hover,
+.site-header nav > a:focus-visible,
+.site-header .nav-dropdown-toggle:hover,
+.site-header .nav-dropdown.open > .nav-dropdown-toggle {
+  color: #fff;
+  border-color: rgba(167,139,250,.20);
+  background: linear-gradient(180deg, rgba(139,92,246,.13), rgba(139,92,246,.055));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 8px 22px rgba(26,12,48,.16);
+  transform: translateY(-1px);
+}
+.site-header #arena-nav-link { white-space: nowrap; }
+.site-header .brand { flex: 0 0 auto; }
+.site-header .header-actions { flex: 0 0 auto; }
+.is-arabic .site-header nav { gap: 4px; }
+.is-arabic .site-header nav > a,
+.is-arabic .site-header .nav-dropdown-toggle { line-height: 1.25; }
+
+.esports-power-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.3fr) minmax(150px, .8fr) minmax(112px, .55fr);
+  align-items: end;
+  gap: 10px;
+}
+.power-search-field { min-width: 0; }
+.power-search-field .leaderboard-search-box { min-width: 210px; }
+.power-panel .table-wrap { border-radius: 13px; }
+.power-pagination {
+  min-height: 58px;
+  padding: 14px 16px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-top: 1px solid rgba(71,50,101,.42);
+}
+.power-load-more {
+  min-width: 196px;
+  justify-content: center;
+  gap: 10px;
+  transition: transform .35s cubic-bezier(.16,1,.3,1), border-color .25s ease, background .25s ease, opacity .25s ease;
+}
+.power-load-more:hover:not(:disabled) { transform: translateY(-2px); }
+.power-load-more:disabled { opacity: .58; cursor: wait; }
+.power-load-more b { color: var(--accent-2); transition: transform .35s cubic-bezier(.16,1,.3,1); }
+.power-load-more:hover b { transform: translateY(3px); }
+.power-table tbody tr { animation: powerRowIn .42s cubic-bezier(.16,1,.3,1) both; }
+.power-table tbody tr:nth-last-child(-n+20) { animation-delay: calc((var(--row-index, 0)) * 16ms); }
+@keyframes powerRowIn { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 1360px) {
+  .site-header .header-inner { width: min(100% - 20px, 1320px); gap: 10px; }
+  .site-header nav > a,
+  .site-header .nav-dropdown-toggle { padding-inline: 9px; font-size: 12px; }
+  .site-header .header-actions { gap: 7px; }
+  .site-header .discord-link,
+  .site-header .donation-link { padding-inline: 9px; }
+  .site-header .live-pill { padding-inline: 9px; }
+}
+@media (max-width: 1180px) and (min-width: 1001px) {
+  .site-header .brand-wordmark small { display: none; }
+  .site-header .brand-wordmark strong { font-size: 16px; }
+  .site-header .brand-mark-wrap,
+  .site-header .brand-logo { width: 40px; height: 40px; flex-basis: 40px; }
+  .site-header nav > a,
+  .site-header .nav-dropdown-toggle { padding-inline: 7px; font-size: 11px; }
+  .site-header .discord-text,
+  .site-header .donation-link > span:not(.donation-heart),
+  .site-header .live-pill > span { display: none; }
+  .site-header .discord-link,
+  .site-header .donation-link,
+  .site-header .live-pill { width: 40px; padding: 0; justify-content: center; }
+  .site-header .discord-arrow,
+  .site-header .donation-link > i { display: none; }
+}
+@media (max-width: 900px) {
+  .esports-power-toolbar { grid-template-columns: 1fr 1fr; width: 100%; }
+  .power-search-field { grid-column: 1 / -1; }
+}
+@media (max-width: 620px) {
+  .esports-power-toolbar { grid-template-columns: 1fr; }
+  .power-search-field { grid-column: auto; }
+  .power-search-field .leaderboard-search-box { min-width: 0; }
+  .power-pagination { align-items: stretch; flex-direction: column; }
+  .power-load-more { width: 100%; }
+}
