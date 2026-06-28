@@ -393,6 +393,17 @@ function setupPlayerPrefetch(container, selector, datasetKey) {
   }
 }
 
+async function fetchPlayerPortrait(id) {
+  const numericId = Number(id);
+  if (!Number.isSafeInteger(numericId) || numericId <= 0) return null;
+  try {
+    const data = await getJson(`/api/player/${encodeURIComponent(numericId)}/portrait?_=${Date.now()}`, { timeoutMs: 7000 });
+    return data?.main_legend || null;
+  } catch {
+    return null;
+  }
+}
+
 function patchPlayerPortrait(button, legend, portraitSelector) {
   if (!button || !legend) return;
   const portrait = button.querySelector(portraitSelector);
@@ -404,6 +415,8 @@ function patchPlayerPortrait(button, legend, portraitSelector) {
     const region = button.dataset.playerRegion || '—';
     label.textContent = `${legend.name || t('unknownLegend')} · ${region}`;
   }
+  const fighterMain = button.querySelector('.fighter-main');
+  if (fighterMain) fighterMain.textContent = `${t('main')}: ${legend.name || t('unknownLegend')}`;
   activateImageFallbacks();
 }
 
@@ -416,11 +429,27 @@ function enrichRenderedPortraits(container, buttonSelector, portraitSelector, co
     while (cursor < queue.length) {
       const button = queue[cursor++];
       const id = Number(button.dataset.playerId);
-      const data = await prefetchPlayerProfile(id).catch(() => null);
+      let legend = await fetchPlayerPortrait(id);
+      if (!legend) {
+        const data = await prefetchPlayerProfile(id).catch(() => null);
+        legend = data?.player?.main_legend || null;
+      }
       if (!button.isConnected) continue;
-      const legend = data?.player?.main_legend || null;
-      patchPlayerPortrait(button, legend, portraitSelector);
-      if (!legend) button.dataset.needsPortrait = '0';
+      if (legend) {
+        patchPlayerPortrait(button, legend, portraitSelector);
+      } else {
+        const attempts = Number(button.dataset.portraitAttempts || 0) + 1;
+        button.dataset.portraitAttempts = String(attempts);
+        if (attempts < 2) {
+          window.setTimeout(() => {
+            if (button.isConnected && button.dataset.needsPortrait === '1') {
+              enrichRenderedPortraits(container, buttonSelector, portraitSelector, 1);
+            }
+          }, 1800);
+        } else {
+          button.dataset.needsPortrait = '0';
+        }
+      }
     }
   };
   Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, worker)).catch(() => null);
@@ -802,14 +831,18 @@ async function loadTeammates(id) {
   els.teammatesCount.textContent = '';
   els.teammatesGrid.innerHTML = `<div class="teammates-loading"><span>${escapeHtml(t('loadingTeammates'))}</span></div>`;
   try {
-    const data = await getJson(`/api/player/${encodeURIComponent(id)}/teammates`);
-    const teammates = data.teammates || [];
+    let data = await getJson(`/api/player/${encodeURIComponent(id)}/teammates`, { timeoutMs: 22000 });
+    let teammates = data.teammates || [];
+    if (!teammates.length && !data.refreshed) {
+      data = await getJson(`/api/player/${encodeURIComponent(id)}/teammates?refresh=1&_=${Date.now()}`, { timeoutMs: 30000 });
+      teammates = data.teammates || [];
+    }
     els.teammatesCount.textContent = teammates.length ? `${number(teammates.length)} ${t('twoVTwoPartners')}` : '';
     els.teammatesGrid.innerHTML = teammates.length ? teammates.map(teammateCard).join('') : `<p class="empty-copy">${escapeHtml(t('noTeammates'))}</p>`;
     const teammateSeeds = new Map(teammates.map((item) => [Number(item.id), makeTeammateSeedPayload(item)]));
     els.teammatesGrid.querySelectorAll('[data-teammate-id]').forEach((button) => button.addEventListener('click', () => {
-      const id = Number(button.dataset.teammateId);
-      navigateToPlayer(id, teammateSeeds.get(id));
+      const teammateId = Number(button.dataset.teammateId);
+      navigateToPlayer(teammateId, teammateSeeds.get(teammateId));
     }));
     activateImageFallbacks();
     registerScrollReveal(els.teammatesPanel);
