@@ -2,6 +2,7 @@ const express = require('express');
 const fs = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
+const { Pool } = require('pg');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,11 +45,506 @@ const PROFILE_DISK_CACHE_LIMIT = 200;
 const profileSearchResponseCache = new Map();
 const aliasSearchWarmups = new Map();
 const PROFILE_SEARCH_RESPONSE_TTL_MS = 2 * 60_000;
+const DATABASE_URL = String(process.env.DATABASE_URL || '').trim();
+const DATABASE_PROFILE_MAX_AGE_MS = Number(process.env.DATABASE_PROFILE_MAX_AGE_MS || 30 * 24 * 60 * 60_000);
+const DATABASE_DISCOVERY_INTERVAL_MS = Math.max(60_000, Number(process.env.DATABASE_DISCOVERY_INTERVAL_MS || 90_000));
+const DATABASE_DISCOVERY_ENABLED = String(process.env.DATABASE_DISCOVERY_ENABLED || '1') !== '0';
+let dbPool = null;
+let dbReady = false;
+let dbLastError = null;
+let discoveryTimer = null;
+let discoveryRunning = false;
 let nameHistorySearchCache = { expiresAt: 0, value: null };
 
 app.disable('x-powered-by');
 app.set('etag', 'strong');
 app.set('trust proxy', true);
+
+
+function databaseUsesSsl(connectionString) {
+  const mode = String(process.env.PGSSLMODE || '').toLowerCase();
+  if (mode === 'disable') return false;
+  if (mode === 'require' || mode === 'verify-ca' || mode === 'verify-full') return true;
+  return !/\.railway\.internal(?::\d+)?\//i.test(connectionString);
+}
+
+async function dbQuery(text, params = []) {
+  if (!dbReady || !dbPool) return null;
+  try {
+    return await dbPool.query(text, params);
+  } catch (error) {
+    dbLastError = error;
+    console.warn('PeakHalla database query failed:', error.message);
+    return null;
+  }
+}
+
+async function initDatabase() {
+  if (!DATABASE_URL) {
+    console.warn('DATABASE_URL is not set. PeakHalla will continue with JSON storage.');
+    return false;
+  }
+
+  dbPool = new Pool({
+    connectionString: DATABASE_URL,
+    max: Math.max(2, Math.min(10, Number(process.env.PGPOOL_MAX || 5))),
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 8_000,
+    ssl: databaseUsesSsl(DATABASE_URL) ? { rejectUnauthorized: false } : undefined
+  });
+  dbPool.on('error', (error) => {
+    dbLastError = error;
+    console.error('PeakHalla PostgreSQL pool error:', error.message);
+  });
+
+  const client = await dbPool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS players (
+        brawlhalla_id BIGINT PRIMARY KEY,
+        current_name TEXT NOT NULL,
+        normalized_name TEXT NOT NULL,
+        region TEXT,
+        rating INTEGER,
+        peak_rating INTEGER,
+        tier TEXT,
+        global_rank INTEGER,
+        account_level INTEGER,
+        account_xp BIGINT,
+        main_legend JSONB,
+        guild JSONB,
+        profile_payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+        first_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_fetched TIMESTAMPTZ
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS player_aliases (
+        player_id BIGINT NOT NULL,
+        alias TEXT NOT NULL,
+        alias_normalized TEXT NOT NULL,
+        first_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        observations INTEGER NOT NULL DEFAULT 1,
+        sources JSONB NOT NULL DEFAULT '[]'::jsonb,
+        PRIMARY KEY (player_id, alias_normalized)
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS player_snapshots (
+        player_id BIGINT NOT NULL,
+        snapshot_date DATE NOT NULL,
+        name TEXT,
+        rating INTEGER,
+        peak_rating INTEGER,
+        global_rank INTEGER,
+        games INTEGER,
+        wins INTEGER,
+        tier TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (player_id, snapshot_date)
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS peakhalla_state (
+        key TEXT PRIMARY KEY,
+        value JSONB NOT NULL DEFAULT '{}'::jsonb,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query('CREATE INDEX IF NOT EXISTS players_normalized_name_idx ON players (normalized_name)');
+    await client.query('CREATE INDEX IF NOT EXISTS players_rating_idx ON players (rating DESC NULLS LAST)');
+    await client.query('CREATE INDEX IF NOT EXISTS aliases_normalized_idx ON player_aliases (alias_normalized)');
+    await client.query('CREATE INDEX IF NOT EXISTS aliases_last_seen_idx ON player_aliases (last_seen DESC)');
+    await client.query('CREATE INDEX IF NOT EXISTS snapshots_player_date_idx ON player_snapshots (player_id, snapshot_date DESC)');
+    await client.query('COMMIT');
+    dbReady = true;
+    dbLastError = null;
+
+    // Trigram indexes improve partial-name searches. The rest of the schema works
+    // even if the managed PostgreSQL plan does not allow this extension.
+    try {
+      await client.query('CREATE EXTENSION IF NOT EXISTS pg_trgm');
+      await client.query('CREATE INDEX IF NOT EXISTS players_name_trgm_idx ON players USING gin (normalized_name gin_trgm_ops)');
+      await client.query('CREATE INDEX IF NOT EXISTS aliases_name_trgm_idx ON player_aliases USING gin (alias_normalized gin_trgm_ops)');
+    } catch (error) {
+      console.warn('PostgreSQL trigram search is unavailable; using standard indexes:', error.message);
+    }
+
+    console.log('PeakHalla PostgreSQL database is ready.');
+    return true;
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => null);
+    dbLastError = error;
+    dbReady = false;
+    console.error('Could not initialize PeakHalla PostgreSQL:', error.message);
+    return false;
+  } finally {
+    client.release();
+  }
+}
+
+async function getDatabaseState(key, fallback = null) {
+  const result = await dbQuery('SELECT value FROM peakhalla_state WHERE key = $1', [key]);
+  return result?.rows?.[0]?.value ?? fallback;
+}
+
+async function setDatabaseState(key, value) {
+  return dbQuery(`
+    INSERT INTO peakhalla_state (key, value, updated_at)
+    VALUES ($1, $2::jsonb, NOW())
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+  `, [key, JSON.stringify(value ?? {})]);
+}
+
+async function saveAliasesToDatabase(entries, source = 'profile') {
+  if (!dbReady || !entries?.length) return;
+  const cleanEntries = entries
+    .map((entry) => ({ id: Number(entry.id), name: sanitizePlayerName(entry.name) }))
+    .filter((entry) => Number.isSafeInteger(entry.id) && entry.id > 0 && isPlausiblePlayerName(entry.name) && !isGeneratedPlayerName(entry.name));
+  if (!cleanEntries.length) return;
+
+  const client = await dbPool.connect();
+  try {
+    await client.query('BEGIN');
+    for (const entry of cleanEntries) {
+      const normalized = normalizeName(entry.name);
+      await client.query(`
+        INSERT INTO player_aliases (player_id, alias, alias_normalized, first_seen, last_seen, observations, sources)
+        VALUES ($1, $2, $3, NOW(), NOW(), 1, $4::jsonb)
+        ON CONFLICT (player_id, alias_normalized) DO UPDATE SET
+          alias = EXCLUDED.alias,
+          last_seen = NOW(),
+          observations = player_aliases.observations + 1,
+          sources = (
+            SELECT COALESCE(jsonb_agg(DISTINCT value), '[]'::jsonb)
+            FROM jsonb_array_elements(player_aliases.sources || EXCLUDED.sources)
+          )
+      `, [entry.id, entry.name, normalized, JSON.stringify([source])]);
+      await client.query(`
+        INSERT INTO players (brawlhalla_id, current_name, normalized_name, first_seen, last_seen)
+        VALUES ($1, $2, $3, NOW(), NOW())
+        ON CONFLICT (brawlhalla_id) DO UPDATE SET
+          last_seen = GREATEST(players.last_seen, NOW())
+      `, [entry.id, entry.name, normalized]);
+    }
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => null);
+    dbLastError = error;
+    console.warn('Could not save player aliases to PostgreSQL:', error.message);
+  } finally {
+    client.release();
+  }
+}
+
+async function saveProfileToDatabase(playerId, payload) {
+  if (!dbReady || !payload?.player) return;
+  const player = payload.player;
+  const id = Number(playerId || player.brawlhalla_id);
+  if (!Number.isSafeInteger(id) || id <= 0) return;
+  const name = sanitizePlayerName(player.name || `Player ${id}`);
+  const updatedAt = player.updated_at && !Number.isNaN(Date.parse(player.updated_at)) ? player.updated_at : new Date().toISOString();
+  await dbQuery(`
+    INSERT INTO players (
+      brawlhalla_id, current_name, normalized_name, region, rating, peak_rating, tier,
+      global_rank, account_level, account_xp, main_legend, guild, profile_payload,
+      first_seen, last_seen, last_fetched
+    ) VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb, $13::jsonb,
+      NOW(), NOW(), $14::timestamptz
+    )
+    ON CONFLICT (brawlhalla_id) DO UPDATE SET
+      current_name = CASE WHEN EXCLUDED.current_name ~* '^Player [0-9]+$' THEN players.current_name ELSE EXCLUDED.current_name END,
+      normalized_name = CASE WHEN EXCLUDED.current_name ~* '^Player [0-9]+$' THEN players.normalized_name ELSE EXCLUDED.normalized_name END,
+      region = COALESCE(NULLIF(EXCLUDED.region, '—'), players.region),
+      rating = COALESCE(EXCLUDED.rating, players.rating),
+      peak_rating = GREATEST(COALESCE(players.peak_rating, 0), COALESCE(EXCLUDED.peak_rating, 0)),
+      tier = COALESCE(NULLIF(EXCLUDED.tier, 'Unranked'), players.tier, EXCLUDED.tier),
+      global_rank = COALESCE(EXCLUDED.global_rank, players.global_rank),
+      account_level = GREATEST(COALESCE(players.account_level, 0), COALESCE(EXCLUDED.account_level, 0)),
+      account_xp = GREATEST(COALESCE(players.account_xp, 0), COALESCE(EXCLUDED.account_xp, 0)),
+      main_legend = COALESCE(EXCLUDED.main_legend, players.main_legend),
+      guild = COALESCE(EXCLUDED.guild, players.guild),
+      profile_payload = EXCLUDED.profile_payload,
+      last_seen = NOW(),
+      last_fetched = EXCLUDED.last_fetched
+  `, [
+    id, name, normalizeName(name), player.region || null, numberOrNull(player.rating),
+    numberOrNull(player.peak_rating), player.tier || null, numberOrNull(player.global_rank),
+    numberOrNull(player.level), numberOrNull(player.account_xp), JSON.stringify(player.main_legend || null),
+    JSON.stringify(player.guild || null), JSON.stringify(payload), updatedAt
+  ]);
+  await saveAliasesToDatabase([{ id, name }], 'profile-database');
+}
+
+async function getDatabaseCachedProfileResponse(playerId, maxAgeMs = DATABASE_PROFILE_MAX_AGE_MS) {
+  if (!dbReady) return null;
+  const result = await dbQuery(`
+    SELECT profile_payload, last_fetched
+    FROM players
+    WHERE brawlhalla_id = $1 AND profile_payload <> '{}'::jsonb
+    LIMIT 1
+  `, [Number(playerId)]);
+  const row = result?.rows?.[0];
+  if (!row?.profile_payload?.player) return null;
+  const age = Date.now() - new Date(row.last_fetched || 0).getTime();
+  if (Number.isFinite(maxAgeMs) && maxAgeMs > 0 && (!Number.isFinite(age) || age > maxAgeMs)) return null;
+  profileResponseCache.set(String(playerId), {
+    value: row.profile_payload,
+    expiresAt: Date.now() + PROFILE_RESPONSE_TTL_MS
+  });
+  return row.profile_payload;
+}
+
+async function getDatabaseKnownNames(playerId) {
+  if (!dbReady) return [];
+  const result = await dbQuery(`
+    SELECT alias AS name, first_seen, last_seen, observations, sources
+    FROM player_aliases
+    WHERE player_id = $1
+    ORDER BY last_seen DESC
+    LIMIT 30
+  `, [Number(playerId)]);
+  return cleanNameHistoryList((result?.rows || []).map((row) => ({
+    name: row.name,
+    first_seen: row.first_seen,
+    last_seen: row.last_seen,
+    observations: Number(row.observations || 1),
+    sources: Array.isArray(row.sources) ? row.sources : []
+  })));
+}
+
+async function findDatabaseAliasMatches(query, limit = 12) {
+  if (!dbReady) return [];
+  const needle = normalizeName(query);
+  if (needle.length < 2) return [];
+  const like = `%${needle.replace(/[%_]/g, '\\$&')}%`;
+  const result = await dbQuery(`
+    SELECT
+      a.player_id,
+      a.alias,
+      a.first_seen,
+      a.last_seen,
+      a.observations,
+      a.sources,
+      p.current_name,
+      p.rating,
+      p.peak_rating,
+      p.global_rank,
+      p.region,
+      p.profile_payload
+    FROM player_aliases a
+    LEFT JOIN players p ON p.brawlhalla_id = a.player_id
+    WHERE a.alias_normalized LIKE $1 ESCAPE '\\'
+       OR p.normalized_name LIKE $1 ESCAPE '\\'
+    ORDER BY
+      CASE WHEN a.alias_normalized = $2 OR p.normalized_name = $2 THEN 0
+           WHEN a.alias_normalized LIKE $3 ESCAPE '\\' OR p.normalized_name LIKE $3 ESCAPE '\\' THEN 1
+           ELSE 2 END,
+      CASE WHEN COALESCE(p.rating, 0) > 0 THEN 0 ELSE 1 END,
+      COALESCE(p.rating, 0) DESC,
+      a.last_seen DESC
+    LIMIT $4
+  `, [like, needle, `${needle.replace(/[%_]/g, '\\$&')}%`, Math.max(limit * 4, 24)]);
+  const grouped = new Map();
+  for (const row of result?.rows || []) {
+    const id = Number(row.player_id);
+    if (!grouped.has(id)) {
+      grouped.set(id, {
+        id,
+        names: [],
+        matched_names: [],
+        last_seen: 0,
+        profile: row.profile_payload?.player ? row.profile_payload : null,
+        rating: Number(row.rating || 0),
+        peak_rating: Number(row.peak_rating || 0),
+        global_rank: Number(row.global_rank || 0),
+        region: row.region || null
+      });
+    }
+    const item = grouped.get(id);
+    const entry = {
+      name: row.alias,
+      first_seen: row.first_seen,
+      last_seen: row.last_seen,
+      observations: Number(row.observations || 1),
+      sources: Array.isArray(row.sources) ? row.sources : []
+    };
+    item.names.push(entry);
+    if (normalizeName(row.alias).includes(needle)) item.matched_names.push(row.alias);
+    item.last_seen = Math.max(item.last_seen, new Date(row.last_seen).getTime() || 0);
+    if (row.current_name && !item.names.some((name) => normalizeName(name.name) === normalizeName(row.current_name))) {
+      item.names.unshift({ name: row.current_name, last_seen: row.last_seen, sources: ['database-current'] });
+    }
+  }
+  return [...grouped.values()]
+    .sort((a, b) => {
+      const aExact = a.names.some((name) => normalizeName(name.name) === needle) ? 1 : 0;
+      const bExact = b.names.some((name) => normalizeName(name.name) === needle) ? 1 : 0;
+      return bExact - aExact || Number(b.rating || 0) - Number(a.rating || 0) || b.last_seen - a.last_seen;
+    })
+    .slice(0, limit);
+}
+
+async function saveSnapshotToDatabase(playerId, snapshot) {
+  if (!dbReady || !snapshot) return;
+  await dbQuery(`
+    INSERT INTO player_snapshots (
+      player_id, snapshot_date, name, rating, peak_rating, global_rank, games, wins, tier, created_at
+    ) VALUES ($1, $2::date, $3, $4, $5, $6, $7, $8, $9, NOW())
+    ON CONFLICT (player_id, snapshot_date) DO UPDATE SET
+      name = EXCLUDED.name,
+      rating = EXCLUDED.rating,
+      peak_rating = EXCLUDED.peak_rating,
+      global_rank = EXCLUDED.global_rank,
+      games = EXCLUDED.games,
+      wins = EXCLUDED.wins,
+      tier = EXCLUDED.tier,
+      created_at = NOW()
+  `, [
+    Number(playerId), snapshot.date, snapshot.name || null, numberOrNull(snapshot.rating),
+    numberOrNull(snapshot.peak_rating), numberOrNull(snapshot.global_rank), numberOrNull(snapshot.games),
+    numberOrNull(snapshot.wins), snapshot.tier || null
+  ]);
+}
+
+async function saveDiscoveredRankingsToDatabase(rankings = [], source = 'official-discovery') {
+  if (!dbReady || !rankings.length) return;
+  const aliases = [];
+  const client = await dbPool.connect();
+  try {
+    await client.query('BEGIN');
+    for (const ranking of rankings) {
+      for (const player of ranking.players || []) {
+        const id = Number(player.id);
+        const name = sanitizePlayerName(player.username || player.name || '');
+        if (!Number.isSafeInteger(id) || id <= 0 || !isPlausiblePlayerName(name)) continue;
+        aliases.push({ id, name });
+        await client.query(`
+          INSERT INTO players (
+            brawlhalla_id, current_name, normalized_name, region, rating, peak_rating, tier,
+            global_rank, main_legend, first_seen, last_seen
+          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,NOW(),NOW())
+          ON CONFLICT (brawlhalla_id) DO UPDATE SET
+            current_name = EXCLUDED.current_name,
+            normalized_name = EXCLUDED.normalized_name,
+            region = COALESCE(EXCLUDED.region, players.region),
+            rating = COALESCE(EXCLUDED.rating, players.rating),
+            peak_rating = GREATEST(COALESCE(players.peak_rating,0), COALESCE(EXCLUDED.peak_rating,0)),
+            tier = COALESCE(EXCLUDED.tier, players.tier),
+            global_rank = COALESCE(EXCLUDED.global_rank, players.global_rank),
+            main_legend = COALESCE(EXCLUDED.main_legend, players.main_legend),
+            last_seen = NOW()
+        `, [
+          id, name, normalizeName(name), ranking.region || null, numberOrNull(ranking.rating),
+          numberOrNull(ranking.best_rating ?? ranking.peak_rating), ranking.tier || null,
+          numberOrNull(ranking.rank), JSON.stringify(player.main_legend || null)
+        ]);
+      }
+    }
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => null);
+    console.warn('Could not save discovered rankings:', error.message);
+  } finally {
+    client.release();
+  }
+  await saveAliasesToDatabase(aliases, source);
+}
+
+async function importLegacyJsonIntoDatabase() {
+  if (!dbReady) return;
+  const imported = await getDatabaseState('legacy_json_import_v1', null);
+  if (imported?.completed) return;
+  console.log('Importing existing PeakHalla JSON cache into PostgreSQL...');
+  const [names, profiles, snapshots] = await Promise.all([
+    readJson(NAMES_FILE, {}),
+    readJson(PROFILE_CACHE_FILE, {}),
+    readJson(SNAPSHOTS_FILE, {})
+  ]);
+
+  for (const [id, entries] of Object.entries(names)) {
+    const aliasEntries = cleanNameHistoryList(entries).map((entry) => ({ id: Number(id), name: entry.name }));
+    await saveAliasesToDatabase(aliasEntries, 'legacy-json');
+  }
+  for (const [id, entry] of Object.entries(profiles)) {
+    if (entry?.value?.player) await saveProfileToDatabase(Number(id), entry.value);
+  }
+  for (const [id, rows] of Object.entries(snapshots)) {
+    for (const row of Array.isArray(rows) ? rows.slice(-120) : []) await saveSnapshotToDatabase(Number(id), row);
+  }
+  await setDatabaseState('legacy_json_import_v1', {
+    completed: true,
+    imported_at: new Date().toISOString(),
+    names: Object.keys(names).length,
+    profiles: Object.keys(profiles).length,
+    snapshot_players: Object.keys(snapshots).length
+  });
+  console.log('Existing PeakHalla cache imported into PostgreSQL.');
+}
+
+const DISCOVERY_REGIONS = ['ALL', 'EU', 'US-E', 'US-W', 'BRZ', 'SEA', 'AUS', 'JPS', 'SA', 'ME'];
+const DISCOVERY_MODES = ['1v1', '2v2'];
+
+async function runDatabaseDiscoveryCycle() {
+  if (!dbReady || !DATABASE_DISCOVERY_ENABLED || discoveryRunning) return;
+  discoveryRunning = true;
+  try {
+    const cursor = await getDatabaseState('official_discovery_cursor_v1', { region_index: 0, mode_index: 0, page: 1 });
+    const regionIndex = Number(cursor?.region_index || 0) % DISCOVERY_REGIONS.length;
+    const modeIndex = Number(cursor?.mode_index || 0) % DISCOVERY_MODES.length;
+    const page = Math.max(1, Math.min(20, Number(cursor?.page || 1)));
+    const region = DISCOVERY_REGIONS[regionIndex];
+    const mode = DISCOVERY_MODES[modeIndex];
+    const params = new URLSearchParams({
+      page: String(page),
+      max_results: '25',
+      game_mode: mode,
+      region,
+      order_by: 'rating'
+    });
+    const response = await apiFetch(`/leaderboard/ranked?${params}`, 45_000).catch(() => null);
+    const rankings = response?.rankings || [];
+    if (rankings.length) await saveDiscoveredRankingsToDatabase(rankings, `official-${mode}-${region}`);
+
+    let nextPage = page + 1;
+    let nextRegion = regionIndex;
+    let nextMode = modeIndex;
+    if (nextPage > 20 || rankings.length < 10) {
+      nextPage = 1;
+      nextRegion += 1;
+      if (nextRegion >= DISCOVERY_REGIONS.length) {
+        nextRegion = 0;
+        nextMode = (nextMode + 1) % DISCOVERY_MODES.length;
+      }
+    }
+    await setDatabaseState('official_discovery_cursor_v1', {
+      region_index: nextRegion,
+      mode_index: nextMode,
+      page: nextPage,
+      last_region: region,
+      last_mode: mode,
+      last_page: page,
+      players_seen: rankings.reduce((sum, item) => sum + (item.players || []).length, 0),
+      updated_at: new Date().toISOString()
+    });
+  } catch (error) {
+    console.warn('PeakHalla background player discovery failed:', error.message);
+  } finally {
+    discoveryRunning = false;
+  }
+}
+
+function scheduleDatabaseDiscovery() {
+  if (!dbReady || !DATABASE_DISCOVERY_ENABLED || discoveryTimer) return;
+  discoveryTimer = setTimeout(() => {
+    runDatabaseDiscoveryCycle().catch(() => null);
+    discoveryTimer = setInterval(() => runDatabaseDiscoveryCycle().catch(() => null), DATABASE_DISCOVERY_INTERVAL_MS);
+  }, 15_000);
+}
 
 // Permanently move every legacy Railway URL to the public PeakHalla domain.
 // This keeps page paths and query strings intact for visitors and search engines.
@@ -495,6 +991,7 @@ async function getDiskCachedProfileResponse(playerId) {
 }
 
 function persistProfileResponse(playerId, value) {
+  saveProfileToDatabase(playerId, value).catch(() => null);
   updateJson(PROFILE_CACHE_FILE, {}, (all) => {
     all[String(playerId)] = { saved_at: Date.now(), value };
     const entries = Object.entries(all)
@@ -514,8 +1011,11 @@ function setCachedProfileResponse(playerId, value) {
 }
 
 async function peekKnownNames(playerId) {
-  const all = await readJson(NAMES_FILE, {});
-  return cleanNameHistoryList(all[String(playerId)]);
+  const [databaseNames, all] = await Promise.all([
+    getDatabaseKnownNames(playerId).catch(() => []),
+    readJson(NAMES_FILE, {})
+  ]);
+  return cleanNameHistoryList([...(databaseNames || []), ...(all[String(playerId)] || [])]);
 }
 
 async function readSnapshotHistory(playerId) {
@@ -1827,20 +2327,21 @@ async function getMainLegendSummary(playerId) {
 }
 
 async function storeSnapshot(player) {
+  const snapshot = {
+    date: new Date().toISOString().slice(0, 10),
+    name: player.name,
+    rating: player.rating ?? null,
+    peak_rating: player.peak_rating ?? null,
+    global_rank: player.global_rank ?? null,
+    games: player.ranked_games ?? null,
+    wins: player.ranked_wins ?? null,
+    tier: player.tier ?? null
+  };
+  saveSnapshotToDatabase(player.brawlhalla_id, snapshot).catch(() => null);
   return updateJson(SNAPSHOTS_FILE, {}, (all) => {
     const key = String(player.brawlhalla_id);
     const list = Array.isArray(all[key]) ? all[key] : [];
-    const today = new Date().toISOString().slice(0, 10);
-    const snapshot = {
-      date: today,
-      name: player.name,
-      rating: player.rating ?? null,
-      peak_rating: player.peak_rating ?? null,
-      global_rank: player.global_rank ?? null,
-      games: player.ranked_games ?? null,
-      wins: player.ranked_wins ?? null,
-      tier: player.tier ?? null
-    };
+    const today = snapshot.date;
     const index = list.findIndex((item) => item.date === today);
     if (index >= 0) list[index] = snapshot;
     else list.push(snapshot);
@@ -1855,7 +2356,7 @@ async function storeObservedNamesBatch(entries, source = 'profile') {
     .filter((entry) => Number.isSafeInteger(entry.id) && entry.id > 0 && isPlausiblePlayerName(entry.name) && !isGeneratedPlayerName(entry.name));
   if (!cleanEntries.length) return {};
 
-  return updateJson(NAMES_FILE, {}, (all) => {
+  const result = await updateJson(NAMES_FILE, {}, (all) => {
     const now = new Date().toISOString();
     const touched = {};
 
@@ -1884,6 +2385,9 @@ async function storeObservedNamesBatch(entries, source = 'profile') {
 
     return touched;
   });
+  saveAliasesToDatabase(cleanEntries, source).catch(() => null);
+  nameHistorySearchCache = { expiresAt: 0, value: null };
+  return result;
 }
 
 async function snapshotNameEntries(playerId) {
@@ -1910,9 +2414,12 @@ async function snapshotNameEntries(playerId) {
 
 async function readKnownNames(playerId) {
   const key = String(playerId);
-  const snapshots = await snapshotNameEntries(playerId);
+  const [snapshots, databaseNames] = await Promise.all([
+    snapshotNameEntries(playerId),
+    getDatabaseKnownNames(playerId).catch(() => [])
+  ]);
   return updateJson(NAMES_FILE, {}, (all) => {
-    const merged = [...cleanNameHistoryList(all[key]), ...snapshots];
+    const merged = [...cleanNameHistoryList(all[key]), ...databaseNames, ...snapshots];
     const cleaned = cleanNameHistoryList(merged);
     all[key] = cleaned;
     return cleaned;
@@ -1934,6 +2441,7 @@ async function cleanAllNameHistory() {
 async function findAliasMatches(query, limit = 8) {
   const needle = normalizeName(query);
   if (needle.length < 2) return [];
+  const databaseMatches = await findDatabaseAliasMatches(query, limit).catch(() => []);
   if (!nameHistorySearchCache.value || nameHistorySearchCache.expiresAt <= Date.now()) {
     nameHistorySearchCache = {
       value: await readJson(NAMES_FILE, {}),
@@ -1941,14 +2449,14 @@ async function findAliasMatches(query, limit = 8) {
     };
   }
   const all = nameHistorySearchCache.value || {};
-  const matches = [];
+  const fileMatches = [];
 
   for (const [id, names] of Object.entries(all)) {
     const cleanNames = cleanNameHistoryList(names);
     if (!cleanNames.length) continue;
     const matchedNames = cleanNames.filter((item) => normalizeName(item.name).includes(needle));
     if (!matchedNames.length) continue;
-    matches.push({
+    fileMatches.push({
       id: Number(id),
       names: cleanNames,
       matched_names: matchedNames.map((item) => item.name),
@@ -1956,8 +2464,27 @@ async function findAliasMatches(query, limit = 8) {
     });
   }
 
-  return matches
-    .sort((a, b) => b.last_seen - a.last_seen)
+  const merged = new Map();
+  for (const item of [...databaseMatches, ...fileMatches]) {
+    const id = Number(item.id);
+    const current = merged.get(id);
+    if (!current) {
+      merged.set(id, { ...item, names: cleanNameHistoryList(item.names), matched_names: [...new Set(item.matched_names || [])] });
+      continue;
+    }
+    current.names = cleanNameHistoryList([...(current.names || []), ...(item.names || [])]);
+    current.matched_names = [...new Set([...(current.matched_names || []), ...(item.matched_names || [])])];
+    current.last_seen = Math.max(Number(current.last_seen || 0), Number(item.last_seen || 0));
+    current.profile ||= item.profile || null;
+    current.rating = Math.max(Number(current.rating || 0), Number(item.rating || 0));
+  }
+
+  return [...merged.values()]
+    .sort((a, b) => {
+      const aExact = (a.names || []).some((item) => normalizeName(item.name) === needle) ? 1 : 0;
+      const bExact = (b.names || []).some((item) => normalizeName(item.name) === needle) ? 1 : 0;
+      return bExact - aExact || Number(b.rating || 0) - Number(a.rating || 0) || b.last_seen - a.last_seen;
+    })
     .slice(0, limit);
 }
 
@@ -2129,10 +2656,41 @@ async function buildProfileSearchRanking(candidate, query, options = {}) {
     const quick = Boolean(options.quick);
     const requestedRegion = allowed(String(options.region || 'ALL').toUpperCase(),
       ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'], 'ALL');
-    const cachedPlayer = getCachedProfileResponse(id)?.player || null;
+    const databasePayload = await getDatabaseCachedProfileResponse(id, 0).catch(() => null);
+    const cachedPlayer = getCachedProfileResponse(id)?.player || databasePayload?.player || candidate?.profile?.player || null;
     let lifetime = null;
     let ranked = null;
     let legendMap = new Map();
+
+    if (quick && cachedPlayer && !isGeneratedPlayerName(cachedPlayer.name)) {
+      const currentName = cleanAliasForSearch(cachedPlayer.name || candidate.name || knownAliases[0]) || `Player ${id}`;
+      const matchedAliases = knownAliases.filter((name) => normalizeName(name).includes(normalizeName(query)));
+      const scopedRank = rankingPositionForRegion(cachedPlayer, requestedRegion);
+      if (requestedRegion === 'ALL' || Number(scopedRank) > 0) {
+        const games = numberOrZero(cachedPlayer.ranked_games ?? cachedPlayer.games);
+        const wins = numberOrZero(cachedPlayer.ranked_wins ?? cachedPlayer.wins);
+        return {
+          rank: scopedRank,
+          region: requestedRegion === 'ALL' ? (cachedPlayer.region || '—') : requestedRegion,
+          rating: numberOrNull(cachedPlayer.rating),
+          best_rating: numberOrNull(cachedPlayer.peak_rating ?? cachedPlayer.best_rating),
+          tier: cachedPlayer.tier || 'Unranked',
+          wins,
+          losses: Math.max(0, games - wins),
+          games,
+          profile_only: !(numberOrZero(cachedPlayer.rating) > 0),
+          search_score: Math.max(aliasScore(currentName, query), ...knownAliases.map((name) => aliasScore(name, query)), 0),
+          players: [{
+            id,
+            username: currentName,
+            main_legend: cachedPlayer.main_legend || null,
+            matched_aliases: matchedAliases,
+            known_names: knownAliases.map((name) => ({ name }))
+          }],
+          database_cached: true
+        };
+      }
+    }
 
     if (quick) {
       [lifetime, ranked, legendMap] = await Promise.all([
@@ -2835,7 +3393,7 @@ app.get('/api/suggestions', async (req, res, next) => {
     const esportsBhId = Number(esportsMatch?.player?.brawlhallaId ?? esportsMatch?.player?.brawlhalla_id ?? 0);
     if (esportsBhId > 0 && !existingIds.has(esportsBhId)) candidates.push({ id: esportsBhId, name: esportsMatch?.player?.name || query, aliases: [query] });
     for (const item of coreMatches) if (!existingIds.has(Number(item.id))) candidates.push(item);
-    for (const item of localMatches) if (!existingIds.has(Number(item.id))) candidates.push({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] });
+    for (const item of localMatches) if (!existingIds.has(Number(item.id))) candidates.push({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [], profile: item.profile || null });
 
     const uniqueCandidates = [...new Map(candidates.map((item) => [Number(item.id), item])).values()]
       .sort((a, b) => candidateSearchScore(b, query) - candidateSearchScore(a, query))
@@ -2909,7 +3467,7 @@ app.get('/api/search', async (req, res, next) => {
     const esportsBhId = Number(esportsMatch?.player?.brawlhallaId ?? esportsMatch?.player?.brawlhalla_id ?? 0);
     if (esportsBhId > 0 && !officialIds.has(esportsBhId)) candidates.push({ id: esportsBhId, name: esportsMatch?.player?.name || query, aliases: [query] });
     for (const item of coreMatches) if (!officialIds.has(Number(item.id))) candidates.push(item);
-    for (const item of localMatches) if (!officialIds.has(Number(item.id))) candidates.push({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] });
+    for (const item of localMatches) if (!officialIds.has(Number(item.id))) candidates.push({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [], profile: item.profile || null });
 
     const uniqueCandidates = [...new Map(candidates.map((item) => [Number(item.id), item])).values()]
       .sort((a, b) => candidateSearchScore(b, query) - candidateSearchScore(a, query))
@@ -3927,7 +4485,7 @@ app.get('/api/player/:id', async (req, res, next) => {
     const forceFresh = String(req.query.refresh || '') === '1';
     const live = String(req.query.live || '') === '1' && !forceFresh;
     const fast = String(req.query.fast || '') === '1' && !forceFresh && !live;
-    const cachedProfile = fast ? (getCachedProfileResponse(id) || await getDiskCachedProfileResponse(id)) : null;
+    const cachedProfile = fast ? (getCachedProfileResponse(id) || await getDatabaseCachedProfileResponse(id) || await getDiskCachedProfileResponse(id)) : null;
     if (cachedProfile) {
       res.setHeader('X-Profile-Cache', 'hit');
       return res.json({ ...cachedProfile, background_refresh_recommended: true });
@@ -4061,6 +4619,23 @@ app.get('/api/player/:id', async (req, res, next) => {
   }
 });
 
+
+app.get('/api/system/database', async (_req, res) => {
+  const counts = dbReady ? await dbQuery(`
+    SELECT
+      (SELECT COUNT(*)::int FROM players) AS players,
+      (SELECT COUNT(*)::int FROM player_aliases) AS aliases,
+      (SELECT COUNT(*)::int FROM player_snapshots) AS snapshots
+  `) : null;
+  res.json({
+    configured: Boolean(DATABASE_URL),
+    ready: dbReady,
+    counts: counts?.rows?.[0] || { players: 0, aliases: 0, snapshots: 0 },
+    discovery_enabled: DATABASE_DISCOVERY_ENABLED,
+    last_error: dbLastError ? dbLastError.message : null
+  });
+});
+
 app.use((error, _req, res, _next) => {
   console.error(error);
   const status = Number.isInteger(error.status) ? error.status : 500;
@@ -4077,9 +4652,27 @@ async function startServer() {
     console.warn('Could not clean name history on startup:', error.message);
   }
 
+  try {
+    const connected = await initDatabase();
+    if (connected) {
+      await importLegacyJsonIntoDatabase().catch((error) => console.warn('Legacy database import failed:', error.message));
+      scheduleDatabaseDiscovery();
+    }
+  } catch (error) {
+    console.warn('PeakHalla database startup failed; continuing with JSON storage:', error.message);
+  }
+
   app.listen(PORT, () => {
     console.log(`PeakHalla running on http://localhost:${PORT}`);
   });
 }
+
+async function shutdown() {
+  if (discoveryTimer) clearInterval(discoveryTimer);
+  if (dbPool) await dbPool.end().catch(() => null);
+  process.exit(0);
+}
+process.once('SIGTERM', shutdown);
+process.once('SIGINT', shutdown);
 
 startServer();

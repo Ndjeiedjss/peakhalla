@@ -1,6 +1,6 @@
 {
   "name": "peakhalla-brawlhalla-tracker",
-  "version": "7.37.0",
+  "version": "7.48.0",
   "private": true,
   "description": "PeakHalla Brawlhalla tracker with fast profile-only alias search, progressive top-player pagination, player XP, levels, clans, Arena Wall and esports data.",
   "main": "server.js",
@@ -12,6 +12,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "express": "4.21.2"
+    "express": "^4.22.2",
+    "pg": "^8.22.0"
   }
 }

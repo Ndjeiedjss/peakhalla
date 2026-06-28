@@ -1,0 +1,18 @@
+PEAKHALLA DATABASE UPDATE v7.48
+
+Upload these files to the ROOT of the GitHub repository (not inside public):
+- server.js
+- package.json
+- package-lock.json
+- CHANGELOG.md (optional)
+
+The Railway service must already contain:
+DATABASE_URL = ${{Postgres.DATABASE_URL}}
+
+Do not create tables manually. PeakHalla creates them automatically during deployment.
+After Railway shows Success, visit:
+https://peakhalla.com/api/system/database
+
+Expected:
+configured: true
+ready: true
