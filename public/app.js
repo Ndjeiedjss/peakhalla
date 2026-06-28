@@ -19,7 +19,7 @@ const translations = {
     legendUsed: 'legend used', legendsUsed: 'legends used', noRankedLegends: 'No ranked legend games found.', nameSeen: 'name recorded', namesSeen: 'names recorded', currentName: 'Current', previousName: 'Previous',
     firstSeen: 'First seen', lastSeen: 'Last seen', formerly: 'Formerly', aliasMatch: 'Old-name match', main: 'Main', unknownLegend: 'Main unknown',
     leaderboardPrefix: 'Top players ·', leaderboardSearch: 'Find a rank', leaderboardSearchPlaceholder: 'Search a player', leaderboardSearchTitle: 'Ranking search', emptyData: 'No data available right now.', allRegions: 'All regions', loadMorePlayers: 'Load next 20 players', loadingMorePlayers: 'Loading 20 more…', playersShown: 'players shown',
-    clansTitle: 'Top clans by lifetime XP', clansText: 'Browse the highest-XP Brawlhalla clans, then open a dedicated roster page for every clan.', clanSearch: 'Find a clan', clanSearchPlaceholder: 'Clan name or guild ID', clanRank: 'XP rank', clanMembers: 'Members', clanPoints: 'Weekly points', clanXp: 'Lifetime XP', clanRecruiting: 'Recruiting', clanClosed: 'Closed', clanOpen: 'Open clan', clanDetails: 'Clan profile', clanRoster: 'Clan roster', clanRole: 'Role', clanJoined: 'Joined', clanMemberXp: 'Member XP', clanNoData: 'No clan data is available right now. Refresh in a moment.', clanLoading: 'Loading top clans by XP…', clanUpdated: 'Updated', clanDiscoveryNote: 'Top clans are ordered by lifetime XP.', clanView: 'View clan', clanBack: 'Back to clans', clanRoleOrder: 'Role hierarchy', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'Members are ordered from Recruit to Leader.', playerClan: 'PLAYER CLAN', viewClanProfile: 'Open clan profile', noClan: 'No clan',
+    clansTitle: 'Top clans by lifetime XP', clansText: 'Browse the highest-XP Brawlhalla clans, then open a dedicated roster page for every clan.', clanSearch: 'Find a clan', clanSearchPlaceholder: 'Clan name or guild ID', clanRank: 'XP rank', clanTier: 'Tier', clanMembers: 'Members', clanPoints: 'Weekly points', clanXp: 'Lifetime XP', clanRecruiting: 'Recruiting', clanClosed: 'Closed', clanOpen: 'Open clan', clanDetails: 'Clan profile', clanRoster: 'Clan roster', clanRole: 'Role', clanJoined: 'Joined', clanMemberXp: 'Member XP', clanNoData: 'No clan data is available right now. Refresh in a moment.', clanLoading: 'Loading top clans by XP…', clanUpdated: 'Updated', clanDiscoveryNote: 'Top clans are ordered by lifetime XP.', clanView: 'View clan', clanBack: 'Back to clans', clanRoleOrder: 'Role hierarchy', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'Members are ordered from Recruit to Leader.', playerClan: 'PLAYER CLAN', viewClanProfile: 'Open clan profile', noClan: 'No clan',
     MiddleEast: 'Middle East', Europe: 'Europe', USEast: 'US East', USWest: 'US West', SouthernAfrica: 'Southern Africa', SoutheastAsia: 'Southeast Asia', Brazil: 'Brazil', Australia: 'Australia', Japan: 'Japan',
     esportsTitle: 'Esports power rankings', esportsText: 'Official competitive names, medals, earnings, and a quick look at major tournament winners.', powerRanking: 'Power ranking', player: 'Player', earnings: 'Earnings',
     officialSource: 'Open official rankings ↗', tournamentList: 'Tournament list', proWinners: 'Pro players & major titles', notExhaustive: 'Featured titles, not a complete career list',
@@ -49,7 +49,7 @@ const translations = {
     legendUsed: 'شخصية مستخدمة', legendsUsed: 'شخصيات مستخدمة', noRankedLegends: 'ما لقينا مباريات رانك على الشخصيات.', nameSeen: 'اسم مسجل', namesSeen: 'أسماء مسجلة', currentName: 'الحالي', previousName: 'قديم',
     firstSeen: 'أول ظهور', lastSeen: 'آخر ظهور', formerly: 'كان اسمه', aliasMatch: 'تطابق اسم قديم', main: 'الأساسية', unknownLegend: 'الشخصية غير معروفة',
     leaderboardPrefix: 'المتصدرين ·', leaderboardSearch: 'ابحث في الترتيب', leaderboardSearchPlaceholder: 'اكتب اسم اللاعب', leaderboardSearchTitle: 'نتيجة الترتيب', emptyData: 'ما فيه بيانات الحين.', allRegions: 'كل المناطق', loadMorePlayers: 'اعرض 20 لاعب إضافي', loadingMorePlayers: 'نحمّل 20 لاعب إضافي…', playersShown: 'لاعب معروض',
-    clansTitle: 'أفضل الكلانات حسب الخبرة', clansText: 'تصفح كلانات براولهالا الأعلى في Lifetime XP وافتح صفحة مستقلة ومنظمة لكل كلان.', clanSearch: 'ابحث عن كلان', clanSearchPlaceholder: 'اسم الكلان أو رقم Guild ID', clanRank: 'ترتيب الخبرة', clanMembers: 'الأعضاء', clanPoints: 'نقاط الأسبوع', clanXp: 'Lifetime XP', clanRecruiting: 'يقبل أعضاء', clanClosed: 'مغلق', clanOpen: 'كلان مفتوح', clanDetails: 'صفحة الكلان', clanRoster: 'أعضاء الكلان', clanRole: 'الرتبة', clanJoined: 'تاريخ الانضمام', clanMemberXp: 'خبرة العضو', clanNoData: 'بيانات الكلانات غير متاحة الآن، جرّب التحديث بعد قليل.', clanLoading: 'نحمّل أفضل الكلانات حسب الخبرة…', clanUpdated: 'آخر تحديث', clanDiscoveryNote: 'الكلانات مرتبة حسب Lifetime XP.', clanView: 'افتح الكلان', clanBack: 'الرجوع للكلانات', clanRoleOrder: 'تسلسل الرتب', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'الأعضاء مرتبون من Recruit إلى Leader.', playerClan: 'كلان اللاعب', viewClanProfile: 'افتح صفحة الكلان', noClan: 'بدون كلان',
+    clansTitle: 'أفضل الكلانات حسب الخبرة', clansText: 'تصفح كلانات براولهالا الأعلى في Lifetime XP وافتح صفحة مستقلة ومنظمة لكل كلان.', clanSearch: 'ابحث عن كلان', clanSearchPlaceholder: 'اسم الكلان أو رقم Guild ID', clanRank: 'ترتيب الخبرة', clanTier: 'المستوى', clanMembers: 'الأعضاء', clanPoints: 'نقاط الأسبوع', clanXp: 'Lifetime XP', clanRecruiting: 'يقبل أعضاء', clanClosed: 'مغلق', clanOpen: 'كلان مفتوح', clanDetails: 'صفحة الكلان', clanRoster: 'أعضاء الكلان', clanRole: 'الرتبة', clanJoined: 'تاريخ الانضمام', clanMemberXp: 'خبرة العضو', clanNoData: 'بيانات الكلانات غير متاحة الآن، جرّب التحديث بعد قليل.', clanLoading: 'نحمّل أفضل الكلانات حسب الخبرة…', clanUpdated: 'آخر تحديث', clanDiscoveryNote: 'الكلانات مرتبة حسب Lifetime XP.', clanView: 'افتح الكلان', clanBack: 'الرجوع للكلانات', clanRoleOrder: 'تسلسل الرتب', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'الأعضاء مرتبون من Recruit إلى Leader.', playerClan: 'كلان اللاعب', viewClanProfile: 'افتح صفحة الكلان', noClan: 'بدون كلان',
     MiddleEast: 'الشرق الأوسط', Europe: 'أوروبا', USEast: 'شرق أمريكا', USWest: 'غرب أمريكا', SouthernAfrica: 'جنوب أفريقيا', SoutheastAsia: 'جنوب شرق آسيا', Brazil: 'البرازيل', Australia: 'أستراليا', Japan: 'اليابان',
     esportsTitle: 'باور رانكنق المحترفين', esportsText: 'أسماء المحترفين، الميداليات، الأرباح، وأهم البطولات اللي فازوا فيها.', powerRanking: 'الباور رانكنق', player: 'اللاعب', earnings: 'الأرباح',
     officialSource: 'افتح الترتيب الرسمي ↗', tournamentList: 'قائمة البطولات', proWinners: 'المحترفين وأهم ألقابهم', notExhaustive: 'ألقاب مختارة، مو كل مسيرة اللاعب',
@@ -1127,12 +1127,15 @@ function renderClanPage(data = {}) {
     guild.create_date ? clanDate(guild.create_date) : null
   ].filter(Boolean).join(' · ');
   document.title = `${guild.name || 'Clan'} — PeakHalla`;
+  const memberCount = Number(guild.member_count ?? members.length) || 0;
+  const memberCapacity = Number(guild.member_capacity || 0) || null;
+  const memberValue = memberCapacity ? `${number(memberCount)} / ${number(memberCapacity)}` : number(memberCount, '0');
   els.clanPageStats.innerHTML = [
     [t('clanXp'), number(guild.xp, '0')],
     [t('clanRank'), guild.rank ? `#${number(guild.rank)}` : '—'],
-    [t('clanMembers'), number(guild.member_count ?? members.length, '0')],
+    [t('clanMembers'), memberValue],
     [t('clanPoints'), number(guild.guild_points, '0')],
-    ['Legacy XP', number(guild.legacy_xp, '0')],
+    [t('clanTier'), guild.tier ? number(guild.tier) : '—'],
     ['Created', guild.create_date ? clanDate(guild.create_date) : '—']
   ].map(([label, value], index) => `<article style="--stat-delay:${index * 60}ms"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></article>`).join('');
 
@@ -1169,7 +1172,8 @@ async function loadStandaloneClan() {
   els.clanPageStatus.hidden = false;
   els.clanPageStatus.innerHTML = `<div class="clans-loading"><span></span><strong>${escapeHtml(t('clanLoading'))}</strong></div>`;
   try {
-    renderClanPage(await getJson(`/api/clans/${encodeURIComponent(standaloneClanId)}`));
+    const params = new URLSearchParams({ refresh: '1', _: String(Date.now()) });
+    renderClanPage(await getJson(`/api/clans/${encodeURIComponent(standaloneClanId)}?${params}`));
   } catch (error) {
     els.clanPageStatus.hidden = false;
     els.clanPageStatus.innerHTML = `<p class="empty-copy">${escapeHtml(error.message || t('friendlyProblem'))}</p>`;
