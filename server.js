@@ -69,7 +69,7 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '8mb' }));
 app.use((req, res, next) => {
   const isApi = req.path.startsWith('/api/');
-  const isHtml = req.path === '/' || req.path.endsWith('.html') || req.path.startsWith('/player/') || req.path.startsWith('/clan/') || req.path === '/queue' || req.path === '/arena';
+  const isHtml = req.path === '/' || req.path.endsWith('.html') || req.path.startsWith('/player/') || req.path.startsWith('/clan/') || req.path === '/queue' || req.path === '/arena' || req.path.startsWith('/esports/');
   const isVersionedAsset = /\.(?:js|css|svg|png|webp|jpg|jpeg|gif|ico)$/i.test(req.path);
   if (isApi || isHtml) {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -106,6 +106,10 @@ app.get('/queue', (_req, res) => {
 });
 
 app.get('/arena', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get(['/esports/power', '/esports/tournaments'], (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -3306,6 +3310,14 @@ function inferTournamentRegions(value = '') {
   return regions.length ? regions : ['GLOBAL'];
 }
 
+function inferTournamentModes(value = '') {
+  const text = ` ${String(value).toLowerCase()} `;
+  const modes = [];
+  if (/\b1v1\b|\bsingles?\b|\bsolo\b/.test(text)) modes.push('1v1');
+  if (/\b2v2\b|\bdoubles?\b|\bduos?\b|\bteam(?:s)?\b/.test(text)) modes.push('2v2');
+  return modes.length ? [...new Set(modes)] : ['1v1', '2v2'];
+}
+
 function isoDateFromEnglish(value = '') {
   const match = String(value).match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(20\d{2})\b/i);
   if (!match) return null;
@@ -3333,6 +3345,7 @@ function parseOfficialEsportsPosts(html = '') {
       name,
       category: community ? 'community' : 'official',
       regions: inferTournamentRegions(name),
+      modes: inferTournamentModes(name),
       date,
       note: community ? 'Officially featured community tournament announcement.' : 'Official Brawlhalla esports announcement.',
       source_url: url,
@@ -3359,6 +3372,7 @@ function parseCommunityTournamentArticle(html = '') {
       name,
       category: 'community',
       regions,
+      modes: inferTournamentModes(`${before} ${name}`),
       date: articleDate,
       note: /sponsored/i.test(before.slice(-100)) ? 'Sponsored community event.' : 'Community tournament featured by Brawlhalla.',
       source_url: url,
@@ -3374,6 +3388,7 @@ function localTournamentDirectory(data = {}) {
     name: event.name || 'Brawlhalla Tournament',
     category: event.category || (/community/i.test(`${event.type || ''} ${event.note || ''}`) ? 'community' : 'official'),
     regions: Array.isArray(event.regions) && event.regions.length ? event.regions : ['GLOBAL'],
+    modes: Array.isArray(event.modes) && event.modes.length ? event.modes : inferTournamentModes(`${event.name || ''} ${event.type || ''} ${event.note || ''}`),
     date: event.date || null,
     note: event.note || event.type || '',
     source_url: event.source_url || '',
@@ -3420,6 +3435,7 @@ async function getLiveTournamentDirectory(refresh = false) {
 app.get('/api/esports/tournaments', async (req, res) => {
   const type = allowed(String(req.query.type || 'official').toLowerCase(), ['official', 'community'], 'official');
   const region = allowed(String(req.query.region || 'ALL').toUpperCase(), ['ALL', 'NA', 'EU', 'SA', 'SEA', 'MENA', 'AUS', 'JPN'], 'ALL');
+  const mode = allowed(String(req.query.mode || 'ALL'), ['ALL', '1v1', '2v2'], 'ALL');
   const refresh = String(req.query.refresh || '') === '1';
   const data = await readJson(ESPORTS_FILE, { tournament_series: [] });
   const local = localTournamentDirectory(data);
@@ -3430,7 +3446,13 @@ app.get('/api/esports/tournaments', async (req, res) => {
   const selected = type === 'community' ? live.community : live.official;
   const merged = [...selected, ...local.filter((event) => event.category === type)];
   const unique = [...new Map(merged.map((event) => [event.source_url || `${event.category}:${event.name}`, event])).values()]
-    .filter((event) => region === 'ALL' || (event.regions || ['GLOBAL']).includes('GLOBAL') || (event.regions || []).includes(region))
+    .filter((event) => {
+      const regions = Array.isArray(event.regions) && event.regions.length ? event.regions : ['GLOBAL'];
+      const modes = Array.isArray(event.modes) && event.modes.length ? event.modes : inferTournamentModes(`${event.name || ''} ${event.note || ''}`);
+      const regionMatches = region === 'ALL' ? true : regions.includes(region);
+      const modeMatches = mode === 'ALL' ? true : modes.includes(mode);
+      return regionMatches && modeMatches;
+    })
     .sort((left, right) => {
       const dateDiff = new Date(right.date || 0).getTime() - new Date(left.date || 0).getTime();
       return dateDiff || String(left.name).localeCompare(String(right.name));
@@ -3440,6 +3462,7 @@ app.get('/api/esports/tournaments', async (req, res) => {
   res.json({
     type,
     region,
+    mode,
     updated_at: new Date().toISOString(),
     live: live.live,
     auto_refresh_seconds: 300,
