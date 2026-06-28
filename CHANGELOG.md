@@ -1,3 +1,10 @@
+# PeakHalla v7.32.0
+
+- Rebuilt narrow-screen leaderboard rows so rank, player identity, and ELO stay aligned.
+- Removed the repeated GLOBAL/region label from each mobile row; the selected scope remains visible in the section title.
+- Added explicit responsive metric classes to prevent the wrong columns from disappearing.
+- Prevented mobile browser text autosizing from enlarging compact rank labels.
+
 # PeakHalla v7.31.0
 
 - Redesigned the region picker as a clean two-column menu with compact region-code badges.
