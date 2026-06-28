@@ -1,5 +1,5 @@
-# PeakHalla v7.36
+# PeakHalla v7.33
 
-- Added a permanent 308 redirect from the legacy Railway domain to https://peakhalla.com.
-- Preserves every path and query string during the redirect.
-- Helps Google replace the old Railway result with the official PeakHalla domain.
+- Replaced the oversized GLOBAL label in leaderboard rows with compact scope chips (WLD / region code).
+- Improved leaderboard row balance and spacing for desktop and mobile.
+- Kept region context visible without cluttering the rank column.
