@@ -1,7 +1,5 @@
 Upload and replace only:
-- public/app.js
-- public/index.html
-- public/styles.css
+- server.js
 - CHANGELOG.md
 
-Do not delete or replace the data folder.
+Do not delete the data folder.

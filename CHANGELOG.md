@@ -1,6 +1,5 @@
-# PeakHalla v7.35
+# PeakHalla v7.36
 
-- Restored the original leaderboard row layout.
-- Removed only the repeated GLOBAL/region scope word from each rank row.
-- Kept the rank number, spacing, player card, metrics, and responsive behavior unchanged.
-- Bumped front-end cache version to 7.35.0.
+- Added a permanent 308 redirect from the legacy Railway domain to https://peakhalla.com.
+- Preserves every path and query string during the redirect.
+- Helps Google replace the old Railway result with the official PeakHalla domain.

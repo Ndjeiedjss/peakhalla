@@ -5,6 +5,10 @@ const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const PRIMARY_HOST = 'peakhalla.com';
+const LEGACY_HOSTS = new Set([
+  'peakhalla-tracker-production.up.railway.app'
+]);
 const API_BASE = process.env.BRAWLHALLA_API_BASE || 'https://api.brawlhalla.com/v1';
 const OFFICIAL_ESPORTS_BASE = 'https://www.brawlhalla.com/rankings/esports';
 const OFFICIAL_LEGENDS_BASE = 'https://www.brawlhalla.com/legends';
@@ -38,6 +42,24 @@ const PROFILE_DISK_CACHE_LIMIT = 200;
 
 app.disable('x-powered-by');
 app.set('etag', 'strong');
+app.set('trust proxy', true);
+
+// Permanently move every legacy Railway URL to the public PeakHalla domain.
+// This keeps page paths and query strings intact for visitors and search engines.
+app.use((req, res, next) => {
+  const forwardedHost = String(req.headers['x-forwarded-host'] || req.headers.host || '')
+    .split(',')[0]
+    .trim()
+    .split(':')[0]
+    .toLowerCase();
+
+  if (LEGACY_HOSTS.has(forwardedHost)) {
+    return res.redirect(308, `https://${PRIMARY_HOST}${req.originalUrl}`);
+  }
+
+  next();
+});
+
 app.use(express.json({ limit: '8mb' }));
 app.use((req, res, next) => {
   const isApi = req.path.startsWith('/api/');
