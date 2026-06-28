@@ -11,6 +11,8 @@ const LEGACY_HOSTS = new Set([
 ]);
 const API_BASE = process.env.BRAWLHALLA_API_BASE || 'https://api.brawlhalla.com/v1';
 const OFFICIAL_ESPORTS_BASE = 'https://www.brawlhalla.com/rankings/esports';
+const OFFICIAL_ESPORTS_NEWS_URL = 'https://www.brawlhalla.com/news/esports';
+const COMMUNITY_TOURNAMENTS_URL = 'https://www.brawlhalla.com/news/upcoming-community-tournaments';
 const OFFICIAL_LEGENDS_BASE = 'https://www.brawlhalla.com/legends';
 const BRAWLTOOLS_API_BASE = process.env.BRAWLTOOLS_API_BASE || 'https://api.brawltools.com/v2';
 const COREHALLA_TRPC_BASE = process.env.COREHALLA_TRPC_BASE || 'https://corehalla.com/api/trpc';
@@ -243,7 +245,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await fetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.43'
+          'User-Agent': 'PeakHalla/7.44'
         },
         signal: controller.signal
       });
@@ -285,7 +287,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.43'
+        'User-Agent': 'PeakHalla/7.44'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -364,7 +366,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             ...(attempt.body ? { 'Content-Type': 'application/json' } : {}),
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.43'
+            'User-Agent': 'PeakHalla/7.44'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -1007,7 +1009,7 @@ async function fetchLegendArtwork(name) {
       const response = await fetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.43',
+          'User-Agent': 'PeakHalla/7.44',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -1043,7 +1045,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await fetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.43'
+        'User-Agent': 'PeakHalla/7.44'
       },
       signal: controller.signal
     });
@@ -3275,6 +3277,175 @@ app.delete('/api/arena/posts/:postId/comments/:commentId', async (req, res, next
     const users = await readJson(WALL_USERS_FILE, {});
     res.json({ post: wallPublicPost(result.post, user.id, wallUserMap(users)) });
   } catch (error) { next(error); }
+});
+
+
+function normalizeTournamentUrl(href, base = 'https://www.brawlhalla.com') {
+  try {
+    const url = new URL(decodeHtml(href), base);
+    if (!['http:', 'https:'].includes(url.protocol)) return '';
+    return url.toString();
+  } catch {
+    return '';
+  }
+}
+
+function inferTournamentRegions(value = '') {
+  const text = ` ${String(value).toUpperCase()} `;
+  const regions = [];
+  const tests = [
+    ['MENA', /\bMENA\b|MIDDLE EAST|NORTH AFRICA/],
+    ['SEA', /\bSEA\b|SOUTHEAST ASIA/],
+    ['NA', /\bNA\b|NORTH AMERICA|UNITED STATES|CANADA/],
+    ['SA', /\bSA\b|SOUTH AMERICA|BRAZIL|LATAM/],
+    ['EU', /\bEU\b|EUROPE/],
+    ['AUS', /\bAUS\b|AUSTRALIA|OCEANIA/],
+    ['JPN', /\bJPN\b|\bJAPAN\b/]
+  ];
+  for (const [code, pattern] of tests) if (pattern.test(text)) regions.push(code);
+  return regions.length ? regions : ['GLOBAL'];
+}
+
+function isoDateFromEnglish(value = '') {
+  const match = String(value).match(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(20\d{2})\b/i);
+  if (!match) return null;
+  const date = new Date(`${match[1]} ${match[2]}, ${match[3]} 12:00:00 UTC`);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function parseOfficialEsportsPosts(html = '') {
+  const events = [];
+  const raw = String(html || '');
+  for (const match of raw.matchAll(/<a\b([^>]*?)href=["']([^"']+)["']([^>]*)>([\s\S]*?)<\/a>/gi)) {
+    const url = normalizeTournamentUrl(match[2]);
+    if (!url || !/brawlhalla\.com\/news\//i.test(url)) continue;
+    const combined = htmlText(match[4]);
+    const nearbyStart = Math.max(0, match.index - 120);
+    const nearby = htmlText(raw.slice(nearbyStart, match.index + match[0].length));
+    const date = isoDateFromEnglish(combined) || isoDateFromEnglish(nearby);
+    let name = combined.replace(/\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+20\d{2}\b/gi, '').trim();
+    name = name.replace(/^Announcements?\s*/i, '').replace(/^Esports\s*/i, '').trim();
+    if (name.length < 8 || name.length > 180) continue;
+    if (!/(championship|tournament|cup|expo|invitational|open|final|series|qualifier|brawl|esports|world championship)/i.test(name)) continue;
+    const community = /community|sponsored/i.test(name);
+    events.push({
+      id: crypto.createHash('sha1').update(url).digest('hex').slice(0, 14),
+      name,
+      category: community ? 'community' : 'official',
+      regions: inferTournamentRegions(name),
+      date,
+      note: community ? 'Officially featured community tournament announcement.' : 'Official Brawlhalla esports announcement.',
+      source_url: url,
+      source: 'Brawlhalla Esports'
+    });
+  }
+  return [...new Map(events.map((event) => [event.source_url, event])).values()];
+}
+
+function parseCommunityTournamentArticle(html = '') {
+  const events = [];
+  const raw = String(html || '');
+  const articleDate = isoDateFromEnglish(htmlText(raw));
+  for (const match of raw.matchAll(/<a\b([^>]*?)href=["']([^"']+)["']([^>]*)>([\s\S]*?)<\/a>/gi)) {
+    const url = normalizeTournamentUrl(match[2]);
+    if (!url || !/(challengermode\.com|start\.gg)/i.test(url)) continue;
+    const name = htmlText(match[4]).trim();
+    if (name.length < 3 || name.length > 140) continue;
+    const before = htmlText(raw.slice(Math.max(0, match.index - 240), match.index));
+    const regionMatch = before.match(/(?:^|\s)(MENA|SEA|NA|SA|EU|AUS|JPN)\s*:\s*$/i);
+    const regions = regionMatch ? [regionMatch[1].toUpperCase()] : inferTournamentRegions(`${before} ${name}`);
+    events.push({
+      id: crypto.createHash('sha1').update(url).digest('hex').slice(0, 14),
+      name,
+      category: 'community',
+      regions,
+      date: articleDate,
+      note: /sponsored/i.test(before.slice(-100)) ? 'Sponsored community event.' : 'Community tournament featured by Brawlhalla.',
+      source_url: url,
+      source: /start\.gg/i.test(url) ? 'start.gg' : 'Challengermode'
+    });
+  }
+  return [...new Map(events.map((event) => [event.source_url, event])).values()];
+}
+
+function localTournamentDirectory(data = {}) {
+  return (data.tournament_series || []).map((event, index) => ({
+    id: `local-${index}-${normalizeName(event.name).replace(/[^a-z0-9]+/g, '-').slice(0, 40)}`,
+    name: event.name || 'Brawlhalla Tournament',
+    category: event.category || (/community/i.test(`${event.type || ''} ${event.note || ''}`) ? 'community' : 'official'),
+    regions: Array.isArray(event.regions) && event.regions.length ? event.regions : ['GLOBAL'],
+    date: event.date || null,
+    note: event.note || event.type || '',
+    source_url: event.source_url || '',
+    source: event.source || 'PeakHalla tournament directory'
+  }));
+}
+
+async function getLiveTournamentDirectory(refresh = false) {
+  if (refresh) cache.delete(`html:${OFFICIAL_ESPORTS_NEWS_URL}`);
+
+  let newsHtml = '';
+  let posts = [];
+  try {
+    newsHtml = await htmlFetch(OFFICIAL_ESPORTS_NEWS_URL, 15 * 60_000);
+    posts = parseOfficialEsportsPosts(newsHtml);
+  } catch (error) {
+    console.warn('Could not refresh Brawlhalla esports news:', error.message);
+  }
+
+  // Always follow the newest Community Tournaments announcement instead of
+  // pinning the directory to one month. When Brawlhalla publishes a new post,
+  // it becomes the source automatically on the next refresh.
+  const latestCommunityPost = posts
+    .filter((event) => event.category === 'community')
+    .sort((left, right) => new Date(right.date || 0) - new Date(left.date || 0))[0];
+  const communityUrl = latestCommunityPost?.source_url || COMMUNITY_TOURNAMENTS_URL;
+  if (refresh) cache.delete(`html:${communityUrl}`);
+
+  let community = [];
+  try {
+    community = parseCommunityTournamentArticle(await htmlFetch(communityUrl, 15 * 60_000));
+  } catch (error) {
+    console.warn('Could not refresh community tournaments:', error.message);
+  }
+
+  return {
+    official: posts.filter((event) => event.category === 'official'),
+    community,
+    community_source_url: communityUrl,
+    live: Boolean(newsHtml || community.length)
+  };
+}
+
+app.get('/api/esports/tournaments', async (req, res) => {
+  const type = allowed(String(req.query.type || 'official').toLowerCase(), ['official', 'community'], 'official');
+  const region = allowed(String(req.query.region || 'ALL').toUpperCase(), ['ALL', 'NA', 'EU', 'SA', 'SEA', 'MENA', 'AUS', 'JPN'], 'ALL');
+  const refresh = String(req.query.refresh || '') === '1';
+  const data = await readJson(ESPORTS_FILE, { tournament_series: [] });
+  const local = localTournamentDirectory(data);
+  let live = { official: [], community: [], live: false };
+  try { live = await getLiveTournamentDirectory(refresh); }
+  catch (error) { console.warn('Could not refresh tournament directory:', error.message); }
+
+  const selected = type === 'community' ? live.community : live.official;
+  const merged = [...selected, ...local.filter((event) => event.category === type)];
+  const unique = [...new Map(merged.map((event) => [event.source_url || `${event.category}:${event.name}`, event])).values()]
+    .filter((event) => region === 'ALL' || (event.regions || ['GLOBAL']).includes('GLOBAL') || (event.regions || []).includes(region))
+    .sort((left, right) => {
+      const dateDiff = new Date(right.date || 0).getTime() - new Date(left.date || 0).getTime();
+      return dateDiff || String(left.name).localeCompare(String(right.name));
+    })
+    .slice(0, 60);
+
+  res.json({
+    type,
+    region,
+    updated_at: new Date().toISOString(),
+    live: live.live,
+    auto_refresh_seconds: 300,
+    events: unique,
+    sources: [OFFICIAL_ESPORTS_NEWS_URL, live.community_source_url || COMMUNITY_TOURNAMENTS_URL]
+  });
 });
 
 app.get('/api/esports', async (req, res) => {
