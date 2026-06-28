@@ -1,8 +1,7 @@
-Upload and replace only these files in the existing GitHub repository:
-
-public/app.js
-public/index.html
-public/styles.css
-CHANGELOG.md
+Upload and replace only:
+- public/app.js
+- public/index.html
+- public/styles.css
+- CHANGELOG.md
 
 Do not delete or replace the data folder.

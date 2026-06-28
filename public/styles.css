@@ -2376,33 +2376,6 @@ body.player-page-mode #clans { display: none !important; }
 .footer-logo { display: block; }
 
 
-/* v7.33 — cleaner leaderboard scope badges */
-.leader-rank {
-  min-width: 0;
-  overflow: visible;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 7px;
-}
-.leader-rank small {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 38px;
-  padding: 4px 7px;
-  color: #bda7ff;
-  border: 1px solid rgba(139,92,246,.24);
-  border-radius: 999px;
-  background: rgba(139,92,246,.10);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
-  font: 800 8px/1 var(--sans);
-  letter-spacing: .12em;
-  white-space: nowrap;
-}
-.leader-rank b { line-height: 1; }
-
 /* v7.32 — balanced responsive leaderboard rows */
 .leader-rank { min-width: 0; overflow: hidden; }
 .leader-rank small { white-space: nowrap; }
@@ -2434,13 +2407,12 @@ body.player-page-mode #clans { display: none !important; }
   .leader-rank {
     width: 48px;
     display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 6px;
+    align-items: center;
+    justify-content: flex-start;
     font-size: 20px;
     line-height: 1;
   }
-  .leader-rank small { min-width: 34px; padding: 4px 6px; font-size: 7px; }
+  .leader-rank small { display: none; }
   .leader-rank b { white-space: nowrap; }
   .leader-players,
   .leader-person,
@@ -2488,54 +2460,11 @@ body.player-page-mode #clans { display: none !important; }
     gap: 8px;
     padding-inline: 9px;
   }
-  .leader-rank { width: 42px; font-size: 18px; gap: 5px; }
+  .leader-rank { width: 42px; font-size: 18px; }
   .row-portrait { width: 46px; height: 46px; }
   .leader-person { gap: 8px; }
   .leader-person button strong { font-size: 15px; }
   .leader-person button small.leader-legend-meta { max-width: 56px; }
   .leader-region-chip { min-width: 36px; padding-inline: 6px; }
   .leader-elo-metric b { font-size: 14px; }
-}
-
-
-/* v7.34 — clean rank column (scope is shown in the heading/filter, not repeated per row) */
-.leader-rank {
-  width: auto !important;
-  min-width: 0 !important;
-  overflow: visible !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  align-self: stretch;
-  gap: 0 !important;
-  color: #847793;
-  font: 800 24px/1 var(--display) !important;
-}
-.leader-rank small { display: none !important; }
-.leader-rank b {
-  display: block;
-  color: inherit;
-  font: inherit;
-  letter-spacing: -.03em;
-  white-space: nowrap;
-}
-.leader-row:nth-child(1) .leader-rank { color: #d7c7ff; }
-.leader-row:nth-child(2) .leader-rank { color: #b9aac8; }
-.leader-row:nth-child(3) .leader-rank { color: #aa7ddd; }
-
-@media (min-width: 1001px) {
-  .leader-row {
-    grid-template-columns: 64px minmax(240px,1fr) 95px 95px minmax(168px,1.05fr) 90px 110px;
-  }
-}
-@media (max-width: 1000px) {
-  .leader-row { grid-template-columns: 54px minmax(190px,1fr) 82px minmax(145px,.9fr) 82px; }
-}
-@media (max-width: 680px) {
-  .leader-row { grid-template-columns: 44px minmax(0,1fr) 68px; }
-  .leader-rank { font-size: 20px !important; }
-}
-@media (max-width: 420px) {
-  .leader-row { grid-template-columns: 40px minmax(0,1fr) 62px; }
-  .leader-rank { font-size: 18px !important; }
 }
