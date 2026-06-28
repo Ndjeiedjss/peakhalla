@@ -1,13 +1,12 @@
-PeakHalla v7.31 update
+PeakHalla v7.32 update
 
-Upload these files to the existing GitHub repository and replace the old versions:
+Upload these files to the existing GitHub repository and replace files with the same paths:
+- public/app.js
+- public/index.html
+- public/styles.css
 - server.js
 - package.json
 - package-lock.json
 - CHANGELOG.md
-- public/app.js
-- public/index.html
-- public/styles.css
 
 Do not delete or replace the data folder.
-After the GitHub commit, wait for Railway deployment to finish, then refresh the site with Ctrl + F5.
