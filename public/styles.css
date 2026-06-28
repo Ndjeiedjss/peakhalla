@@ -2468,3 +2468,51 @@ body.player-page-mode #clans { display: none !important; }
   .leader-region-chip { min-width: 36px; padding-inline: 6px; }
   .leader-elo-metric b { font-size: 14px; }
 }
+
+
+/* PeakHalla v7.37 — profile-only search and progressive leaderboard */
+.search-card .primary-button { margin-top: 16px; }
+.leaderboard-pagination {
+  min-height: 72px;
+  padding: 18px 2px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+.leaderboard-page-status {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.leaderboard-load-more {
+  min-width: 230px;
+  min-height: 50px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  color: var(--text);
+  border: 1px solid rgba(139,92,246,.42);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(139,92,246,.18), rgba(139,92,246,.07));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 14px 32px rgba(0,0,0,.16);
+  font: 800 12px/1 var(--display);
+  cursor: pointer;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease, opacity .2s ease;
+}
+.leaderboard-load-more:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(167,139,250,.78);
+  background: linear-gradient(135deg, rgba(139,92,246,.28), rgba(139,92,246,.10));
+}
+.leaderboard-load-more b { color: var(--accent-2); font-size: 18px; }
+.leaderboard-load-more:disabled { opacity: .55; cursor: wait; }
+.leader-rank:not(:has(small)) { justify-content: center; }
+@media (max-width: 680px) {
+  .leaderboard-pagination { flex-direction: column-reverse; gap: 10px; }
+  .leaderboard-load-more { width: 100%; min-width: 0; }
+}

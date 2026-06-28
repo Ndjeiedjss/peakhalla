@@ -1,6 +1,7 @@
-# PeakHalla v7.35
+# PeakHalla v7.37
 
-- Restored the original leaderboard row layout.
-- Removed only the repeated GLOBAL/region scope word from each rank row.
-- Kept the rank number, spacing, player card, metrics, and responsive behavior unchanged.
-- Bumped front-end cache version to 7.35.0.
+- Removed the ranked-mode selector from the main player search. The search now focuses only on player profiles by current name, old name, or BH ID.
+- Reduced old-name search delays with local alias-first lookup, shorter external timeouts, background alias warming, and short-lived response caching.
+- Added progressive leaderboard pagination. The first 20 players load normally, then **Load next 20 players** appends the next page without replacing the existing list.
+- Kept region and ranked-mode filters on the leaderboard itself.
+- Preserved the permanent Railway-to-peakhalla.com redirect.

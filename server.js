@@ -5,6 +5,10 @@ const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const PRIMARY_HOST = 'peakhalla.com';
+const LEGACY_HOSTS = new Set([
+  'peakhalla-tracker-production.up.railway.app'
+]);
 const API_BASE = process.env.BRAWLHALLA_API_BASE || 'https://api.brawlhalla.com/v1';
 const OFFICIAL_ESPORTS_BASE = 'https://www.brawlhalla.com/rankings/esports';
 const OFFICIAL_LEGENDS_BASE = 'https://www.brawlhalla.com/legends';
@@ -35,9 +39,31 @@ const profileResponseCache = new Map();
 const PROFILE_RESPONSE_TTL_MS = 30 * 60_000;
 const PROFILE_DISK_CACHE_MAX_AGE_MS = 6 * 60 * 60_000;
 const PROFILE_DISK_CACHE_LIMIT = 200;
+const profileSearchResponseCache = new Map();
+const aliasSearchWarmups = new Map();
+const PROFILE_SEARCH_RESPONSE_TTL_MS = 2 * 60_000;
+let nameHistorySearchCache = { expiresAt: 0, value: null };
 
 app.disable('x-powered-by');
 app.set('etag', 'strong');
+app.set('trust proxy', true);
+
+// Permanently move every legacy Railway URL to the public PeakHalla domain.
+// This keeps page paths and query strings intact for visitors and search engines.
+app.use((req, res, next) => {
+  const forwardedHost = String(req.headers['x-forwarded-host'] || req.headers.host || '')
+    .split(',')[0]
+    .trim()
+    .split(':')[0]
+    .toLowerCase();
+
+  if (LEGACY_HOSTS.has(forwardedHost)) {
+    return res.redirect(308, `https://${PRIMARY_HOST}${req.originalUrl}`);
+  }
+
+  next();
+});
+
 app.use(express.json({ limit: '8mb' }));
 app.use((req, res, next) => {
   const isApi = req.path.startsWith('/api/');
@@ -393,6 +419,47 @@ async function settleWithin(promise, timeoutMs, fallback) {
     Promise.resolve(promise).catch(() => fallback),
     wait(timeoutMs).then(() => fallback)
   ]);
+}
+
+function profileSearchCacheKey(kind, query, region = 'ALL', mode = '1v1') {
+  return `${kind}:${normalizeName(query)}:${String(region).toUpperCase()}:${mode}`;
+}
+
+function getCachedProfileSearch(kind, query, region = 'ALL', mode = '1v1') {
+  const key = profileSearchCacheKey(kind, query, region, mode);
+  const cached = profileSearchResponseCache.get(key);
+  if (!cached) return null;
+  if (cached.expiresAt <= Date.now()) {
+    profileSearchResponseCache.delete(key);
+    return null;
+  }
+  return cached.value;
+}
+
+function setCachedProfileSearch(kind, query, region, mode, value) {
+  const key = profileSearchCacheKey(kind, query, region, mode);
+  profileSearchResponseCache.set(key, { value, expiresAt: Date.now() + PROFILE_SEARCH_RESPONSE_TTL_MS });
+  if (profileSearchResponseCache.size > 250) {
+    const oldest = profileSearchResponseCache.keys().next().value;
+    if (oldest) profileSearchResponseCache.delete(oldest);
+  }
+  return value;
+}
+
+function hasExactAliasMatch(matches, query) {
+  const needle = normalizeName(query);
+  return (matches || []).some((item) => (item.names || []).some((name) => normalizeName(name?.name) === needle));
+}
+
+function warmAliasSearchInBackground(query) {
+  const key = normalizeName(query);
+  if (key.length < 2 || aliasSearchWarmups.has(key)) return;
+  const job = (async () => {
+    const matches = await searchCorehallaAliasesBroad(query, 5, false).catch(() => []);
+    if (matches.length) await rememberCorehallaAliasMatches(matches).catch(() => null);
+    return matches;
+  })().finally(() => aliasSearchWarmups.delete(key));
+  aliasSearchWarmups.set(key, job);
 }
 
 function getCachedProfileResponse(playerId) {
@@ -1667,7 +1734,13 @@ async function cleanAllNameHistory() {
 async function findAliasMatches(query, limit = 8) {
   const needle = normalizeName(query);
   if (needle.length < 2) return [];
-  const all = await readJson(NAMES_FILE, {});
+  if (!nameHistorySearchCache.value || nameHistorySearchCache.expiresAt <= Date.now()) {
+    nameHistorySearchCache = {
+      value: await readJson(NAMES_FILE, {}),
+      expiresAt: Date.now() + 10_000
+    };
+  }
+  const all = nameHistorySearchCache.value || {};
   const matches = [];
 
   for (const [id, names] of Object.entries(all)) {
@@ -2477,7 +2550,7 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.32.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.37.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
@@ -2487,47 +2560,67 @@ app.get('/api/suggestions', async (req, res, next) => {
     const region = allowed(String(req.query.region || 'ALL').toUpperCase(),
       ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'], 'ALL');
     const mode = allowed(String(req.query.mode || '1v1'), ['1v1', '2v2', '3v3'], '1v1');
+    const cached = getCachedProfileSearch('suggestions', query, region, mode);
+    if (cached) return res.json({ ...cached, cached: true });
 
-    async function fetchMatches(search) {
+    const numericId = query.replace(/^#/, '');
+    const isNumeric = /^\d+$/.test(numericId);
+    const localMatches = isNumeric ? [] : await findAliasMatches(query, 12).catch(() => []);
+    const exactLocal = hasExactAliasMatch(localMatches, query);
+
+    async function fetchOfficial() {
       const params = new URLSearchParams({
-        page: '1', max_results: '12', game_mode: mode, region, search, order_by: 'rating'
+        page: '1', max_results: '12', game_mode: mode, region, search: query, order_by: 'rating'
       });
       return apiFetch(`/leaderboard/ranked?${params}`, 30_000).catch(() => ({ rankings: [] }));
     }
 
-    const numericId = query.replace(/^#/, '');
-    const quickLocalMatches = /^\d+$/.test(numericId) ? [] : await findAliasMatches(query, 7).catch(() => []);
-    const exactLocalMatches = quickLocalMatches.filter((item) => (item.names || []).some((name) => normalizeName(name?.name) === normalizeName(query)));
-    if (exactLocalMatches.length) {
-      const localCandidates = exactLocalMatches.map((item) => ({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] }));
-      const localProfiles = (await mapWithConcurrency(localCandidates, 5, (item) => buildProfileSearchRanking(item, query, { quick: true, mode, region }))).filter(Boolean);
-      if (localProfiles.length) return res.json({ rankings: sortSearchRankings(localProfiles, query).slice(0, 7), local_alias_hit: true });
+    // Local old-name hits return first. A deeper Corehalla lookup continues in
+    // the background so the next keystroke or search is instant.
+    if (exactLocal) {
+      warmAliasSearchInBackground(query);
+      const candidates = localMatches.slice(0, 7).map((item) => ({
+        id: item.id,
+        name: item.names?.[0]?.name,
+        aliases: item.names?.map((name) => name.name) || []
+      }));
+      const profiles = (await mapWithConcurrency(candidates, 7, (item) =>
+        buildProfileSearchRanking(item, query, { quick: true, mode, region, rankTimeoutMs: 650 })
+      )).filter(Boolean);
+      const payload = { rankings: sortSearchRankings(profiles, query).slice(0, 7), local_alias_hit: true };
+      return res.json(setCachedProfileSearch('suggestions', query, region, mode, payload));
     }
-    const [official, coreMatches, localMatches, esportsMatch] = await Promise.all([
-      /^\d+$/.test(numericId) ? Promise.resolve({ rankings: [] }) : settleWithin(fetchMatches(query), 1600, { rankings: [] }),
-      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 8, true), 14000, []),
-      findAliasMatches(query, 8).catch(() => []),
-      /^\d+$/.test(numericId) ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 2600, null)
+
+    const [official, coreMatches, esportsMatch] = await Promise.all([
+      isNumeric ? Promise.resolve({ rankings: [] }) : settleWithin(fetchOfficial(), 1100, { rankings: [] }),
+      isNumeric ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 2, false), 2300, []),
+      isNumeric ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 1000, null)
     ]);
-    await rememberCorehallaAliasMatches(coreMatches);
+    warmAliasSearchInBackground(query);
+    if (coreMatches.length) await rememberCorehallaAliasMatches(coreMatches).catch(() => null);
+
     const rankings = await hydrateRankingPlayers(official?.rankings || [], 'suggestion', { includeLegends: false });
     const existingIds = new Set(rankings.flatMap((item) => (item.players || []).map((player) => Number(player.id))));
     const candidates = [];
-    if (/^\d+$/.test(numericId)) candidates.push({ id: Number(numericId), name: `Player ${numericId}`, aliases: [] });
+    if (isNumeric) candidates.push({ id: Number(numericId), name: `Player ${numericId}`, aliases: [] });
     const esportsBhId = Number(esportsMatch?.player?.brawlhallaId ?? esportsMatch?.player?.brawlhalla_id ?? 0);
     if (esportsBhId > 0 && !existingIds.has(esportsBhId)) candidates.push({ id: esportsBhId, name: esportsMatch?.player?.name || query, aliases: [query] });
     for (const item of coreMatches) if (!existingIds.has(Number(item.id))) candidates.push(item);
     for (const item of localMatches) if (!existingIds.has(Number(item.id))) candidates.push({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] });
+
     const uniqueCandidates = [...new Map(candidates.map((item) => [Number(item.id), item])).values()]
       .sort((a, b) => candidateSearchScore(b, query) - candidateSearchScore(a, query))
-      .slice(0, 7);
-    const profiles = (await mapWithConcurrency(uniqueCandidates, 5, (item) => buildProfileSearchRanking(item, query, { quick: true, mode, region }))).filter(Boolean);
+      .slice(0, 8);
+    const profiles = (await mapWithConcurrency(uniqueCandidates, 8, (item) =>
+      buildProfileSearchRanking(item, query, { quick: true, mode, region, rankTimeoutMs: 650 })
+    )).filter(Boolean);
     const combined = sortSearchRankings([...profiles, ...rankings], query);
-    res.json({
+    const payload = {
       rankings: combined.slice(0, 12),
       alias_lookup: coreMatches.length > 0,
       exact_alias_hit: combined.some((ranking) => searchRankingScore(ranking, query) >= 2200)
-    });
+    };
+    res.json(setCachedProfileSearch('suggestions', query, region, mode, payload));
   } catch (error) {
     next(error);
   }
@@ -2541,17 +2634,25 @@ app.get('/api/search', async (req, res, next) => {
     const region = allowed(String(req.query.region || 'ALL').toUpperCase(),
       ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'], 'ALL');
     const mode = allowed(String(req.query.mode || '1v1'), ['1v1', '2v2', '3v3'], '1v1');
+    const cached = getCachedProfileSearch('search', query, region, mode);
+    if (cached) return res.json({ ...cached, cached: true });
+
+    const numericId = query.replace(/^#/, '');
+    const isNumeric = /^\d+$/.test(numericId);
+    const localMatches = isNumeric ? [] : await findAliasMatches(query, 18).catch(() => []);
+    const exactLocal = hasExactAliasMatch(localMatches, query);
     const params = new URLSearchParams({
       page: '1', max_results: '20', game_mode: mode, region, search: query, order_by: 'rating'
     });
-    const numericId = query.replace(/^#/, '');
-    const [official, coreMatches, localMatches, esportsMatch] = await Promise.all([
-      /^\d+$/.test(numericId) ? Promise.resolve({ rankings: [], total_pages: 0 }) : settleWithin(apiFetch(`/leaderboard/ranked?${params}`), 3500, { rankings: [], total_pages: 0 }),
-      /^\d+$/.test(numericId) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 10, true), 18000, []),
-      findAliasMatches(query, 12).catch(() => []),
-      /^\d+$/.test(numericId) ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 3500, null)
+
+    const [official, coreMatches, esportsMatch] = await Promise.all([
+      isNumeric ? Promise.resolve({ rankings: [], total_pages: 0 }) : settleWithin(apiFetch(`/leaderboard/ranked?${params}`), 1250, { rankings: [], total_pages: 0 }),
+      (isNumeric || exactLocal) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 2, false), 2600, []),
+      isNumeric ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 1100, null)
     ]);
-    await rememberCorehallaAliasMatches(coreMatches);
+    warmAliasSearchInBackground(query);
+    if (coreMatches.length) await rememberCorehallaAliasMatches(coreMatches).catch(() => null);
+
     const hydratedOfficial = await hydrateRankingPlayers(official?.rankings || [], 'search', { includeLegends: false });
     const needle = normalizeName(query);
     const officialRankings = hydratedOfficial.filter((item) => (item.players || []).some((player) =>
@@ -2560,24 +2661,28 @@ app.get('/api/search', async (req, res, next) => {
     const officialIds = new Set(officialRankings.flatMap((item) => (item.players || []).map((player) => Number(player.id))));
 
     const candidates = [];
-    if (/^\d+$/.test(numericId)) candidates.push({ id: Number(numericId), name: `Player ${numericId}`, aliases: [] });
+    if (isNumeric) candidates.push({ id: Number(numericId), name: `Player ${numericId}`, aliases: [] });
     const esportsBhId = Number(esportsMatch?.player?.brawlhallaId ?? esportsMatch?.player?.brawlhalla_id ?? 0);
     if (esportsBhId > 0 && !officialIds.has(esportsBhId)) candidates.push({ id: esportsBhId, name: esportsMatch?.player?.name || query, aliases: [query] });
     for (const item of coreMatches) if (!officialIds.has(Number(item.id))) candidates.push(item);
     for (const item of localMatches) if (!officialIds.has(Number(item.id))) candidates.push({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] });
+
     const uniqueCandidates = [...new Map(candidates.map((item) => [Number(item.id), item])).values()]
       .sort((a, b) => candidateSearchScore(b, query) - candidateSearchScore(a, query))
-      .slice(0, 12);
-    const profiles = (await mapWithConcurrency(uniqueCandidates, 5, (item) => buildProfileSearchRanking(item, query, { quick: true, mode, region }))).filter(Boolean);
+      .slice(0, 14);
+    const profiles = (await mapWithConcurrency(uniqueCandidates, 8, (item) =>
+      buildProfileSearchRanking(item, query, { quick: true, mode, region, rankTimeoutMs: 750 })
+    )).filter(Boolean);
 
     const combined = sortSearchRankings([...profiles, ...officialRankings], query);
-    res.json({
+    const payload = {
       rankings: combined.slice(0, 24),
       total_pages: official?.total_pages || 0,
       includes_unranked_profiles: profiles.length > 0,
-      alias_lookup: coreMatches.length > 0,
+      alias_lookup: coreMatches.length > 0 || exactLocal,
       exact_alias_hit: combined.some((ranking) => searchRankingScore(ranking, query) >= 2200)
-    });
+    };
+    res.json(setCachedProfileSearch('search', query, region, mode, payload));
   } catch (error) {
     next(error);
   }

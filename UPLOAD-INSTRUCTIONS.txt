@@ -1,7 +1,12 @@
-Upload and replace only:
-- public/app.js
-- public/index.html
-- public/styles.css
-- CHANGELOG.md
+Upload these files to the existing GitHub repository and replace the old copies:
 
-Do not delete or replace the data folder.
+public/app.js
+public/index.html
+public/styles.css
+server.js
+package.json
+package-lock.json
+CHANGELOG.md
+
+Do not replace or delete the data folder.
+After Railway finishes deploying, refresh the website with Ctrl + Shift + R.

@@ -62,8 +62,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="/styles.css?v=7.35.0" as="style">
-  <link rel="stylesheet" href="/styles.css?v=7.35.0">
+  <link rel="preload" href="/styles.css?v=7.37.0" as="style">
+  <link rel="stylesheet" href="/styles.css?v=7.37.0">
 </head>
 <body>
   <header class="site-header">
@@ -350,13 +350,6 @@
           <input id="player-name" type="search" minlength="2" maxlength="40" placeholder="Sandstorm" autocomplete="off" required data-i18n-placeholder="playerPlaceholder" aria-autocomplete="list" aria-controls="search-suggestions" aria-expanded="false">
           <div id="search-suggestions" class="search-suggestions" role="listbox" hidden></div>
         </label>
-        <div class="field-row search-mode-only">
-          <label class="field">
-            <span data-i18n="gameMode">Mode</span>
-            <select id="search-mode"><option value="1v1">Ranked 1v1</option><option value="2v2">Ranked 2v2</option><option value="3v3">Ranked 3v3</option></select>
-          </label>
-          <div class="all-regions-note"><i>◎</i><span data-i18n="boardsFeature">All regions</span></div>
-        </div>
         <button type="submit" class="primary-button"><span data-i18n="searchButton">Search player</span><b>→</b></button>
         <p class="form-note" data-i18n="searchNote">Search the official ranked database by player name.</p>
       </form>
@@ -461,6 +454,10 @@
         </div>
       </div>
       <div id="leaderboard-list" class="leaderboard-list panel"><div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div></div>
+      <div class="leaderboard-pagination">
+        <span id="leaderboard-page-status" class="leaderboard-page-status" aria-live="polite"></span>
+        <button id="leaderboard-load-more" class="leaderboard-load-more" type="button" hidden><span data-i18n="loadMorePlayers">Load next 20 players</span><b>↓</b></button>
+      </div>
     </section>
 
     <section id="clans" class="shell section clans-section">
@@ -606,7 +603,7 @@
       </a>
     </div>
   </footer>
-  <script src="/app.js?v=7.35.0" defer></script>
+  <script src="/app.js?v=7.37.0" defer></script>
   <script src="/arena-v72.js?v=7.32.0" defer></script>
 </body>
 </html>

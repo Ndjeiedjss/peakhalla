@@ -6,7 +6,7 @@ const translations = {
     heroTitle: 'Track the player.<br><em>Know the main.</em>', heroText: 'Search every known Brawlhalla profile across all regions, discover main legends, clans, and competitive rankings.',
     mainLegendFeature: 'Main legend', aliasFeature: 'Name history', boardsFeature: 'All regions', esportsFeature: 'Esports power rankings', findPlayer: 'Find a player',
     playerName: 'Player name, old name, or BH ID', playerPlaceholder: 'Sandstorm', region: 'Region', gameMode: 'Mode', searchButton: 'Search player',
-    searchNote: 'Searches all regions automatically, including unranked profiles found by name history or BH ID.', searchResults: 'Search results', playerIdLabel: 'BH ID', updatedLabel: 'Updated', currentRank: 'Current rank',
+    searchNote: 'Searches player profiles directly by current name, old name, or BH ID across all regions.', searchResults: 'Search results', playerIdLabel: 'BH ID', updatedLabel: 'Updated', currentRank: 'Current rank',
     eloProgress: 'Elo progress', last120: '120 days', firstSnapshot: 'First snapshot saved. The chart grows when the tracker sees this account again.',
     playerSummary: 'Player summary', knownNames: 'Known names', knownNamesNote: 'Previous names are loaded automatically from the fresh Corehalla alias history whenever the player page opens.',
     bestLegends: 'Ranked legends', legend: 'Legend', weapons: 'Weapons', games: 'Games', wins: 'Wins', winRate: 'Win rate', peak: 'Peak', refresh: 'Refresh',
@@ -18,7 +18,7 @@ const translations = {
     fullPlayerStats: 'Full player stats', officialLifetimeData: 'Official lifetime data', allLegendStats: 'Every legend · lifetime stats', searchLegends: 'Search legends', legendSearchPlaceholder: 'Legend or weapon', show: 'Show', playedOnly: 'Played only', allLegends: 'All legends', sortBy: 'Sort by', level: 'Level', xp: 'XP', losses: 'Losses', damageDealt: 'Damage dealt', damageTaken: 'Damage taken', kos: 'KOs', falls: 'Falls', kdRatio: 'K/D ratio', damageRatio: 'Damage ratio', suicides: 'Suicides', teamKOs: 'Team KOs', unarmedDamage: 'Unarmed damage', thrownDamage: 'Thrown-item damage', gadgetDamage: 'Gadget damage', gadgetKOs: 'Gadget KOs', unarmedKOs: 'Unarmed KOs', bombDamage: 'Bomb damage', mineDamage: 'Mine damage', spikeballDamage: 'Spikeball damage', sidekickDamage: 'Sidekick damage', snowballHits: 'Snowball hits', bombKOs: 'Bomb KOs', mineKOs: 'Mine KOs', sidekickKOs: 'Sidekick KOs', snowballKOs: 'Snowball KOs', spikeballKOs: 'Spikeball KOs', matchTime: 'Match time', seasonRanked: 'Current season ranked', lifetimeCombat: 'Lifetime combat', weaponBreakdown: 'Weapon breakdown', noLifetimeStats: 'No legends matched these filters.', legendsTotal: 'legends', playedLegends: 'played',
     legendUsed: 'legend used', legendsUsed: 'legends used', noRankedLegends: 'No ranked legend games found.', nameSeen: 'name recorded', namesSeen: 'names recorded', currentName: 'Current', previousName: 'Previous',
     firstSeen: 'First seen', lastSeen: 'Last seen', formerly: 'Formerly', aliasMatch: 'Old-name match', main: 'Main', unknownLegend: 'Main unknown',
-    leaderboardPrefix: 'Top players ·', leaderboardSearch: 'Find a rank', leaderboardSearchPlaceholder: 'Search a player', leaderboardSearchTitle: 'Ranking search', emptyData: 'No data available right now.', allRegions: 'All regions',
+    leaderboardPrefix: 'Top players ·', leaderboardSearch: 'Find a rank', leaderboardSearchPlaceholder: 'Search a player', leaderboardSearchTitle: 'Ranking search', emptyData: 'No data available right now.', allRegions: 'All regions', loadMorePlayers: 'Load next 20 players', loadingMorePlayers: 'Loading 20 more…', playersShown: 'players shown',
     clansTitle: 'Top clans by lifetime XP', clansText: 'Browse the highest-XP Brawlhalla clans, then open a dedicated roster page for every clan.', clanSearch: 'Find a clan', clanSearchPlaceholder: 'Clan name or guild ID', clanRank: 'XP rank', clanMembers: 'Members', clanPoints: 'Weekly points', clanXp: 'Lifetime XP', clanRecruiting: 'Recruiting', clanClosed: 'Closed', clanOpen: 'Open clan', clanDetails: 'Clan profile', clanRoster: 'Clan roster', clanRole: 'Role', clanJoined: 'Joined', clanMemberXp: 'Member XP', clanNoData: 'No clan data is available right now. Refresh in a moment.', clanLoading: 'Loading top clans by XP…', clanUpdated: 'Updated', clanDiscoveryNote: 'Top clans are ordered by lifetime XP.', clanView: 'View clan', clanBack: 'Back to clans', clanRoleOrder: 'Role hierarchy', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'Members are ordered from Recruit to Leader.', playerClan: 'PLAYER CLAN', viewClanProfile: 'Open clan profile', noClan: 'No clan',
     MiddleEast: 'Middle East', Europe: 'Europe', USEast: 'US East', USWest: 'US West', SouthernAfrica: 'Southern Africa', SoutheastAsia: 'Southeast Asia', Brazil: 'Brazil', Australia: 'Australia', Japan: 'Japan',
     esportsTitle: 'Esports power rankings', esportsText: 'Official competitive names, medals, earnings, and a quick look at major tournament winners.', powerRanking: 'Power ranking', player: 'Player', earnings: 'Earnings',
@@ -36,7 +36,7 @@ const translations = {
     heroTitle: 'تتبّع اللاعب.<br><em>واعرف شخصيته.</em>', heroText: 'ابحث عن كل بروفايلات براولهالا في جميع المناطق، وشاهد الشخصية الأساسية والكلانات والترتيب.',
     mainLegendFeature: 'الشخصية الأساسية', aliasFeature: 'الأسماء القديمة', boardsFeature: 'كل المناطق', esportsFeature: 'باور رانكنق البطولات', findPlayer: 'دور على لاعب',
     playerName: 'اسم اللاعب أو اسمه القديم أو BH ID', playerPlaceholder: 'مثال: Sandstorm', region: 'المنطقة', gameMode: 'النمط', searchButton: 'ابحث',
-    searchNote: 'البحث يشمل كل المناطق تلقائيًا، ويعرض الحسابات غير المصنفة بالاسم القديم أو BH ID.', searchResults: 'نتائج البحث', playerIdLabel: 'معرّف BH', updatedLabel: 'آخر تحديث', currentRank: 'الرانك الحالي',
+    searchNote: 'يبحث مباشرة في بروفايلات اللاعبين بالاسم الحالي أو القديم أو BH ID في كل المناطق.', searchResults: 'نتائج البحث', playerIdLabel: 'معرّف BH', updatedLabel: 'آخر تحديث', currentRank: 'الرانك الحالي',
     eloProgress: 'تطور الإيلو', last120: '١٢٠ يوم', firstSnapshot: 'حفظنا أول لقطة، والرسم يكبر كل ما نشوف الحساب مرة ثانية.',
     playerSummary: 'زبدة الحساب', knownNames: 'الأسماء المعروفة', knownNamesNote: 'تُجلب الأسماء السابقة تلقائيًا من سجل Corehalla المحدث عند فتح صفحة اللاعب.',
     bestLegends: 'شخصيات الرانك', legend: 'الشخصية', weapons: 'الأسلحة', games: 'المباريات', wins: 'الفوز', winRate: 'نسبة الفوز', peak: 'أعلى إيلو', refresh: 'حدّث',
@@ -48,7 +48,7 @@ const translations = {
     fullPlayerStats: 'إحصائيات اللاعب كاملة', officialLifetimeData: 'بيانات رسمية طوال عمر الحساب', allLegendStats: 'كل الشخصيات · إحصائيات العمر الكامل', searchLegends: 'ابحث في الشخصيات', legendSearchPlaceholder: 'اسم شخصية أو سلاح', show: 'العرض', playedOnly: 'اللي لعب بها فقط', allLegends: 'كل الشخصيات', sortBy: 'الترتيب حسب', level: 'اللفل', xp: 'الإكس بي', losses: 'الخسائر', damageDealt: 'الضرر المسبب', damageTaken: 'الضرر المستلم', kos: 'الإقصاءات', falls: 'مرات السقوط', kdRatio: 'نسبة K/D', damageRatio: 'نسبة الضرر', suicides: 'سقوط ذاتي', teamKOs: 'إقصاء الزملاء', unarmedDamage: 'ضرر بدون سلاح', thrownDamage: 'ضرر الأدوات المرميّة', gadgetDamage: 'ضرر الأدوات', gadgetKOs: 'إقصاءات الأدوات', unarmedKOs: 'إقصاءات بدون سلاح', bombDamage: 'ضرر القنابل', mineDamage: 'ضرر الألغام', spikeballDamage: 'ضرر الكرة الشائكة', sidekickDamage: 'ضرر المساعد', snowballHits: 'إصابات كرة الثلج', bombKOs: 'إقصاءات القنابل', mineKOs: 'إقصاءات الألغام', sidekickKOs: 'إقصاءات المساعد', snowballKOs: 'إقصاءات كرة الثلج', spikeballKOs: 'إقصاءات الكرة الشائكة', matchTime: 'وقت المباريات', seasonRanked: 'رانك الموسم الحالي', lifetimeCombat: 'قتال العمر الكامل', weaponBreakdown: 'تفاصيل الأسلحة', noLifetimeStats: 'ما فيه شخصيات مطابقة للفلاتر.', legendsTotal: 'شخصية', playedLegends: 'مستخدمة',
     legendUsed: 'شخصية مستخدمة', legendsUsed: 'شخصيات مستخدمة', noRankedLegends: 'ما لقينا مباريات رانك على الشخصيات.', nameSeen: 'اسم مسجل', namesSeen: 'أسماء مسجلة', currentName: 'الحالي', previousName: 'قديم',
     firstSeen: 'أول ظهور', lastSeen: 'آخر ظهور', formerly: 'كان اسمه', aliasMatch: 'تطابق اسم قديم', main: 'الأساسية', unknownLegend: 'الشخصية غير معروفة',
-    leaderboardPrefix: 'المتصدرين ·', leaderboardSearch: 'ابحث في الترتيب', leaderboardSearchPlaceholder: 'اكتب اسم اللاعب', leaderboardSearchTitle: 'نتيجة الترتيب', emptyData: 'ما فيه بيانات الحين.', allRegions: 'كل المناطق',
+    leaderboardPrefix: 'المتصدرين ·', leaderboardSearch: 'ابحث في الترتيب', leaderboardSearchPlaceholder: 'اكتب اسم اللاعب', leaderboardSearchTitle: 'نتيجة الترتيب', emptyData: 'ما فيه بيانات الحين.', allRegions: 'كل المناطق', loadMorePlayers: 'اعرض 20 لاعب إضافي', loadingMorePlayers: 'نحمّل 20 لاعب إضافي…', playersShown: 'لاعب معروض',
     clansTitle: 'أفضل الكلانات حسب الخبرة', clansText: 'تصفح كلانات براولهالا الأعلى في Lifetime XP وافتح صفحة مستقلة ومنظمة لكل كلان.', clanSearch: 'ابحث عن كلان', clanSearchPlaceholder: 'اسم الكلان أو رقم Guild ID', clanRank: 'ترتيب الخبرة', clanMembers: 'الأعضاء', clanPoints: 'نقاط الأسبوع', clanXp: 'Lifetime XP', clanRecruiting: 'يقبل أعضاء', clanClosed: 'مغلق', clanOpen: 'كلان مفتوح', clanDetails: 'صفحة الكلان', clanRoster: 'أعضاء الكلان', clanRole: 'الرتبة', clanJoined: 'تاريخ الانضمام', clanMemberXp: 'خبرة العضو', clanNoData: 'بيانات الكلانات غير متاحة الآن، جرّب التحديث بعد قليل.', clanLoading: 'نحمّل أفضل الكلانات حسب الخبرة…', clanUpdated: 'آخر تحديث', clanDiscoveryNote: 'الكلانات مرتبة حسب Lifetime XP.', clanView: 'افتح الكلان', clanBack: 'الرجوع للكلانات', clanRoleOrder: 'تسلسل الرتب', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'الأعضاء مرتبون من Recruit إلى Leader.', playerClan: 'كلان اللاعب', viewClanProfile: 'افتح صفحة الكلان', noClan: 'بدون كلان',
     MiddleEast: 'الشرق الأوسط', Europe: 'أوروبا', USEast: 'شرق أمريكا', USWest: 'غرب أمريكا', SouthernAfrica: 'جنوب أفريقيا', SoutheastAsia: 'جنوب شرق آسيا', Brazil: 'البرازيل', Australia: 'أستراليا', Japan: 'اليابان',
     esportsTitle: 'باور رانكنق المحترفين', esportsText: 'أسماء المحترفين، الميداليات، الأرباح، وأهم البطولات اللي فازوا فيها.', powerRanking: 'الباور رانكنق', player: 'اللاعب', earnings: 'الأرباح',
@@ -66,7 +66,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, leaderboardSearchTimer: null, leaderboardSearchController: null, queueMode: '1v1', queueRegion: 'ME', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, queueMode: '1v1', queueRegion: 'ME', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
 const playerPathMatch = location.pathname.match(/^\/player\/(\d+)\/?$/);
 const clanPathMatch = location.pathname.match(/^\/clan\/(\d+)\/?$/);
 const standalonePlayerId = playerPathMatch ? playerPathMatch[1] : null;
@@ -81,10 +81,10 @@ if (isLiveQueuePage) document.body.classList.add('live-queue-page-mode', 'page-e
 if (isArenaPage) document.body.classList.add('arena-page-mode', 'page-entering');
 if (isStandalonePlayerPage || isClanPage || isLiveQueuePage || isArenaPage) { const brandLink = document.querySelector('.brand'); if (brandLink) brandLink.href = '/'; }
 const els = {
-  form: $('#search-form'), name: $('#player-name'), region: $('#search-region'), mode: $('#search-mode'), suggestions: $('#search-suggestions'), status: $('#status'),
+  form: $('#search-form'), name: $('#player-name'), region: $('#search-region'), mode: null, suggestions: $('#search-suggestions'), status: $('#status'),
   resultsSection: $('#search-results'), resultsGrid: $('#results-grid'), resultCount: $('#result-count'), profile: $('#player-profile'), accountShowcase: $('#account-showcase'), profileAliases: $('#player-aliases'), playerClanCard: $('#player-clan-card'), playerClanName: $('#player-clan-name'), playerClanRole: $('#player-clan-role'),
   leaderboard: $('#leaderboard-list'), refreshLeaderboard: $('#refresh-leaderboard'), leaderboardRegion: $('#leaderboard-region'),
-  leaderboardMode: $('#leaderboard-mode'), leaderboardSearch: $('#leaderboard-search'), leaderboardTitle: $('#leaderboard-title'), languageToggle: $('#language-toggle'), rankedNav: $('#ranked-nav-dropdown'), rankedToggle: $('#ranked-nav-toggle'), rankedMenu: $('#ranked-nav-menu'), rankedModeLabel: $('#ranked-mode-label'), queueNav: $('#queue-nav-dropdown'), queueToggle: $('#queue-nav-toggle'), queueMenu: $('#queue-nav-menu'), queueModeLabel: $('#queue-mode-label'), playerPeakRating: $('#player-peak-rating'), eloGap: $('#elo-gap'), rankProgressFill: $('#rank-progress-fill'),
+  leaderboardMode: $('#leaderboard-mode'), leaderboardSearch: $('#leaderboard-search'), leaderboardTitle: $('#leaderboard-title'), leaderboardLoadMore: $('#leaderboard-load-more'), leaderboardPageStatus: $('#leaderboard-page-status'), languageToggle: $('#language-toggle'), rankedNav: $('#ranked-nav-dropdown'), rankedToggle: $('#ranked-nav-toggle'), rankedMenu: $('#ranked-nav-menu'), rankedModeLabel: $('#ranked-mode-label'), queueNav: $('#queue-nav-dropdown'), queueToggle: $('#queue-nav-toggle'), queueMenu: $('#queue-nav-menu'), queueModeLabel: $('#queue-mode-label'), playerPeakRating: $('#player-peak-rating'), eloGap: $('#elo-gap'), rankProgressFill: $('#rank-progress-fill'),
   esportsRegion: $('#esports-region'), esportsMode: $('#esports-mode'), powerBody: $('#power-ranking-body'), esportsUpdated: $('#esports-updated'),
   tournamentList: $('#tournament-list'), tournamentRegionLabel: $('#tournament-region-label'), championsGrid: $('#champions-grid'), esportsSource: $('#esports-source'),
   clansGrid: $('#clans-grid'), clansSearch: $('#clans-search'), clansRefresh: $('#clans-refresh'), clansUpdated: $('#clans-updated'), clanPage: $('#clan-page'), clanPageName: $('#clan-page-name'), clanPageMeta: $('#clan-page-meta'), clanPageStats: $('#clan-page-stats'), clanPageStatus: $('#clan-page-status'), clanPageMembers: $('#clan-page-members'), clanPageMemberCount: $('#clan-page-member-count'), clanPageRoles: $('#clan-page-roles'), clanModal: $('#clan-modal'), clanModalName: $('#clan-modal-name'), clanModalMeta: $('#clan-modal-meta'), clanModalStats: $('#clan-modal-stats'), clanMembersBody: $('#clan-members-body'), clanMemberCount: $('#clan-member-count'), clanModalStatus: $('#clan-modal-status'),
@@ -383,9 +383,10 @@ function prefetchPlayerProfile(id) {
 }
 
 function setupPlayerPrefetch(container, selector, datasetKey) {
-  const buttons = [...container.querySelectorAll(selector)];
+  const buttons = [...container.querySelectorAll(selector)].filter((button) => button.dataset.prefetchBound !== '1');
   const warm = (button) => prefetchPlayerProfile(button.dataset[datasetKey]);
   for (const button of buttons) {
+    button.dataset.prefetchBound = '1';
     button.addEventListener('pointerenter', () => warm(button), { once: true, passive: true });
     button.addEventListener('focus', () => warm(button), { once: true });
     button.addEventListener('touchstart', () => warm(button), { once: true, passive: true });
@@ -877,7 +878,7 @@ async function loadPlayer(id, options = {}) {
 async function searchPlayer(event) {
   event.preventDefault(); const q = els.name.value.trim(); const button = els.form.querySelector('button[type="submit"]');
   if (q.length < 2) return;
-  try { button.disabled = true; showStatus(t('searching')); const params = new URLSearchParams({ q, region: 'ALL', mode: els.mode?.value || '1v1' }); const data = await getJson(`/api/search?${params}`); hideStatus(); renderSearchResults(data.rankings || []); }
+  try { button.disabled = true; showStatus(t('searching')); const params = new URLSearchParams({ q }); const data = await getJson(`/api/search?${params}`); hideStatus(); renderSearchResults(data.rankings || []); }
   catch { hideStatus(); renderSearchResults([]); } finally { button.disabled = false; }
 }
 
@@ -889,9 +890,11 @@ function leaderboardPerson(player, region) {
   return `<div class="leader-person">${portraitMarkup(main || { name: player.username }, 'row-portrait')}<button data-leader-id="${Number(player.id)}"><span class="leader-name-line"><strong>${escapeHtml(player.username || 'Unknown')}</strong></span><span class="leader-meta-line"><small class="leader-legend-meta">${escapeHtml(main ? main.name : 'Brawlhalla')}</small><span class="leader-region-chip" title="${escapeHtml(regionTitle)}">${escapeHtml(regionCode)}</span></span></button></div>`;
 }
 
-function renderLeaderboardRows(rankings = []) {
+function renderLeaderboardRows(rankings = [], options = {}) {
+  const append = Boolean(options.append);
   const activeRegion = els.leaderboardRegion?.value || 'ALL';
-  els.leaderboard.innerHTML = rankings.map((item) => {
+  const rankScope = activeRegion === 'ALL' ? '' : activeRegion;
+  const markup = rankings.map((item) => {
     const wins = Math.max(0, Number(item.wins) || 0);
     const reportedLosses = Number(item.losses);
     const reportedGames = Number(item.games);
@@ -908,40 +911,96 @@ function renderLeaderboardRows(rankings = []) {
       state.playerSeeds.set(Number(player.id), makePlayerSeedPayload(item, player));
       return leaderboardPerson(player, item.region || '—');
     }).join('');
-    return `<div class="leader-row"><span class="leader-rank" title="${escapeHtml(activeRegion === 'ALL' ? t('globalRank') : t('regionRank'))}"><b>#${number(item.rank)}</b></span><div class="leader-players">${playersMarkup}</div><div class="leader-metric leader-elo-metric"><span>ELO</span><b>${number(item.rating)}</b></div><div class="leader-metric leader-peak-metric"><span>${escapeHtml(t('peak'))}</span><b>${number(item.best_rating)}</b></div><div class="leader-metric leader-games-metric" title="${escapeHtml(recordTitle)}" aria-label="${escapeHtml(recordTitle)}"><span>${escapeHtml(t('games'))}</span><b>${number(safeGames)}</b><div class="leader-record-stack"><div class="leader-record-bar"><i class="leader-record-fill leader-record-fill-win" style="width:${winWidth}%"></i><i class="leader-record-fill leader-record-fill-loss" style="width:${lossWidth}%"></i></div><div class="leader-record-labels"><small class="leader-win-label"><strong>${number(wins)}</strong>W</small><small class="leader-loss-label"><strong>${number(losses)}</strong>L</small></div></div></div><div class="leader-metric leader-winrate-metric"><span>${escapeHtml(t('winRate'))}</span><b>${winRate}%</b></div><span class="tier-chip">${escapeHtml(item.tier || 'Unranked')}</span></div>`;
-  }).join('') || `<p class="empty-copy">${escapeHtml(t('emptyData'))}</p>`;
-  els.leaderboard.querySelectorAll('[data-leader-id]').forEach((button) => button.addEventListener('click', () => {
-    const id = Number(button.dataset.leaderId);
-    navigateToPlayer(id, state.playerSeeds.get(id));
-  }));
+    const rankTitle = activeRegion === 'ALL' ? t('globalRank') : `${t('regionRank')} · ${regionLabel(activeRegion)}`;
+    return `<div class="leader-row"><span class="leader-rank" title="${escapeHtml(rankTitle)}">${rankScope ? `<small>${escapeHtml(rankScope)}</small>` : ''}<b>#${number(item.rank)}</b></span><div class="leader-players">${playersMarkup}</div><div class="leader-metric leader-elo-metric"><span>ELO</span><b>${number(item.rating)}</b></div><div class="leader-metric leader-peak-metric"><span>${escapeHtml(t('peak'))}</span><b>${number(item.best_rating)}</b></div><div class="leader-metric leader-games-metric" title="${escapeHtml(recordTitle)}" aria-label="${escapeHtml(recordTitle)}"><span>${escapeHtml(t('games'))}</span><b>${number(safeGames)}</b><div class="leader-record-stack"><div class="leader-record-bar"><i class="leader-record-fill leader-record-fill-win" style="width:${winWidth}%"></i><i class="leader-record-fill leader-record-fill-loss" style="width:${lossWidth}%"></i></div><div class="leader-record-labels"><small class="leader-win-label"><strong>${number(wins)}</strong>W</small><small class="leader-loss-label"><strong>${number(losses)}</strong>L</small></div></div></div><div class="leader-metric leader-winrate-metric"><span>${escapeHtml(t('winRate'))}</span><b>${winRate}%</b></div><span class="tier-chip">${escapeHtml(item.tier || 'Unranked')}</span></div>`;
+  }).join('');
+
+  if (append) {
+    if (markup) els.leaderboard.insertAdjacentHTML('beforeend', markup);
+  } else {
+    els.leaderboard.innerHTML = markup || `<p class="empty-copy">${escapeHtml(t('emptyData'))}</p>`;
+  }
+
+  els.leaderboard.querySelectorAll('[data-leader-id]:not([data-leader-bound])').forEach((button) => {
+    button.dataset.leaderBound = '1';
+    button.addEventListener('click', () => {
+      const id = Number(button.dataset.leaderId);
+      navigateToPlayer(id, state.playerSeeds.get(id));
+    });
+  });
   setupPlayerPrefetch(els.leaderboard, '[data-leader-id]', 'leaderId');
   activateImageFallbacks();
-  els.leaderboard.classList.remove('leaderboard-mode-enter');
-  requestAnimationFrame(() => els.leaderboard.classList.add('leaderboard-mode-enter'));
+  if (!append) {
+    els.leaderboard.classList.remove('leaderboard-mode-enter');
+    requestAnimationFrame(() => els.leaderboard.classList.add('leaderboard-mode-enter'));
+  }
 }
 
-async function loadLeaderboard() {
+function updateLeaderboardPagination({ query = '', page = 1, totalPages = 1, received = 0 } = {}) {
+  const isSearch = query.length >= 2;
+  const loadedRows = els.leaderboard?.querySelectorAll('.leader-row').length || 0;
+  const hasMore = !isSearch && received > 0 && (totalPages > 0 ? page < totalPages : received >= 20);
+  state.leaderboardPage = page;
+  state.leaderboardTotalPages = totalPages || page;
+  if (els.leaderboardLoadMore) {
+    els.leaderboardLoadMore.hidden = !hasMore;
+    els.leaderboardLoadMore.disabled = false;
+    const label = els.leaderboardLoadMore.querySelector('span');
+    if (label) label.textContent = t('loadMorePlayers');
+  }
+  if (els.leaderboardPageStatus) {
+    els.leaderboardPageStatus.textContent = !isSearch && loadedRows ? `${number(loadedRows)} ${t('playersShown')}` : '';
+  }
+}
+
+async function loadLeaderboard(options = {}) {
+  const append = Boolean(options.append);
   const region = els.leaderboardRegion?.value || 'ALL';
   const mode = els.leaderboardMode?.value || '1v1';
   const query = els.leaderboardSearch?.value.trim() || '';
+  const page = append ? state.leaderboardPage + 1 : 1;
+  if (append && (state.leaderboardLoadingMore || query.length >= 2)) return;
+
   els.leaderboardTitle.textContent = query.length >= 2
     ? `${t('leaderboardSearchTitle')} · ${query} · ${regionLabel(region)}`
     : `${t('leaderboardPrefix')} ${regionLabel(region)}`;
-  els.leaderboard.innerHTML = '<div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div>';
+
+  if (!append) {
+    els.leaderboard.innerHTML = '<div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div>';
+    if (els.leaderboardLoadMore) els.leaderboardLoadMore.hidden = true;
+    if (els.leaderboardPageStatus) els.leaderboardPageStatus.textContent = '';
+  } else {
+    state.leaderboardLoadingMore = true;
+    if (els.leaderboardLoadMore) {
+      els.leaderboardLoadMore.disabled = true;
+      const label = els.leaderboardLoadMore.querySelector('span');
+      if (label) label.textContent = t('loadingMorePlayers');
+    }
+  }
+
   state.leaderboardSearchController?.abort();
   state.leaderboardSearchController = new AbortController();
   try {
     const params = new URLSearchParams(query.length >= 2
       ? { q: query, region, mode }
-      : { region, mode, page: '1' });
+      : { region, mode, page: String(page) });
     const endpoint = query.length >= 2 ? '/api/search' : '/api/leaderboard';
     const response = await fetch(`${endpoint}?${params}`, { headers: { Accept: 'application/json' }, signal: state.leaderboardSearchController.signal });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || t('fetchError'));
-    renderLeaderboardRows(data.rankings || []);
+    const rankings = data.rankings || [];
+    renderLeaderboardRows(rankings, { append });
+    updateLeaderboardPagination({ query, page, totalPages: Number(data.total_pages) || 0, received: rankings.length });
   } catch (error) {
     if (error.name === 'AbortError') return;
-    els.leaderboard.innerHTML = `<p class="empty-copy">${escapeHtml(t('friendlyProblem'))}</p>`;
+    if (!append) els.leaderboard.innerHTML = `<p class="empty-copy">${escapeHtml(t('friendlyProblem'))}</p>`;
+  } finally {
+    state.leaderboardLoadingMore = false;
+    if (append && els.leaderboardLoadMore?.disabled) {
+      els.leaderboardLoadMore.disabled = false;
+      const label = els.leaderboardLoadMore.querySelector('span');
+      if (label) label.textContent = t('loadMorePlayers');
+    }
   }
 }
 
@@ -1718,7 +1777,7 @@ async function loadSearchSuggestions() {
   if (query.length < 2) { hideSuggestions(); return; }
   state.suggestionController?.abort();
   state.suggestionController = new AbortController();
-  const params = new URLSearchParams({ q: query, region: 'ALL', mode: els.mode?.value || '1v1' });
+  const params = new URLSearchParams({ q: query });
   try {
     const response = await fetch(`/api/suggestions?${params}`, { headers: { Accept: 'application/json' }, signal: state.suggestionController.signal });
     const data = await response.json().catch(() => ({}));
@@ -1732,7 +1791,7 @@ async function loadSearchSuggestions() {
 
 function scheduleSuggestions() {
   window.clearTimeout(state.suggestionTimer);
-  state.suggestionTimer = window.setTimeout(loadSearchSuggestions, 260);
+  state.suggestionTimer = window.setTimeout(loadSearchSuggestions, 140);
 }
 
 function updateSuggestionHighlight() {
@@ -1942,7 +2001,6 @@ document.addEventListener('click', (event) => {
 els.form.addEventListener('submit', (event) => { hideSuggestions(); searchPlayer(event); });
 els.name?.addEventListener('input', scheduleSuggestions);
 els.name?.addEventListener('focus', () => { if ((els.name.value || '').trim().length >= 2) scheduleSuggestions(); });
-els.mode?.addEventListener('change', () => { if ((els.name?.value || '').trim().length >= 2) scheduleSuggestions(); });
 els.name?.addEventListener('keydown', (event) => {
   if (els.suggestions?.hidden || !state.suggestionItems.length) return;
   if (event.key === 'ArrowDown') { event.preventDefault(); state.suggestionIndex = Math.min(state.suggestionIndex + 1, state.suggestionItems.length - 1); updateSuggestionHighlight(); }
@@ -1960,7 +2018,8 @@ els.playerClanCard?.addEventListener('click', () => {
 els.clansSearch?.addEventListener('input', scheduleClanSearch);
 els.clansRefresh?.addEventListener('click', () => loadClans({ refresh: true }));
 els.clanModal?.addEventListener('click', (event) => { if (event.target.closest('[data-clan-close]')) closeClanModal(); });
-els.refreshLeaderboard.addEventListener('click', loadLeaderboard);
+els.refreshLeaderboard.addEventListener('click', () => loadLeaderboard());
+els.leaderboardLoadMore?.addEventListener('click', () => loadLeaderboard({ append: true }));
 els.leaderboardSearch?.addEventListener('input', scheduleLeaderboardSearch);
 els.leaderboardRegion.addEventListener('change', loadLeaderboard);
 els.leaderboardMode.addEventListener('change', loadLeaderboard);
@@ -2022,10 +2081,10 @@ els.arenaFeed?.addEventListener('submit', (event) => {
   submitArenaComment(form);
 });
 
-if (els.rankedModeLabel) els.rankedModeLabel.textContent = els.mode?.value || '1v1';
+if (els.rankedModeLabel) els.rankedModeLabel.textContent = els.leaderboardMode?.value || '1v1';
 setupMotionSelects();
 setupScrollReveal();
-els.rankedMenu?.querySelectorAll('[data-ranked-mode]').forEach((button) => button.classList.toggle('selected', button.dataset.rankedMode === (els.mode?.value || '1v1')));
+els.rankedMenu?.querySelectorAll('[data-ranked-mode]').forEach((button) => button.classList.toggle('selected', button.dataset.rankedMode === (els.leaderboardMode?.value || '1v1')));
 if (isLiveQueuePage) setupLiveQueuePage();
 if (isArenaPage) setupArenaPage();
 if (isClanPage) loadStandaloneClan();
