@@ -28,7 +28,7 @@ const WALL_USERS_FILE = path.join(DATA_DIR, 'arena-users.json');
 const WALL_POSTS_FILE = path.join(DATA_DIR, 'arena-posts.json');
 const WALL_UPLOADS_DIR = path.join(__dirname, 'uploads', 'arena');
 const WALL_SESSION_SECRET = process.env.WALL_SESSION_SECRET || crypto.randomBytes(32).toString('hex');
-const WALL_SESSION_MAX_AGE = 30 * 24 * 60 * 60 * 1000;
+const WALL_SESSION_MAX_AGE = 90 * 24 * 60 * 60 * 1000;
 const WALL_MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const WALL_MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const wallRateLimits = new Map();
@@ -158,11 +158,97 @@ async function initDatabase() {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS arena_users (
+        id TEXT PRIMARY KEY,
+        username TEXT NOT NULL,
+        username_key TEXT NOT NULL UNIQUE,
+        password_salt TEXT NOT NULL,
+        password_hash TEXT NOT NULL,
+        bio TEXT NOT NULL DEFAULT '',
+        avatar_url TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_login_at TIMESTAMPTZ
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS arena_sessions (
+        token_hash TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        expires_at TIMESTAMPTZ NOT NULL
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS arena_notifications (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        actor_id TEXT,
+        type TEXT NOT NULL,
+        post_id TEXT,
+        comment_id TEXT,
+        message TEXT,
+        is_read BOOLEAN NOT NULL DEFAULT FALSE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS arena_media (
+        id TEXT PRIMARY KEY,
+        owner_id TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        mime_type TEXT NOT NULL,
+        data BYTEA NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS arena_posts (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        caption TEXT NOT NULL DEFAULT '',
+        media_id TEXT,
+        legacy_image_url TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS arena_comments (
+        id TEXT PRIMARY KEY,
+        post_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        text TEXT NOT NULL,
+        parent_id TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ
+      )
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS arena_reactions (
+        post_id TEXT NOT NULL,
+        user_id TEXT NOT NULL,
+        reaction TEXT NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (post_id, user_id)
+      )
+    `);
     await client.query('CREATE INDEX IF NOT EXISTS players_normalized_name_idx ON players (normalized_name)');
     await client.query('CREATE INDEX IF NOT EXISTS players_rating_idx ON players (rating DESC NULLS LAST)');
     await client.query('CREATE INDEX IF NOT EXISTS aliases_normalized_idx ON player_aliases (alias_normalized)');
     await client.query('CREATE INDEX IF NOT EXISTS aliases_last_seen_idx ON player_aliases (last_seen DESC)');
     await client.query('CREATE INDEX IF NOT EXISTS snapshots_player_date_idx ON player_snapshots (player_id, snapshot_date DESC)');
+    await client.query('CREATE INDEX IF NOT EXISTS arena_users_username_key_idx ON arena_users (username_key)');
+    await client.query('CREATE INDEX IF NOT EXISTS arena_sessions_user_idx ON arena_sessions (user_id, expires_at DESC)');
+    await client.query('CREATE INDEX IF NOT EXISTS arena_sessions_expiry_idx ON arena_sessions (expires_at)');
+    await client.query('CREATE INDEX IF NOT EXISTS arena_notifications_user_idx ON arena_notifications (user_id, is_read, created_at DESC)');
+    await client.query('CREATE INDEX IF NOT EXISTS arena_posts_created_idx ON arena_posts (created_at DESC)');
+    await client.query('CREATE INDEX IF NOT EXISTS arena_posts_user_idx ON arena_posts (user_id, created_at DESC)');
+    await client.query('CREATE INDEX IF NOT EXISTS arena_comments_post_idx ON arena_comments (post_id, created_at ASC)');
+    await client.query('CREATE INDEX IF NOT EXISTS arena_comments_user_idx ON arena_comments (user_id, created_at DESC)');
+    await client.query('CREATE INDEX IF NOT EXISTS arena_reactions_post_idx ON arena_reactions (post_id)');
     await client.query('COMMIT');
     dbReady = true;
     dbLastError = null;
@@ -177,6 +263,9 @@ async function initDatabase() {
       console.warn('PostgreSQL trigram search is unavailable; using standard indexes:', error.message);
     }
 
+    await importArenaJsonIntoDatabase();
+    await importArenaPostsIntoDatabase();
+    await cleanupArenaSessions();
     console.log('PeakHalla PostgreSQL database is ready.');
     return true;
   } catch (error) {
@@ -678,6 +767,9 @@ app.get('/queue', (_req, res) => {
 });
 
 app.get('/arena', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+app.get('/arena/profile/:username', (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -3057,33 +3149,72 @@ function wallPasswordMatches(password, user = {}) {
   }
 }
 
-function wallSignSession(userId, expiresAt = Date.now() + WALL_SESSION_MAX_AGE) {
+function wallLegacySessionToken(userId, expiresAt = Date.now() + WALL_SESSION_MAX_AGE) {
   const payload = `${userId}.${expiresAt}`;
   const signature = crypto.createHmac('sha256', WALL_SESSION_SECRET).update(payload).digest('base64url');
   return `${payload}.${signature}`;
 }
 
-function wallSessionUserId(req) {
-  const token = parseCookies(req.headers.cookie || '').arena_session;
-  if (!token) return null;
-  const parts = token.split('.');
+function wallSessionHash(token) {
+  return crypto.createHash('sha256').update(String(token || '')).digest('hex');
+}
+
+function wallReadLegacySessionUserId(token) {
+  const parts = String(token || '').split('.');
   if (parts.length !== 3) return null;
   const [userId, expiresAt, signature] = parts;
   if (!/^[-a-zA-Z0-9_]+$/.test(userId) || Number(expiresAt) < Date.now()) return null;
   const expected = crypto.createHmac('sha256', WALL_SESSION_SECRET).update(`${userId}.${expiresAt}`).digest('base64url');
   const left = Buffer.from(signature);
   const right = Buffer.from(expected);
-  if (left.length !== right.length || !crypto.timingSafeEqual(left, right)) return null;
-  return userId;
+  return left.length === right.length && crypto.timingSafeEqual(left, right) ? userId : null;
 }
 
-function wallSetSessionCookie(req, res, userId) {
-  const token = wallSignSession(userId);
+async function wallSessionUserId(req) {
+  const token = parseCookies(req.headers.cookie || '').arena_session;
+  if (!token) return null;
+  if (dbReady) {
+    const result = await dbQuery(`
+      SELECT user_id
+      FROM arena_sessions
+      WHERE token_hash = $1 AND expires_at > NOW()
+      LIMIT 1
+    `, [wallSessionHash(token)]);
+    const userId = result?.rows?.[0]?.user_id || null;
+    if (userId) {
+      dbQuery('UPDATE arena_sessions SET last_seen_at = NOW() WHERE token_hash = $1', [wallSessionHash(token)]).catch(() => null);
+      return String(userId);
+    }
+    return null;
+  }
+  return wallReadLegacySessionUserId(token);
+}
+
+async function wallSetSessionCookie(req, res, userId) {
   const secure = req.secure || String(req.headers['x-forwarded-proto'] || '').includes('https');
+  let token;
+  if (dbReady) {
+    token = crypto.randomBytes(32).toString('base64url');
+    const expiresAt = new Date(Date.now() + WALL_SESSION_MAX_AGE);
+    await dbQuery(`
+      INSERT INTO arena_sessions (token_hash, user_id, created_at, last_seen_at, expires_at)
+      VALUES ($1, $2, NOW(), NOW(), $3)
+    `, [wallSessionHash(token), String(userId), expiresAt]);
+    await dbQuery(`
+      DELETE FROM arena_sessions
+      WHERE user_id = $1 AND token_hash NOT IN (
+        SELECT token_hash FROM arena_sessions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 8
+      )
+    `, [String(userId)]);
+  } else {
+    token = wallLegacySessionToken(userId);
+  }
   res.setHeader('Set-Cookie', `arena_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(WALL_SESSION_MAX_AGE / 1000)}${secure ? '; Secure' : ''}`);
 }
 
-function wallClearSessionCookie(req, res) {
+async function wallClearSessionCookie(req, res) {
+  const token = parseCookies(req.headers.cookie || '').arena_session;
+  if (dbReady && token) await dbQuery('DELETE FROM arena_sessions WHERE token_hash = $1', [wallSessionHash(token)]);
   const secure = req.secure || String(req.headers['x-forwarded-proto'] || '').includes('https');
   res.setHeader('Set-Cookie', `arena_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure ? '; Secure' : ''}`);
 }
@@ -3099,10 +3230,9 @@ function wallRateLimit(req, bucket, limit, windowMs) {
 }
 
 async function wallCurrentUser(req) {
-  const id = wallSessionUserId(req);
+  const id = await wallSessionUserId(req);
   if (!id) return null;
-  const users = await readJson(WALL_USERS_FILE, {});
-  const user = Object.values(users).find((item) => item.id === id);
+  const user = await wallFindUserById(id);
   return user ? wallPublicUser(user) : null;
 }
 
@@ -3115,6 +3245,226 @@ function wallPublicUser(user = {}) {
     created_at: user.created_at,
     updated_at: user.updated_at || user.created_at
   };
+}
+
+function wallDbUser(row = {}) {
+  return {
+    id: String(row.id || ''),
+    username: row.username,
+    password_salt: row.password_salt,
+    password_hash: row.password_hash,
+    bio: row.bio || '',
+    avatar_url: row.avatar_url || null,
+    created_at: row.created_at,
+    updated_at: row.updated_at || row.created_at,
+    last_login_at: row.last_login_at || null
+  };
+}
+
+async function wallFindUserById(id) {
+  if (dbReady) {
+    const result = await dbQuery('SELECT * FROM arena_users WHERE id = $1 LIMIT 1', [String(id)]);
+    return result?.rows?.[0] ? wallDbUser(result.rows[0]) : null;
+  }
+  const users = await readJson(WALL_USERS_FILE, {});
+  return Object.values(users).find((item) => String(item?.id) === String(id)) || null;
+}
+
+async function wallFindUserByUsername(username) {
+  const key = wallUsernameKey(username);
+  if (dbReady) {
+    const result = await dbQuery('SELECT * FROM arena_users WHERE username_key = $1 LIMIT 1', [key]);
+    return result?.rows?.[0] ? wallDbUser(result.rows[0]) : null;
+  }
+  const users = await readJson(WALL_USERS_FILE, {});
+  return users[key] || null;
+}
+
+async function wallAllUsers() {
+  if (dbReady) {
+    const result = await dbQuery('SELECT * FROM arena_users ORDER BY created_at ASC');
+    const users = {};
+    for (const row of result?.rows || []) {
+      const user = wallDbUser(row);
+      users[wallUsernameKey(user.username)] = user;
+    }
+    return users;
+  }
+  return readJson(WALL_USERS_FILE, {});
+}
+
+async function importArenaJsonIntoDatabase() {
+  if (!dbReady) return;
+  const imported = await getDatabaseState('arena_users_import_v1', null);
+  if (imported?.completed) return;
+  const users = await readJson(WALL_USERS_FILE, {});
+  let count = 0;
+  for (const user of Object.values(users || {})) {
+    if (!user?.id || !user?.username || !user?.password_salt || !user?.password_hash) continue;
+    await dbQuery(`
+      INSERT INTO arena_users (
+        id, username, username_key, password_salt, password_hash, bio, avatar_url, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      ON CONFLICT (id) DO UPDATE SET
+        username = EXCLUDED.username,
+        username_key = EXCLUDED.username_key,
+        password_salt = EXCLUDED.password_salt,
+        password_hash = EXCLUDED.password_hash,
+        bio = EXCLUDED.bio,
+        avatar_url = EXCLUDED.avatar_url,
+        updated_at = GREATEST(arena_users.updated_at, EXCLUDED.updated_at)
+    `, [
+      String(user.id), wallUsername(user.username), wallUsernameKey(user.username), String(user.password_salt),
+      String(user.password_hash), String(user.bio || '').slice(0, 160), user.avatar_url || null,
+      user.created_at || new Date().toISOString(), user.updated_at || user.created_at || new Date().toISOString()
+    ]);
+    count += 1;
+  }
+  await setDatabaseState('arena_users_import_v1', { completed: true, imported_at: new Date().toISOString(), users: count });
+}
+
+async function cleanupArenaSessions() {
+  if (!dbReady) return;
+  await dbQuery('DELETE FROM arena_sessions WHERE expires_at <= NOW()');
+}
+
+async function wallCreateNotification({ userId, actorId, type, postId = null, commentId = null, message = null }) {
+  if (!dbReady || !userId || String(userId) === String(actorId)) return;
+  await dbQuery(`
+    INSERT INTO arena_notifications (id, user_id, actor_id, type, post_id, comment_id, message, is_read, created_at)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,FALSE,NOW())
+  `, [crypto.randomUUID(), String(userId), actorId ? String(actorId) : null, type, postId, commentId, message]);
+}
+
+function wallMediaUrl(id) {
+  return id ? `/api/arena/media/${encodeURIComponent(id)}` : null;
+}
+
+async function wallSaveMedia(ownerId, image, kind = 'post') {
+  if (!dbReady) return null;
+  const id = crypto.randomUUID();
+  const mime = image.extension === 'jpg' ? 'image/jpeg' : `image/${image.extension}`;
+  const result = await dbQuery(`
+    INSERT INTO arena_media (id, owner_id, kind, mime_type, data, created_at)
+    VALUES ($1,$2,$3,$4,$5,NOW())
+    RETURNING id
+  `, [id, String(ownerId), kind, mime, image.buffer]);
+  return result?.rows?.[0]?.id || null;
+}
+
+async function wallDeleteMediaByUrl(urlValue) {
+  const match = String(urlValue || '').match(/^\/api\/arena\/media\/([^/?#]+)/);
+  if (dbReady && match) {
+    await dbQuery('DELETE FROM arena_media WHERE id = $1', [decodeURIComponent(match[1])]);
+    return;
+  }
+  await removeArenaUpload(urlValue);
+}
+
+async function wallDatabasePosts(viewerId = null, limit = 80, onlyPostId = null) {
+  if (!dbReady) return [];
+  const params = [];
+  let where = '';
+  if (onlyPostId) {
+    params.push(String(onlyPostId));
+    where = 'WHERE p.id = $1';
+  }
+  params.push(Math.max(1, Math.min(300, Number(limit || 80))));
+  const limitIndex = params.length;
+  const postsResult = await dbQuery(`
+    SELECT p.*, u.username, u.bio, u.avatar_url, u.created_at AS user_created_at, u.updated_at AS user_updated_at
+    FROM arena_posts p
+    JOIN arena_users u ON u.id = p.user_id
+    ${where}
+    ORDER BY p.created_at DESC
+    LIMIT $${limitIndex}
+  `, params);
+  const rows = postsResult?.rows || [];
+  if (!rows.length) return [];
+  const ids = rows.map((row) => String(row.id));
+  const [commentsResult, reactionsResult] = await Promise.all([
+    dbQuery(`
+      SELECT c.*, u.username, u.bio, u.avatar_url, u.created_at AS user_created_at, u.updated_at AS user_updated_at
+      FROM arena_comments c
+      JOIN arena_users u ON u.id = c.user_id
+      WHERE c.post_id = ANY($1::text[])
+      ORDER BY c.created_at ASC
+    `, [ids]),
+    dbQuery('SELECT post_id, user_id, reaction FROM arena_reactions WHERE post_id = ANY($1::text[])', [ids])
+  ]);
+  const commentsByPost = new Map();
+  for (const row of commentsResult?.rows || []) {
+    const list = commentsByPost.get(String(row.post_id)) || [];
+    list.push({
+      id: row.id,
+      user_id: row.user_id,
+      username: row.username,
+      author: wallPublicUser({ id: row.user_id, username: row.username, bio: row.bio, avatar_url: row.avatar_url, created_at: row.user_created_at, updated_at: row.user_updated_at }),
+      text: row.text,
+      parent_id: row.parent_id || null,
+      created_at: row.created_at,
+      updated_at: row.updated_at || null,
+      is_owner: Boolean(viewerId && String(viewerId) === String(row.user_id))
+    });
+    commentsByPost.set(String(row.post_id), list);
+  }
+  const reactionsByPost = new Map();
+  for (const row of reactionsResult?.rows || []) {
+    const map = reactionsByPost.get(String(row.post_id)) || {};
+    map[String(row.user_id)] = row.reaction;
+    reactionsByPost.set(String(row.post_id), map);
+  }
+  return rows.map((row) => ({
+    id: row.id,
+    user_id: row.user_id,
+    username: row.username,
+    author: wallPublicUser({ id: row.user_id, username: row.username, bio: row.bio, avatar_url: row.avatar_url, created_at: row.user_created_at, updated_at: row.user_updated_at }),
+    caption: row.caption || '',
+    image_url: row.media_id ? wallMediaUrl(row.media_id) : row.legacy_image_url,
+    created_at: row.created_at,
+    updated_at: row.updated_at || null,
+    is_owner: Boolean(viewerId && String(viewerId) === String(row.user_id)),
+    reactions: wallReactionSummary(reactionsByPost.get(String(row.id)) || {}, viewerId),
+    comments: commentsByPost.get(String(row.id)) || []
+  }));
+}
+
+async function importArenaPostsIntoDatabase() {
+  if (!dbReady) return;
+  const imported = await getDatabaseState('arena_posts_import_v1', null);
+  if (imported?.completed) return;
+  const posts = await readJson(WALL_POSTS_FILE, []);
+  let postCount = 0;
+  let commentCount = 0;
+  for (const post of Array.isArray(posts) ? posts : []) {
+    const owner = await wallFindUserById(post.user_id);
+    if (!owner) continue;
+    await dbQuery(`
+      INSERT INTO arena_posts (id, user_id, caption, legacy_image_url, created_at, updated_at)
+      VALUES ($1,$2,$3,$4,$5,$6)
+      ON CONFLICT (id) DO NOTHING
+    `, [String(post.id), String(post.user_id), String(post.caption || '').slice(0,500), post.image_url || null, post.created_at || new Date().toISOString(), post.updated_at || null]);
+    postCount += 1;
+    for (const [userId, reaction] of Object.entries(post.reactions || {})) {
+      if (!['like', 'dislike'].includes(reaction)) continue;
+      await dbQuery(`
+        INSERT INTO arena_reactions (post_id, user_id, reaction, updated_at)
+        VALUES ($1,$2,$3,NOW())
+        ON CONFLICT (post_id, user_id) DO UPDATE SET reaction = EXCLUDED.reaction, updated_at = NOW()
+      `, [String(post.id), String(userId), reaction]);
+    }
+    for (const comment of Array.isArray(post.comments) ? post.comments : []) {
+      const author = await wallFindUserById(comment.user_id);
+      if (!author) continue;
+      await dbQuery(`
+        INSERT INTO arena_comments (id, post_id, user_id, text, parent_id, created_at, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        ON CONFLICT (id) DO NOTHING
+      `, [String(comment.id), String(post.id), String(comment.user_id), String(comment.text || '').slice(0,500), comment.parent_id || null, comment.created_at || new Date().toISOString(), comment.updated_at || null]);
+      commentCount += 1;
+    }
+  }
+  await setDatabaseState('arena_posts_import_v1', { completed: true, imported_at: new Date().toISOString(), posts: postCount, comments: commentCount });
 }
 
 function wallUserMap(users = {}) {
@@ -3789,8 +4139,66 @@ app.get('/api/queue/activity', async (req, res, next) => {
 });
 
 
+app.get('/api/arena/media/:id', async (req, res) => {
+  if (!dbReady) return res.status(404).end();
+  const result = await dbQuery('SELECT mime_type, data FROM arena_media WHERE id = $1 LIMIT 1', [String(req.params.id || '')]);
+  const row = result?.rows?.[0];
+  if (!row?.data) return res.status(404).end();
+  res.setHeader('Content-Type', row.mime_type || 'application/octet-stream');
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+  res.send(row.data);
+});
+
 app.get('/api/arena/me', async (req, res) => {
-  res.json({ user: await wallCurrentUser(req) });
+  const user = await wallCurrentUser(req);
+  let unread = 0;
+  if (user && dbReady) {
+    const result = await dbQuery('SELECT COUNT(*)::int AS count FROM arena_notifications WHERE user_id = $1 AND is_read = FALSE', [String(user.id)]);
+    unread = Number(result?.rows?.[0]?.count || 0);
+  }
+  res.json({ user, unread_notifications: unread });
+});
+
+app.get('/api/arena/notifications', async (req, res) => {
+  const user = await wallRequireUser(req, res);
+  if (!user) return;
+  if (!dbReady) return res.json({ notifications: [], unread_count: 0 });
+  const limit = Math.max(1, Math.min(50, Number(req.query.limit || 25)));
+  const result = await dbQuery(`
+    SELECT n.*, a.username AS actor_username, a.avatar_url AS actor_avatar_url
+    FROM arena_notifications n
+    LEFT JOIN arena_users a ON a.id = n.actor_id
+    WHERE n.user_id = $1
+    ORDER BY n.created_at DESC
+    LIMIT $2
+  `, [String(user.id), limit]);
+  const unreadResult = await dbQuery('SELECT COUNT(*)::int AS count FROM arena_notifications WHERE user_id = $1 AND is_read = FALSE', [String(user.id)]);
+  res.json({
+    notifications: (result?.rows || []).map((row) => ({
+      id: row.id,
+      type: row.type,
+      post_id: row.post_id,
+      comment_id: row.comment_id,
+      message: row.message,
+      is_read: Boolean(row.is_read),
+      created_at: row.created_at,
+      actor: row.actor_id ? { id: row.actor_id, username: row.actor_username || 'Player', avatar_url: row.actor_avatar_url || null } : null
+    })),
+    unread_count: Number(unreadResult?.rows?.[0]?.count || 0)
+  });
+});
+
+app.post('/api/arena/notifications/read', async (req, res) => {
+  const user = await wallRequireUser(req, res);
+  if (!user) return;
+  if (!dbReady) return res.json({ ok: true });
+  const ids = Array.isArray(req.body?.ids) ? req.body.ids.map(String).slice(0, 50) : [];
+  if (ids.length) {
+    await dbQuery('UPDATE arena_notifications SET is_read = TRUE WHERE user_id = $1 AND id = ANY($2::text[])', [String(user.id), ids]);
+  } else {
+    await dbQuery('UPDATE arena_notifications SET is_read = TRUE WHERE user_id = $1', [String(user.id)]);
+  }
+  res.json({ ok: true });
 });
 
 app.post('/api/arena/register', async (req, res, next) => {
@@ -3800,18 +4208,30 @@ app.post('/api/arena/register', async (req, res, next) => {
     const password = String(req.body?.password || '');
     if (!validWallUsername(username)) return res.status(400).json({ error: 'Username must be 3–24 letters, numbers, dots, dashes, or underscores.' });
     if (password.length < 6 || password.length > 72) return res.status(400).json({ error: 'Password must be 6–72 characters.' });
-    const key = wallUsernameKey(username);
-    const created = await updateJson(WALL_USERS_FILE, {}, (users) => {
-      if (users[key]) return null;
-      const secret = wallPasswordHash(password);
-      const now = new Date().toISOString();
-      const user = { id: crypto.randomUUID(), username, password_salt: secret.salt, password_hash: secret.hash, bio: '', avatar_url: null, created_at: now, updated_at: now };
-      users[key] = user;
-      return user;
-    });
-    if (!created) return res.status(409).json({ error: 'That username is already taken.' });
-    wallSetSessionCookie(req, res, created.id);
-    res.status(201).json({ user: wallPublicUser(created) });
+    if (await wallFindUserByUsername(username)) return res.status(409).json({ error: 'That username is already taken.' });
+    const secret = wallPasswordHash(password);
+    const now = new Date().toISOString();
+    const created = { id: crypto.randomUUID(), username, password_salt: secret.salt, password_hash: secret.hash, bio: '', avatar_url: null, created_at: now, updated_at: now };
+    if (dbReady) {
+      const result = await dbQuery(`
+        INSERT INTO arena_users (id, username, username_key, password_salt, password_hash, bio, avatar_url, created_at, updated_at, last_login_at)
+        VALUES ($1,$2,$3,$4,$5,'',NULL,NOW(),NOW(),NOW())
+        ON CONFLICT (username_key) DO NOTHING
+        RETURNING *
+      `, [created.id, username, wallUsernameKey(username), secret.salt, secret.hash]);
+      if (!result?.rows?.[0]) return res.status(409).json({ error: 'That username is already taken.' });
+      Object.assign(created, wallDbUser(result.rows[0]));
+    } else {
+      const key = wallUsernameKey(username);
+      const saved = await updateJson(WALL_USERS_FILE, {}, (users) => {
+        if (users[key]) return null;
+        users[key] = created;
+        return created;
+      });
+      if (!saved) return res.status(409).json({ error: 'That username is already taken.' });
+    }
+    await wallSetSessionCookie(req, res, created.id);
+    res.status(201).json({ user: wallPublicUser(created), unread_notifications: 0 });
   } catch (error) { next(error); }
 });
 
@@ -3820,37 +4240,47 @@ app.post('/api/arena/login', async (req, res, next) => {
     if (!wallRateLimit(req, 'arena-login', 12, 10 * 60_000)) return res.status(429).json({ error: 'Too many attempts. Try again later.' });
     const username = wallUsername(req.body?.username);
     const password = String(req.body?.password || '');
-    const users = await readJson(WALL_USERS_FILE, {});
-    const user = users[wallUsernameKey(username)];
+    const user = await wallFindUserByUsername(username);
     if (!user || !wallPasswordMatches(password, user)) return res.status(401).json({ error: 'Username or password is incorrect.' });
-    wallSetSessionCookie(req, res, user.id);
-    res.json({ user: wallPublicUser(user) });
+    if (dbReady) await dbQuery('UPDATE arena_users SET last_login_at = NOW() WHERE id = $1', [String(user.id)]);
+    await wallSetSessionCookie(req, res, user.id);
+    const unreadResult = dbReady ? await dbQuery('SELECT COUNT(*)::int AS count FROM arena_notifications WHERE user_id = $1 AND is_read = FALSE', [String(user.id)]) : null;
+    res.json({ user: wallPublicUser(user), unread_notifications: Number(unreadResult?.rows?.[0]?.count || 0) });
   } catch (error) { next(error); }
 });
 
 app.post('/api/arena/logout', async (req, res) => {
-  wallClearSessionCookie(req, res);
+  await wallClearSessionCookie(req, res);
   res.json({ ok: true });
 });
 
 app.get('/api/arena/posts', async (req, res) => {
-  const [posts, users, viewer] = await Promise.all([
-    readJson(WALL_POSTS_FILE, []),
-    readJson(WALL_USERS_FILE, {}),
-    wallCurrentUser(req)
-  ]);
+  const viewer = await wallCurrentUser(req);
+  if (dbReady) return res.json({ posts: await wallDatabasePosts(viewer?.id || null, 80) });
+  const [posts, users] = await Promise.all([readJson(WALL_POSTS_FILE, []), wallAllUsers()]);
   const usersById = wallUserMap(users);
   res.json({ posts: (Array.isArray(posts) ? posts : []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 80).map((post) => wallPublicPost(post, viewer?.id || null, usersById)) });
 });
 
 app.get('/api/arena/profiles/:username', async (req, res) => {
   const username = wallUsername(req.params.username);
-  const [users, posts] = await Promise.all([readJson(WALL_USERS_FILE, {}), readJson(WALL_POSTS_FILE, [])]);
-  const user = users[wallUsernameKey(username)];
+  const [user, posts] = await Promise.all([wallFindUserByUsername(username), readJson(WALL_POSTS_FILE, [])]);
   if (!user) return res.status(404).json({ error: 'Profile not found.' });
-  const safePosts = Array.isArray(posts) ? posts : [];
-  const postCount = safePosts.filter((post) => String(post.user_id) === String(user.id)).length;
-  const commentCount = safePosts.reduce((total, post) => total + (Array.isArray(post.comments) ? post.comments.filter((comment) => String(comment.user_id) === String(user.id)).length : 0), 0);
+  let postCount = 0;
+  let commentCount = 0;
+  if (dbReady) {
+    const counts = await dbQuery(`
+      SELECT
+        (SELECT COUNT(*)::int FROM arena_posts WHERE user_id = $1) AS post_count,
+        (SELECT COUNT(*)::int FROM arena_comments WHERE user_id = $1) AS comment_count
+    `, [String(user.id)]);
+    postCount = Number(counts?.rows?.[0]?.post_count || 0);
+    commentCount = Number(counts?.rows?.[0]?.comment_count || 0);
+  } else {
+    const safePosts = Array.isArray(posts) ? posts : [];
+    postCount = safePosts.filter((post) => String(post.user_id) === String(user.id)).length;
+    commentCount = safePosts.reduce((total, post) => total + (Array.isArray(post.comments) ? post.comments.filter((comment) => String(comment.user_id) === String(user.id)).length : 0), 0);
+  }
   res.json({ profile: { ...wallPublicUser(user), post_count: postCount, comment_count: commentCount } });
 });
 
@@ -3866,25 +4296,45 @@ app.patch('/api/arena/profile', async (req, res, next) => {
 
     if (avatarData) {
       const image = parseArenaImage(avatarData, WALL_MAX_AVATAR_BYTES, 'Avatar');
-      await fs.mkdir(path.join(WALL_UPLOADS_DIR, 'avatars'), { recursive: true });
-      const filename = `avatar-${viewer.id}-${Date.now()}.${image.extension}`;
-      await fs.writeFile(path.join(WALL_UPLOADS_DIR, 'avatars', filename), image.buffer, { flag: 'wx' });
-      newAvatarUrl = `/uploads/arena/avatars/${filename}`;
+      if (dbReady) {
+        const mediaId = await wallSaveMedia(viewer.id, image, 'avatar');
+        if (!mediaId) throw new Error('Could not save the profile photo.');
+        newAvatarUrl = wallMediaUrl(mediaId);
+      } else {
+        await fs.mkdir(path.join(WALL_UPLOADS_DIR, 'avatars'), { recursive: true });
+        const filename = `avatar-${viewer.id}-${Date.now()}.${image.extension}`;
+        await fs.writeFile(path.join(WALL_UPLOADS_DIR, 'avatars', filename), image.buffer, { flag: 'wx' });
+        newAvatarUrl = `/uploads/arena/avatars/${filename}`;
+      }
     }
 
-    const updated = await updateJson(WALL_USERS_FILE, {}, (users) => {
-      const key = Object.keys(users).find((item) => String(users[item]?.id) === String(viewer.id));
-      if (!key) return null;
-      const user = users[key];
-      oldAvatarUrl = user.avatar_url || null;
-      user.bio = bio;
-      if (newAvatarUrl) user.avatar_url = newAvatarUrl;
-      else if (removeAvatar) user.avatar_url = null;
-      user.updated_at = new Date().toISOString();
-      return user;
-    });
+    const existing = await wallFindUserById(viewer.id);
+    oldAvatarUrl = existing?.avatar_url || null;
+    let updated = null;
+    if (dbReady) {
+      const result = await dbQuery(`
+        UPDATE arena_users
+        SET bio = $2,
+            avatar_url = CASE WHEN $3::text IS NOT NULL THEN $3 WHEN $4::boolean THEN NULL ELSE avatar_url END,
+            updated_at = NOW()
+        WHERE id = $1
+        RETURNING *
+      `, [String(viewer.id), bio, newAvatarUrl, removeAvatar]);
+      updated = result?.rows?.[0] ? wallDbUser(result.rows[0]) : null;
+    } else {
+      updated = await updateJson(WALL_USERS_FILE, {}, (users) => {
+        const key = Object.keys(users).find((item) => String(users[item]?.id) === String(viewer.id));
+        if (!key) return null;
+        const user = users[key];
+        user.bio = bio;
+        if (newAvatarUrl) user.avatar_url = newAvatarUrl;
+        else if (removeAvatar) user.avatar_url = null;
+        user.updated_at = new Date().toISOString();
+        return user;
+      });
+    }
     if (!updated) return res.status(404).json({ error: 'Profile not found.' });
-    if ((newAvatarUrl || removeAvatar) && oldAvatarUrl && oldAvatarUrl !== updated.avatar_url) await removeArenaUpload(oldAvatarUrl);
+    if ((newAvatarUrl || removeAvatar) && oldAvatarUrl && oldAvatarUrl !== updated.avatar_url) await wallDeleteMediaByUrl(oldAvatarUrl);
     res.json({ user: wallPublicUser(updated) });
   } catch (error) { next(error); }
 });
@@ -3896,6 +4346,17 @@ app.post('/api/arena/posts', async (req, res, next) => {
     if (!wallRateLimit(req, `arena-post:${user.id}`, 12, 60 * 60_000)) return res.status(429).json({ error: 'Post limit reached. Try again later.' });
     const caption = String(req.body?.caption || '').trim().slice(0, 500);
     const image = parseArenaImage(req.body?.image_data);
+    if (dbReady) {
+      const mediaId = await wallSaveMedia(user.id, image, 'post');
+      if (!mediaId) throw new Error('Could not save the screenshot.');
+      const postId = crypto.randomUUID();
+      await dbQuery(`
+        INSERT INTO arena_posts (id, user_id, caption, media_id, created_at)
+        VALUES ($1,$2,$3,$4,NOW())
+      `, [postId, String(user.id), caption, mediaId]);
+      const [created] = await wallDatabasePosts(user.id, 1, postId);
+      return res.status(201).json({ post: created });
+    }
     await fs.mkdir(WALL_UPLOADS_DIR, { recursive: true });
     const filename = `${Date.now()}-${crypto.randomUUID()}.${image.extension}`;
     await fs.writeFile(path.join(WALL_UPLOADS_DIR, filename), image.buffer, { flag: 'wx' });
@@ -3909,7 +4370,7 @@ app.post('/api/arena/posts', async (req, res, next) => {
       if (posts.length > 300) posts.length = 300;
       return post;
     });
-    const users = await readJson(WALL_USERS_FILE, {});
+    const users = await wallAllUsers();
     res.status(201).json({ post: wallPublicPost(post, user.id, wallUserMap(users)) });
   } catch (error) { next(error); }
 });
@@ -3921,6 +4382,23 @@ app.patch('/api/arena/posts/:id', async (req, res, next) => {
     if (!user) return;
     const postId = String(req.params.id || '');
     const caption = String(req.body?.caption || '').trim().slice(0, 500);
+    if (dbReady) {
+      const currentResult = await dbQuery('SELECT * FROM arena_posts WHERE id = $1 LIMIT 1', [postId]);
+      const currentPost = currentResult?.rows?.[0];
+      if (!currentPost) return res.status(404).json({ error: 'Post not found.' });
+      if (String(currentPost.user_id) !== String(user.id)) return res.status(403).json({ error: 'You can only edit your own posts.' });
+      let mediaId = currentPost.media_id || null;
+      if (req.body?.image_data) {
+        const image = parseArenaImage(req.body.image_data);
+        const savedId = await wallSaveMedia(user.id, image, 'post');
+        if (!savedId) throw new Error('Could not save the screenshot.');
+        mediaId = savedId;
+      }
+      await dbQuery('UPDATE arena_posts SET caption = $2, media_id = $3, updated_at = NOW() WHERE id = $1', [postId, caption, mediaId]);
+      if (req.body?.image_data && currentPost.media_id && currentPost.media_id !== mediaId) await dbQuery('DELETE FROM arena_media WHERE id = $1', [currentPost.media_id]);
+      const [updatedPost] = await wallDatabasePosts(user.id, 1, postId);
+      return res.json({ post: updatedPost });
+    }
     const currentPosts = await readJson(WALL_POSTS_FILE, []);
     const currentPost = Array.isArray(currentPosts) ? currentPosts.find((item) => item.id === postId) : null;
     if (!currentPost) return res.status(404).json({ error: 'Post not found.' });
@@ -3955,7 +4433,7 @@ app.patch('/api/arena/posts/:id', async (req, res, next) => {
       return res.status(403).json({ error: 'You can only edit your own posts.' });
     }
     if (newImageUrl && oldImageUrl && oldImageUrl !== newImageUrl) await removeArenaUpload(oldImageUrl);
-    const users = await readJson(WALL_USERS_FILE, {});
+    const users = await wallAllUsers();
     res.json({ post: wallPublicPost(post, user.id, wallUserMap(users)) });
   } catch (error) {
     if (newImageUrl) await removeArenaUpload(newImageUrl);
@@ -3968,6 +4446,18 @@ app.delete('/api/arena/posts/:id', async (req, res, next) => {
     const user = await wallRequireUser(req, res);
     if (!user) return;
     const postId = String(req.params.id || '');
+    if (dbReady) {
+      const currentResult = await dbQuery('SELECT * FROM arena_posts WHERE id = $1 LIMIT 1', [postId]);
+      const currentPost = currentResult?.rows?.[0];
+      if (!currentPost) return res.status(404).json({ error: 'Post not found.' });
+      if (String(currentPost.user_id) !== String(user.id)) return res.status(403).json({ error: 'You can only delete your own posts.' });
+      await dbQuery('DELETE FROM arena_notifications WHERE post_id = $1', [postId]);
+      await dbQuery('DELETE FROM arena_reactions WHERE post_id = $1', [postId]);
+      await dbQuery('DELETE FROM arena_comments WHERE post_id = $1', [postId]);
+      await dbQuery('DELETE FROM arena_posts WHERE id = $1', [postId]);
+      if (currentPost.media_id) await dbQuery('DELETE FROM arena_media WHERE id = $1', [currentPost.media_id]);
+      return res.json({ ok: true });
+    }
     let removed = null;
     const result = await updateJson(WALL_POSTS_FILE, [], (posts) => {
       if (!Array.isArray(posts)) return null;
@@ -3990,6 +4480,21 @@ app.post('/api/arena/posts/:id/reaction', async (req, res, next) => {
     if (!user) return;
     const postId = String(req.params.id || '');
     const requested = ['like', 'dislike'].includes(req.body?.reaction) ? req.body.reaction : null;
+    if (dbReady) {
+      const existing = await dbQuery('SELECT reaction FROM arena_reactions WHERE post_id = $1 AND user_id = $2', [postId, String(user.id)]);
+      if (!requested || existing?.rows?.[0]?.reaction === requested) {
+        await dbQuery('DELETE FROM arena_reactions WHERE post_id = $1 AND user_id = $2', [postId, String(user.id)]);
+      } else {
+        await dbQuery(`
+          INSERT INTO arena_reactions (post_id, user_id, reaction, updated_at)
+          VALUES ($1,$2,$3,NOW())
+          ON CONFLICT (post_id, user_id) DO UPDATE SET reaction = EXCLUDED.reaction, updated_at = NOW()
+        `, [postId, String(user.id), requested]);
+      }
+      const [updatedPost] = await wallDatabasePosts(user.id, 1, postId);
+      if (!updatedPost) return res.status(404).json({ error: 'Post not found.' });
+      return res.json({ post: updatedPost });
+    }
     const post = await updateJson(WALL_POSTS_FILE, [], (posts) => {
       if (!Array.isArray(posts)) return null;
       const found = posts.find((item) => item.id === postId);
@@ -4000,7 +4505,7 @@ app.post('/api/arena/posts/:id/reaction', async (req, res, next) => {
       return found;
     });
     if (!post) return res.status(404).json({ error: 'Post not found.' });
-    const users = await readJson(WALL_USERS_FILE, {});
+    const users = await wallAllUsers();
     res.json({ post: wallPublicPost(post, user.id, wallUserMap(users)) });
   } catch (error) { next(error); }
 });
@@ -4014,22 +4519,67 @@ app.post('/api/arena/posts/:id/comments', async (req, res, next) => {
     const textValue = String(req.body?.text || '').trim().slice(0, 500);
     const parentId = req.body?.parent_id ? String(req.body.parent_id) : null;
     if (!textValue) return res.status(400).json({ error: 'Write a comment first.' });
+    if (dbReady) {
+      const postResult = await dbQuery('SELECT * FROM arena_posts WHERE id = $1 LIMIT 1', [postId]);
+      const post = postResult?.rows?.[0];
+      if (!post) return res.status(404).json({ error: 'Post not found.' });
+      let safeParentId = null;
+      let parentUserId = null;
+      if (parentId) {
+        const parentResult = await dbQuery('SELECT id, user_id, parent_id FROM arena_comments WHERE id = $1 AND post_id = $2 LIMIT 1', [parentId, postId]);
+        const parent = parentResult?.rows?.[0];
+        if (parent) {
+          safeParentId = parent.parent_id || parent.id;
+          parentUserId = parent.user_id || null;
+        }
+      }
+      const commentId = crypto.randomUUID();
+      await dbQuery(`
+        INSERT INTO arena_comments (id, post_id, user_id, text, parent_id, created_at)
+        VALUES ($1,$2,$3,$4,$5,NOW())
+      `, [commentId, postId, String(user.id), textValue, safeParentId]);
+      const recipients = new Map();
+      if (post.user_id && String(post.user_id) !== String(user.id)) recipients.set(String(post.user_id), { type: 'comment', message: `${user.username} commented on your post.` });
+      if (parentUserId && String(parentUserId) !== String(user.id)) recipients.set(String(parentUserId), { type: 'reply', message: `${user.username} replied to your comment.` });
+      await Promise.all([...recipients.entries()].map(([recipientId, info]) => wallCreateNotification({ userId: recipientId, actorId: user.id, type: info.type, postId, commentId, message: info.message })));
+      const [updatedPost] = await wallDatabasePosts(user.id, 1, postId);
+      return res.status(201).json({ post: updatedPost });
+    }
     const result = await updateJson(WALL_POSTS_FILE, [], (posts) => {
       if (!Array.isArray(posts)) return null;
       const post = posts.find((item) => item.id === postId);
       if (!post) return null;
       post.comments = Array.isArray(post.comments) ? post.comments : [];
       let safeParentId = null;
+      let parentUserId = null;
       if (parentId) {
         const parent = post.comments.find((item) => item.id === parentId);
-        if (parent) safeParentId = parent.parent_id || parent.id;
+        if (parent) {
+          safeParentId = parent.parent_id || parent.id;
+          parentUserId = parent.user_id || null;
+        }
       }
       const comment = { id: crypto.randomUUID(), user_id: user.id, username: user.username, text: textValue, parent_id: safeParentId, created_at: new Date().toISOString(), updated_at: null };
       post.comments.push(comment);
-      return { post, comment };
+      return { post, comment, parent_user_id: parentUserId };
     });
     if (!result) return res.status(404).json({ error: 'Post not found.' });
-    const users = await readJson(WALL_USERS_FILE, {});
+    const recipients = new Map();
+    if (result.post?.user_id && String(result.post.user_id) !== String(user.id)) {
+      recipients.set(String(result.post.user_id), { type: 'comment', message: `${user.username} commented on your post.` });
+    }
+    if (result.parent_user_id && String(result.parent_user_id) !== String(user.id)) {
+      recipients.set(String(result.parent_user_id), { type: 'reply', message: `${user.username} replied to your comment.` });
+    }
+    await Promise.all([...recipients.entries()].map(([recipientId, info]) => wallCreateNotification({
+      userId: recipientId,
+      actorId: user.id,
+      type: info.type,
+      postId,
+      commentId: result.comment?.id || null,
+      message: info.message
+    })));
+    const users = await wallAllUsers();
     res.status(201).json({ post: wallPublicPost(result.post, user.id, wallUserMap(users)) });
   } catch (error) { next(error); }
 });
@@ -4040,6 +4590,15 @@ app.patch('/api/arena/posts/:postId/comments/:commentId', async (req, res, next)
     if (!user) return;
     const textValue = String(req.body?.text || '').trim().slice(0, 500);
     if (!textValue) return res.status(400).json({ error: 'Comment cannot be empty.' });
+    if (dbReady) {
+      const found = await dbQuery('SELECT * FROM arena_comments WHERE id = $1 AND post_id = $2 LIMIT 1', [String(req.params.commentId || ''), String(req.params.postId || '')]);
+      const comment = found?.rows?.[0];
+      if (!comment) return res.status(404).json({ error: 'Comment not found.' });
+      if (String(comment.user_id) !== String(user.id)) return res.status(403).json({ error: 'You can only edit your own comments.' });
+      await dbQuery('UPDATE arena_comments SET text = $3, updated_at = NOW() WHERE id = $1 AND post_id = $2', [String(req.params.commentId || ''), String(req.params.postId || ''), textValue]);
+      const [updatedPost] = await wallDatabasePosts(user.id, 1, String(req.params.postId || ''));
+      return res.json({ post: updatedPost });
+    }
     const result = await updateJson(WALL_POSTS_FILE, [], (posts) => {
       const post = Array.isArray(posts) ? posts.find((item) => item.id === String(req.params.postId || '')) : null;
       if (!post) return null;
@@ -4052,7 +4611,7 @@ app.patch('/api/arena/posts/:postId/comments/:commentId', async (req, res, next)
     });
     if (!result) return res.status(404).json({ error: 'Comment not found.' });
     if (result.forbidden) return res.status(403).json({ error: 'You can only edit your own comments.' });
-    const users = await readJson(WALL_USERS_FILE, {});
+    const users = await wallAllUsers();
     res.json({ post: wallPublicPost(result.post, user.id, wallUserMap(users)) });
   } catch (error) { next(error); }
 });
@@ -4061,6 +4620,18 @@ app.delete('/api/arena/posts/:postId/comments/:commentId', async (req, res, next
   try {
     const user = await wallRequireUser(req, res);
     if (!user) return;
+    if (dbReady) {
+      const postId = String(req.params.postId || '');
+      const commentId = String(req.params.commentId || '');
+      const found = await dbQuery('SELECT * FROM arena_comments WHERE id = $1 AND post_id = $2 LIMIT 1', [commentId, postId]);
+      const comment = found?.rows?.[0];
+      if (!comment) return res.status(404).json({ error: 'Comment not found.' });
+      if (String(comment.user_id) !== String(user.id)) return res.status(403).json({ error: 'You can only delete your own comments.' });
+      await dbQuery('DELETE FROM arena_notifications WHERE comment_id = $1', [commentId]);
+      await dbQuery('DELETE FROM arena_comments WHERE id = $1 OR parent_id = $1', [commentId]);
+      const [updatedPost] = await wallDatabasePosts(user.id, 1, postId);
+      return res.json({ post: updatedPost });
+    }
     const result = await updateJson(WALL_POSTS_FILE, [], (posts) => {
       const post = Array.isArray(posts) ? posts.find((item) => item.id === String(req.params.postId || '')) : null;
       if (!post) return null;
@@ -4074,7 +4645,7 @@ app.delete('/api/arena/posts/:postId/comments/:commentId', async (req, res, next
     });
     if (!result) return res.status(404).json({ error: 'Comment not found.' });
     if (result.forbidden) return res.status(403).json({ error: 'You can only delete your own comments.' });
-    const users = await readJson(WALL_USERS_FILE, {});
+    const users = await wallAllUsers();
     res.json({ post: wallPublicPost(result.post, user.id, wallUserMap(users)) });
   } catch (error) { next(error); }
 });
@@ -4763,7 +5334,12 @@ app.get('/api/system/database', async (_req, res) => {
       SELECT
         (SELECT COUNT(*)::int FROM players) AS players,
         (SELECT COUNT(*)::int FROM player_aliases) AS aliases,
-        (SELECT COUNT(*)::int FROM player_snapshots) AS snapshots
+        (SELECT COUNT(*)::int FROM player_snapshots) AS snapshots,
+        (SELECT COUNT(*)::int FROM arena_users) AS arena_users,
+        (SELECT COUNT(*)::int FROM arena_sessions WHERE expires_at > NOW()) AS arena_sessions,
+        (SELECT COUNT(*)::int FROM arena_notifications) AS arena_notifications,
+        (SELECT COUNT(*)::int FROM arena_posts) AS arena_posts,
+        (SELECT COUNT(*)::int FROM arena_comments) AS arena_comments
     `),
     dbQuery(`
       SELECT COALESCE(NULLIF(region, ''), 'UNKNOWN') AS region, COUNT(*)::int AS players
@@ -4777,7 +5353,7 @@ app.get('/api/system/database', async (_req, res) => {
   res.json({
     configured: Boolean(DATABASE_URL),
     ready: dbReady,
-    counts: counts?.rows?.[0] || { players: 0, aliases: 0, snapshots: 0 },
+    counts: counts?.rows?.[0] || { players: 0, aliases: 0, snapshots: 0, arena_users: 0, arena_sessions: 0, arena_notifications: 0, arena_posts: 0, arena_comments: 0 },
     discovery_enabled: DATABASE_DISCOVERY_ENABLED,
     discovery_running: discoveryRunning,
     discovery_config: {

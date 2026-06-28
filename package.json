@@ -1,6 +1,6 @@
 {
   "name": "peakhalla-brawlhalla-tracker",
-  "version": "7.50.0",
+  "version": "7.52.0",
   "private": true,
   "description": "PeakHalla Brawlhalla tracker with a PostgreSQL player database, adaptive official leaderboard discovery, alias search, profiles, clans, Arena Wall and esports data.",
   "main": "server.js",

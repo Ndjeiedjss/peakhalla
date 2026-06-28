@@ -1,7 +1,11 @@
-# PeakHalla v7.50 — Persistent unranked search
+# PeakHalla v7.52 — Arena Accounts & Notifications
 
-- Fixes unranked profiles disappearing from search after the first profile view.
-- Persists a viewed profile to PostgreSQL before returning the response.
-- Returns exact PeakHalla database name matches before waiting for external providers.
-- Stops caching empty search responses.
-- Invalidates stale search results immediately when a current or previous name is saved.
+- Arena Wall accounts are stored in PostgreSQL and survive Railway deployments.
+- Arena posts, comments, reactions, new screenshots, and new profile photos are persisted in PostgreSQL.
+- Existing Arena users and posts are imported automatically from the old JSON files once.
+- Login sessions are database-backed and remain active for up to 90 days.
+- Added a site-wide Arena account button with direct profile access from every page.
+- Added comment and reply notifications with unread badges and a smooth notification panel.
+- Added dedicated profile URLs: `/arena/profile/<username>`.
+- Clicking a notification opens and highlights the related Arena post.
+- Added Arena user/session/post/comment/notification counts to `/api/system/database`.

@@ -1,0 +1,18 @@
+PeakHalla v7.52
+
+Upload to repository root:
+- server.js
+- package.json
+- package-lock.json
+
+Upload inside public:
+- app.js
+- index.html
+- styles.css
+- arena-v72.js
+- arena-account.js
+
+Keep DATABASE_URL connected to the same PostgreSQL service.
+No manual SQL or Create Table action is required. Tables are created automatically after deployment.
+
+Important: existing users may need to sign in one more time after this update. Future sessions persist across deployments for up to 90 days.
