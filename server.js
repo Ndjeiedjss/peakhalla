@@ -32,8 +32,8 @@ const imageCache = new Map();
 const fileQueues = new Map();
 const queueTrackers = new Map();
 const profileResponseCache = new Map();
-const PROFILE_RESPONSE_TTL_MS = 6 * 60 * 60_000;
-const PROFILE_DISK_CACHE_MAX_AGE_MS = 30 * 24 * 60 * 60_000;
+const PROFILE_RESPONSE_TTL_MS = 30 * 60_000;
+const PROFILE_DISK_CACHE_MAX_AGE_MS = 6 * 60 * 60_000;
 const PROFILE_DISK_CACHE_LIMIT = 200;
 
 app.disable('x-powered-by');
@@ -217,7 +217,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await fetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.28'
+          'User-Agent': 'PeakHalla/7.30'
         },
         signal: controller.signal
       });
@@ -259,7 +259,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.28'
+        'User-Agent': 'PeakHalla/7.30'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -338,7 +338,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             ...(attempt.body ? { 'Content-Type': 'application/json' } : {}),
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.28'
+            'User-Agent': 'PeakHalla/7.30'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -938,7 +938,7 @@ async function fetchLegendArtwork(name) {
       const response = await fetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.28',
+          'User-Agent': 'PeakHalla/7.30',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -974,7 +974,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await fetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.28'
+        'User-Agent': 'PeakHalla/7.30'
       },
       signal: controller.signal
     });
@@ -1781,10 +1781,51 @@ function searchRankingScore(ranking, query) {
   return best;
 }
 
+function searchMatchTier(ranking, query) {
+  const needle = normalizeName(query);
+  const compactNeedle = compactAliasKey(query);
+  let tier = 0;
+  for (const player of ranking?.players || []) {
+    const names = [
+      player?.username,
+      ...(player?.matched_aliases || []),
+      ...(player?.known_names || []).map((item) => typeof item === 'string' ? item : item?.name)
+    ];
+    for (const rawName of names) {
+      const name = normalizeName(rawName);
+      const compactName = compactAliasKey(rawName);
+      if (!name) continue;
+      if (name === needle || (compactNeedle && compactName === compactNeedle)) tier = Math.max(tier, 3);
+      else if (name.startsWith(needle) || (compactNeedle && compactName.startsWith(compactNeedle))) tier = Math.max(tier, 2);
+      else if (name.includes(needle) || (compactNeedle && compactName.includes(compactNeedle))) tier = Math.max(tier, 1);
+    }
+  }
+  return tier;
+}
+
 function sortSearchRankings(rankings, query) {
-  return [...rankings].sort((a, b) =>
-    searchRankingScore(b, query) - searchRankingScore(a, query) ||
-    Number(b?.rating || 0) - Number(a?.rating || 0)
+  return [...rankings].sort((a, b) => {
+    const aRating = numberOrZero(a?.rating);
+    const bRating = numberOrZero(b?.rating);
+    const aRanked = aRating > 0 ? 1 : 0;
+    const bRanked = bRating > 0 ? 1 : 0;
+    const aRank = Number(a?.rank) > 0 ? Number(a.rank) : Number.POSITIVE_INFINITY;
+    const bRank = Number(b?.rank) > 0 ? Number(b.rank) : Number.POSITIVE_INFINITY;
+    return searchMatchTier(b, query) - searchMatchTier(a, query) ||
+      bRanked - aRanked ||
+      bRating - aRating ||
+      numberOrZero(b?.best_rating ?? b?.peak_rating) - numberOrZero(a?.best_rating ?? a?.peak_rating) ||
+      aRank - bRank ||
+      searchRankingScore(b, query) - searchRankingScore(a, query);
+  });
+}
+
+function candidateSearchScore(candidate, query) {
+  const aliases = candidate?.aliases || candidate?.names || [];
+  return Math.max(
+    aliasScore(candidate?.name || '', query),
+    ...aliases.map((item) => aliasScore(typeof item === 'string' ? item : item?.name, query)),
+    0
   );
 }
 
@@ -1796,35 +1837,50 @@ async function buildProfileSearchRanking(candidate, query, options = {}) {
       .map((item) => cleanAliasForSearch(typeof item === 'string' ? item : item?.name))
       .filter(Boolean))];
     const quick = Boolean(options.quick);
+    const cachedPlayer = getCachedProfileResponse(id)?.player || null;
     let lifetime = null;
+    let ranked = null;
     let legendMap = new Map();
-    if (!quick) {
-      [lifetime, legendMap] = await Promise.all([
+
+    if (quick) {
+      ranked = await settleWithin(
+        apiFetch(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`, 90_000),
+        Number(options.rankTimeoutMs || 2200),
+        null
+      );
+    } else {
+      [lifetime, ranked, legendMap] = await Promise.all([
         apiFetch(`/player/stats?brawlhalla_id=${id}&mode=all`, 5 * 60_000).catch(() => null),
+        apiFetch(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`, 90_000).catch(() => null),
         getLegendMap().catch(() => new Map())
       ]);
     }
 
-    const currentName = cleanAliasForSearch(lifetime?.name || candidate.name || knownAliases[0]) || `Player ${id}`;
+    const rankedSource = ranked || cachedPlayer || {};
+    const currentName = cleanAliasForSearch(ranked?.name || lifetime?.name || cachedPlayer?.name || candidate.name || knownAliases[0]) || `Player ${id}`;
     const mainStats = [...(lifetime?.legends || [])]
       .filter((legend) => numberOrZero(legend.games) > 0)
       .sort((a, b) => numberOrZero(b.games) - numberOrZero(a.games))[0];
     const matchedAliases = knownAliases.filter((name) => normalizeName(name).includes(normalizeName(query)));
+    const rating = numberOrNull(rankedSource?.rating);
+    const bestRating = numberOrNull(rankedSource?.best_rating ?? rankedSource?.peak_rating);
+    const wins = numberOrZero(rankedSource?.wins ?? rankedSource?.ranked_wins);
+    const games = numberOrZero(rankedSource?.games ?? rankedSource?.ranked_games);
     return {
-      rank: null,
-      region: '—',
-      rating: null,
-      best_rating: null,
-      tier: 'Unranked',
-      wins: 0,
-      losses: 0,
-      games: 0,
-      profile_only: true,
+      rank: numberOrNull(rankedSource?.global_rank ?? rankedSource?.rank),
+      region: rankedSource?.region || '—',
+      rating,
+      best_rating: bestRating,
+      tier: rankedSource?.tier || 'Unranked',
+      wins,
+      losses: Math.max(0, games - wins),
+      games,
+      profile_only: !(rating > 0),
       search_score: Math.max(aliasScore(currentName, query), ...knownAliases.map((name) => aliasScore(name, query)), 0),
       players: [{
         id,
         username: currentName,
-        main_legend: makeLegendSummary(mainStats, legendMap.get(Number(mainStats?.legend_id))),
+        main_legend: cachedPlayer?.main_legend || makeLegendSummary(mainStats, legendMap.get(Number(mainStats?.legend_id))),
         matched_aliases: matchedAliases,
         known_names: knownAliases.map((name) => ({ name }))
       }]
@@ -2405,7 +2461,7 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.28.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.30.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
@@ -2427,8 +2483,8 @@ app.get('/api/suggestions', async (req, res, next) => {
     const exactLocalMatches = quickLocalMatches.filter((item) => (item.names || []).some((name) => normalizeName(name?.name) === normalizeName(query)));
     if (exactLocalMatches.length) {
       const localCandidates = exactLocalMatches.map((item) => ({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] }));
-      const localProfiles = (await mapWithConcurrency(localCandidates, 7, (item) => buildProfileSearchRanking(item, query, { quick: true }))).filter(Boolean);
-      if (localProfiles.length) return res.json({ rankings: localProfiles.slice(0, 7), local_alias_hit: true });
+      const localProfiles = (await mapWithConcurrency(localCandidates, 5, (item) => buildProfileSearchRanking(item, query, { quick: true, mode }))).filter(Boolean);
+      if (localProfiles.length) return res.json({ rankings: sortSearchRankings(localProfiles, query).slice(0, 7), local_alias_hit: true });
     }
     const [official, coreMatches, localMatches, esportsMatch] = await Promise.all([
       /^\d+$/.test(numericId) ? Promise.resolve({ rankings: [] }) : settleWithin(fetchMatches(query), 1600, { rankings: [] }),
@@ -2445,8 +2501,10 @@ app.get('/api/suggestions', async (req, res, next) => {
     if (esportsBhId > 0 && !existingIds.has(esportsBhId)) candidates.push({ id: esportsBhId, name: esportsMatch?.player?.name || query, aliases: [query] });
     for (const item of coreMatches) if (!existingIds.has(Number(item.id))) candidates.push(item);
     for (const item of localMatches) if (!existingIds.has(Number(item.id))) candidates.push({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] });
-    const uniqueCandidates = [...new Map(candidates.map((item) => [Number(item.id), item])).values()].slice(0, 7);
-    const profiles = (await mapWithConcurrency(uniqueCandidates, 6, (item) => buildProfileSearchRanking(item, query, { quick: true }))).filter(Boolean);
+    const uniqueCandidates = [...new Map(candidates.map((item) => [Number(item.id), item])).values()]
+      .sort((a, b) => candidateSearchScore(b, query) - candidateSearchScore(a, query))
+      .slice(0, 7);
+    const profiles = (await mapWithConcurrency(uniqueCandidates, 5, (item) => buildProfileSearchRanking(item, query, { quick: true, mode }))).filter(Boolean);
     const combined = sortSearchRankings([...profiles, ...rankings], query);
     res.json({
       rankings: combined.slice(0, 12),
@@ -2489,9 +2547,10 @@ app.get('/api/search', async (req, res, next) => {
     if (esportsBhId > 0 && !officialIds.has(esportsBhId)) candidates.push({ id: esportsBhId, name: esportsMatch?.player?.name || query, aliases: [query] });
     for (const item of coreMatches) if (!officialIds.has(Number(item.id))) candidates.push(item);
     for (const item of localMatches) if (!officialIds.has(Number(item.id))) candidates.push({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] });
-    const uniqueCandidates = [...new Map(candidates.map((item) => [Number(item.id), item])).values()].slice(0, 12);
-    const profiles = (await mapWithConcurrency(uniqueCandidates, 8, (item) => buildProfileSearchRanking(item, query, { quick: true }))).filter(Boolean)
-      .sort((a, b) => Number(b.search_score || 0) - Number(a.search_score || 0));
+    const uniqueCandidates = [...new Map(candidates.map((item) => [Number(item.id), item])).values()]
+      .sort((a, b) => candidateSearchScore(b, query) - candidateSearchScore(a, query))
+      .slice(0, 12);
+    const profiles = (await mapWithConcurrency(uniqueCandidates, 5, (item) => buildProfileSearchRanking(item, query, { quick: true, mode }))).filter(Boolean);
 
     const combined = sortSearchRankings([...profiles, ...officialRankings], query);
     res.json({

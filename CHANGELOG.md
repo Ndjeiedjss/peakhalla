@@ -1,3 +1,12 @@
+# PeakHalla v7.30.0
+
+- Ranked name-search results now prioritize exact matches by current ELO, peak ELO, and global rank.
+- Old-name matches are enriched with current ranked data instead of appearing as duplicate unranked rows.
+- Player profiles now repaint automatically when live ELO, peak, tier, rank, or season stats change.
+- Fresh search-result ELO is shown immediately when opening a profile.
+- Reduced background prefetch load to improve Railway responsiveness.
+- Shortened stale server profile cache windows.
+
 # PeakHalla Changelog
 
 ## 7.29.0

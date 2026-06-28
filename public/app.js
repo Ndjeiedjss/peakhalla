@@ -255,17 +255,24 @@ async function getJson(url, options = {}) {
 
 function playerPayloadSignature(data = {}) {
   const player = data.player || {};
-  const legends = (player.lifetime_legends || []).map((legend) => [legend.legend_id, legend.level, legend.xp]);
+  const legends = (player.lifetime_legends || []).map((legend) => [legend.legend_id, legend.level, legend.xp, legend.games, legend.wins]);
   const names = (data.known_names || []).map((item) => item?.name || item);
-  return JSON.stringify([player.brawlhalla_id, player.name, player.account_xp, player.level, names, legends]);
+  const regionRanks = (player.region_ranks || []).map((item) => [item.region, item.rank]);
+  return JSON.stringify([
+    player.brawlhalla_id, player.name, player.account_xp, player.level,
+    player.rating, player.peak_rating, player.tier, player.region, player.global_rank,
+    player.ranked_games, player.ranked_wins, player.ranked_win_rate, regionRanks,
+    player.guild?.guild_id || null, names, legends
+  ]);
 }
 
-const PLAYER_BROWSER_CACHE_KEY = 'peakhalla-player-cache-v1';
+const PLAYER_BROWSER_CACHE_KEY = 'peakhalla-player-cache-v2';
+const PLAYER_BROWSER_CACHE_MAX_AGE_MS = 24 * 60 * 60_000;
 function readPlayerBrowserCache(id) {
   try {
     const all = JSON.parse(localStorage.getItem(PLAYER_BROWSER_CACHE_KEY) || '{}');
     const entry = all[String(id)];
-    if (!entry?.data || Date.now() - Number(entry.saved_at || 0) > 30 * 24 * 60 * 60_000) return null;
+    if (!entry?.data || Date.now() - Number(entry.saved_at || 0) > PLAYER_BROWSER_CACHE_MAX_AGE_MS) return null;
     return entry.data;
   } catch { return null; }
 }
@@ -358,7 +365,7 @@ function prefetchPlayerProfile(id) {
   const cacheAge = cached?.player?.updated_at ? Date.now() - new Date(cached.player.updated_at).getTime() : Infinity;
   if (cached && cacheAge < 2 * 60_000 && !cached.seed_only) return Promise.resolve(cached);
   if (state.playerPrefetches.has(numericId)) return state.playerPrefetches.get(numericId);
-  const promise = fetch(`/api/player/${encodeURIComponent(numericId)}?live=1&prefetch=1&_=${Date.now()}`, {
+  const promise = fetch(`/api/player/${encodeURIComponent(numericId)}?fast=1&prefetch=1&_=${Date.now()}`, {
     cache: 'no-store',
     keepalive: true,
     headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' }
@@ -382,7 +389,6 @@ function setupPlayerPrefetch(container, selector, datasetKey) {
     button.addEventListener('focus', () => warm(button), { once: true });
     button.addEventListener('touchstart', () => warm(button), { once: true, passive: true });
   }
-  window.setTimeout(() => buttons.slice(0, 3).forEach(warm), 250);
 }
 
 function playerCard(item, player) {
@@ -791,6 +797,23 @@ function renderPlayer(data, shouldScroll = true, renderOptions = {}) {
   if (shouldScroll) els.profile.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+function mergeRankedPreview(data, preview) {
+  if (!data?.player || !preview?.player || !data.background_refresh_recommended) return data;
+  const source = preview.player;
+  const target = data.player;
+  const rankedFields = [
+    'rating', 'peak_rating', 'tier', 'region', 'global_rank', 'region_ranks',
+    'ranked_games', 'ranked_wins', 'ranked_win_rate'
+  ];
+  const sourceHasRankedData = Number(source.rating) > 0 || Number(source.peak_rating) > 0 || Number(source.global_rank) > 0;
+  if (!sourceHasRankedData) return data;
+  for (const field of rankedFields) {
+    if (source[field] !== undefined && source[field] !== null && source[field] !== '' && source[field] !== '—') target[field] = source[field];
+  }
+  target.updated_at = source.updated_at || target.updated_at;
+  return data;
+}
+
 async function loadPlayer(id, options = {}) {
   const silent = Boolean(options.silent);
   const manualRefresh = Boolean(options.refresh);
@@ -798,7 +821,7 @@ async function loadPlayer(id, options = {}) {
   let renderedInstantData = false;
   try {
     if (!silent && !manualRefresh && !backgroundRefresh) {
-      const cached = readPlayerBrowserCache(id) || readPlayerNavigationSeed(id);
+      const cached = readPlayerNavigationSeed(id) || readPlayerBrowserCache(id);
       if (cached) {
         renderPlayer(cached, options.shouldScroll !== false, { refreshSecondary: !cached.seed_only });
         state.playerSignature = playerPayloadSignature(cached);
@@ -815,7 +838,8 @@ async function loadPlayer(id, options = {}) {
       state.playerRefreshController?.abort();
       state.playerRefreshController = new AbortController();
     }
-    const data = await getJson(`/api/player/${encodeURIComponent(id)}?${params}`, { signal: manualRefresh ? state.playerRefreshController.signal : undefined });
+    let data = await getJson(`/api/player/${encodeURIComponent(id)}?${params}`, { signal: manualRefresh ? state.playerRefreshController.signal : undefined });
+    data = mergeRankedPreview(data, renderedInstantData ? state.currentPlayer : null);
     if (data?.player) writePlayerBrowserCache(id, data);
     if (!silent) hideStatus();
     const signature = playerPayloadSignature(data);
@@ -832,7 +856,7 @@ async function loadPlayer(id, options = {}) {
     if (options.autoVerify !== false && !manualRefresh && !backgroundRefresh) {
       window.clearTimeout(state.playerAutoRefreshTimer);
       const refreshInBackground = () => loadPlayer(id, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
-      state.playerAutoRefreshTimer = window.setTimeout(refreshInBackground, renderedInstantData ? 450 : 700);
+      state.playerAutoRefreshTimer = window.setTimeout(refreshInBackground, renderedInstantData ? 250 : 500);
     }
     return data;
   } catch (error) {

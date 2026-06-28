@@ -1,0 +1,11 @@
+PeakHalla v7.30 update-only package
+
+Replace these files in the existing GitHub repository:
+- server.js
+- package.json
+- package-lock.json
+- CHANGELOG.md
+- public/app.js
+- public/index.html
+
+Do not delete or replace the data folder.
