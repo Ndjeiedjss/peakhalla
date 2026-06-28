@@ -217,7 +217,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await fetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.30'
+          'User-Agent': 'PeakHalla/7.31'
         },
         signal: controller.signal
       });
@@ -259,7 +259,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.30'
+        'User-Agent': 'PeakHalla/7.31'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -338,7 +338,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             ...(attempt.body ? { 'Content-Type': 'application/json' } : {}),
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.30'
+            'User-Agent': 'PeakHalla/7.31'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -938,7 +938,7 @@ async function fetchLegendArtwork(name) {
       const response = await fetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.30',
+          'User-Agent': 'PeakHalla/7.31',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -974,7 +974,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await fetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.30'
+        'User-Agent': 'PeakHalla/7.31'
       },
       signal: controller.signal
     });
@@ -1829,6 +1829,18 @@ function candidateSearchScore(candidate, query) {
   );
 }
 
+function rankingPositionForRegion(rankedSource = {}, requestedRegion = 'ALL') {
+  const region = String(requestedRegion || 'ALL').toUpperCase();
+  if (region === 'ALL') return numberOrNull(rankedSource?.global_rank ?? rankedSource?.rank);
+  const regional = Array.isArray(rankedSource?.region_ranks)
+    ? rankedSource.region_ranks.find((item) => String(item?.region || '').toUpperCase() === region)
+    : null;
+  if (regional) return numberOrNull(regional.rank ?? regional.position);
+  const playerRegion = String(rankedSource?.region || '').toUpperCase();
+  if (playerRegion === region) return numberOrNull(rankedSource?.region_rank ?? rankedSource?.rank);
+  return null;
+}
+
 async function buildProfileSearchRanking(candidate, query, options = {}) {
   try {
     const id = Number(candidate?.id);
@@ -1837,6 +1849,8 @@ async function buildProfileSearchRanking(candidate, query, options = {}) {
       .map((item) => cleanAliasForSearch(typeof item === 'string' ? item : item?.name))
       .filter(Boolean))];
     const quick = Boolean(options.quick);
+    const requestedRegion = allowed(String(options.region || 'ALL').toUpperCase(),
+      ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'], 'ALL');
     const cachedPlayer = getCachedProfileResponse(id)?.player || null;
     let lifetime = null;
     let ranked = null;
@@ -1866,9 +1880,11 @@ async function buildProfileSearchRanking(candidate, query, options = {}) {
     const bestRating = numberOrNull(rankedSource?.best_rating ?? rankedSource?.peak_rating);
     const wins = numberOrZero(rankedSource?.wins ?? rankedSource?.ranked_wins);
     const games = numberOrZero(rankedSource?.games ?? rankedSource?.ranked_games);
+    const scopedRank = rankingPositionForRegion(rankedSource, requestedRegion);
+    if (requestedRegion !== 'ALL' && !(Number(scopedRank) > 0)) return null;
     return {
-      rank: numberOrNull(rankedSource?.global_rank ?? rankedSource?.rank),
-      region: rankedSource?.region || '—',
+      rank: scopedRank,
+      region: requestedRegion === 'ALL' ? (rankedSource?.region || '—') : requestedRegion,
       rating,
       best_rating: bestRating,
       tier: rankedSource?.tier || 'Unranked',
@@ -2461,14 +2477,15 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.30.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.31.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
   try {
     const query = String(req.query.q || '').trim().slice(0, 40);
     if (query.length < 2) return res.status(400).json({ error: 'Type at least 2 letters.' });
-    const region = 'ALL';
+    const region = allowed(String(req.query.region || 'ALL').toUpperCase(),
+      ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'], 'ALL');
     const mode = allowed(String(req.query.mode || '1v1'), ['1v1', '2v2', '3v3'], '1v1');
 
     async function fetchMatches(search) {
@@ -2483,7 +2500,7 @@ app.get('/api/suggestions', async (req, res, next) => {
     const exactLocalMatches = quickLocalMatches.filter((item) => (item.names || []).some((name) => normalizeName(name?.name) === normalizeName(query)));
     if (exactLocalMatches.length) {
       const localCandidates = exactLocalMatches.map((item) => ({ id: item.id, name: item.names?.[0]?.name, aliases: item.names?.map((name) => name.name) || [] }));
-      const localProfiles = (await mapWithConcurrency(localCandidates, 5, (item) => buildProfileSearchRanking(item, query, { quick: true, mode }))).filter(Boolean);
+      const localProfiles = (await mapWithConcurrency(localCandidates, 5, (item) => buildProfileSearchRanking(item, query, { quick: true, mode, region }))).filter(Boolean);
       if (localProfiles.length) return res.json({ rankings: sortSearchRankings(localProfiles, query).slice(0, 7), local_alias_hit: true });
     }
     const [official, coreMatches, localMatches, esportsMatch] = await Promise.all([
@@ -2504,7 +2521,7 @@ app.get('/api/suggestions', async (req, res, next) => {
     const uniqueCandidates = [...new Map(candidates.map((item) => [Number(item.id), item])).values()]
       .sort((a, b) => candidateSearchScore(b, query) - candidateSearchScore(a, query))
       .slice(0, 7);
-    const profiles = (await mapWithConcurrency(uniqueCandidates, 5, (item) => buildProfileSearchRanking(item, query, { quick: true, mode }))).filter(Boolean);
+    const profiles = (await mapWithConcurrency(uniqueCandidates, 5, (item) => buildProfileSearchRanking(item, query, { quick: true, mode, region }))).filter(Boolean);
     const combined = sortSearchRankings([...profiles, ...rankings], query);
     res.json({
       rankings: combined.slice(0, 12),
@@ -2521,7 +2538,8 @@ app.get('/api/search', async (req, res, next) => {
     const query = String(req.query.q || '').trim().slice(0, 40);
     if (query.length < 2) return res.status(400).json({ error: 'Type at least 2 letters.' });
 
-    const region = 'ALL';
+    const region = allowed(String(req.query.region || 'ALL').toUpperCase(),
+      ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'], 'ALL');
     const mode = allowed(String(req.query.mode || '1v1'), ['1v1', '2v2', '3v3'], '1v1');
     const params = new URLSearchParams({
       page: '1', max_results: '20', game_mode: mode, region, search: query, order_by: 'rating'
@@ -2550,7 +2568,7 @@ app.get('/api/search', async (req, res, next) => {
     const uniqueCandidates = [...new Map(candidates.map((item) => [Number(item.id), item])).values()]
       .sort((a, b) => candidateSearchScore(b, query) - candidateSearchScore(a, query))
       .slice(0, 12);
-    const profiles = (await mapWithConcurrency(uniqueCandidates, 5, (item) => buildProfileSearchRanking(item, query, { quick: true, mode }))).filter(Boolean);
+    const profiles = (await mapWithConcurrency(uniqueCandidates, 5, (item) => buildProfileSearchRanking(item, query, { quick: true, mode, region }))).filter(Boolean);
 
     const combined = sortSearchRankings([...profiles, ...officialRankings], query);
     res.json({

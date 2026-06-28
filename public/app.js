@@ -123,6 +123,7 @@ function applyLanguage() {
   document.querySelectorAll('[data-i18n-html]').forEach((el) => { el.innerHTML = t(el.dataset.i18nHtml); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => { el.placeholder = t(el.dataset.i18nPlaceholder); });
   els.languageToggle.innerHTML = isArabic ? '<span>EN</span><b>AR</b>' : '<b>EN</b><span>AR</span>';
+  [els.region, els.mode, els.leaderboardRegion, els.leaderboardMode, els.esportsRegion, els.esportsMode, els.queueRegion].forEach((select) => select?._motionSync?.());
   localStorage.setItem('nad-bh-language', state.language);
   if (state.currentPlayer) renderPlayer(state.currentPlayer, false);
   if (isLiveQueuePage) {
@@ -889,6 +890,8 @@ function leaderboardPerson(player, region) {
 }
 
 function renderLeaderboardRows(rankings = []) {
+  const activeRegion = els.leaderboardRegion?.value || 'ALL';
+  const rankScope = activeRegion === 'ALL' ? (state.language === 'ar' ? 'عالمي' : 'GLOBAL') : activeRegion;
   els.leaderboard.innerHTML = rankings.map((item) => {
     const wins = Math.max(0, Number(item.wins) || 0);
     const reportedLosses = Number(item.losses);
@@ -906,7 +909,7 @@ function renderLeaderboardRows(rankings = []) {
       state.playerSeeds.set(Number(player.id), makePlayerSeedPayload(item, player));
       return leaderboardPerson(player, item.region || '—');
     }).join('');
-    return `<div class="leader-row"><span class="leader-rank">#${number(item.rank)}</span><div class="leader-players">${playersMarkup}</div><div class="leader-metric"><span>ELO</span><b>${number(item.rating)}</b></div><div class="leader-metric"><span>${escapeHtml(t('peak'))}</span><b>${number(item.best_rating)}</b></div><div class="leader-metric leader-games-metric" title="${escapeHtml(recordTitle)}" aria-label="${escapeHtml(recordTitle)}"><span>${escapeHtml(t('games'))}</span><b>${number(safeGames)}</b><div class="leader-record-stack"><div class="leader-record-bar"><i class="leader-record-fill leader-record-fill-win" style="width:${winWidth}%"></i><i class="leader-record-fill leader-record-fill-loss" style="width:${lossWidth}%"></i></div><div class="leader-record-labels"><small class="leader-win-label"><strong>${number(wins)}</strong>W</small><small class="leader-loss-label"><strong>${number(losses)}</strong>L</small></div></div></div><div class="leader-metric leader-winrate-metric"><span>${escapeHtml(t('winRate'))}</span><b>${winRate}%</b></div><span class="tier-chip">${escapeHtml(item.tier || 'Unranked')}</span></div>`;
+    return `<div class="leader-row"><span class="leader-rank" title="${escapeHtml(activeRegion === 'ALL' ? t('globalRank') : t('regionRank'))}"><small>${escapeHtml(rankScope)}</small><b>#${number(item.rank)}</b></span><div class="leader-players">${playersMarkup}</div><div class="leader-metric"><span>ELO</span><b>${number(item.rating)}</b></div><div class="leader-metric"><span>${escapeHtml(t('peak'))}</span><b>${number(item.best_rating)}</b></div><div class="leader-metric leader-games-metric" title="${escapeHtml(recordTitle)}" aria-label="${escapeHtml(recordTitle)}"><span>${escapeHtml(t('games'))}</span><b>${number(safeGames)}</b><div class="leader-record-stack"><div class="leader-record-bar"><i class="leader-record-fill leader-record-fill-win" style="width:${winWidth}%"></i><i class="leader-record-fill leader-record-fill-loss" style="width:${lossWidth}%"></i></div><div class="leader-record-labels"><small class="leader-win-label"><strong>${number(wins)}</strong>W</small><small class="leader-loss-label"><strong>${number(losses)}</strong>L</small></div></div></div><div class="leader-metric leader-winrate-metric"><span>${escapeHtml(t('winRate'))}</span><b>${winRate}%</b></div><span class="tier-chip">${escapeHtml(item.tier || 'Unranked')}</span></div>`;
   }).join('') || `<p class="empty-copy">${escapeHtml(t('emptyData'))}</p>`;
   els.leaderboard.querySelectorAll('[data-leader-id]').forEach((button) => button.addEventListener('click', () => {
     const id = Number(button.dataset.leaderId);
@@ -923,7 +926,7 @@ async function loadLeaderboard() {
   const mode = els.leaderboardMode?.value || '1v1';
   const query = els.leaderboardSearch?.value.trim() || '';
   els.leaderboardTitle.textContent = query.length >= 2
-    ? `${t('leaderboardSearchTitle')} · ${query}`
+    ? `${t('leaderboardSearchTitle')} · ${query} · ${regionLabel(region)}`
     : `${t('leaderboardPrefix')} ${regionLabel(region)}`;
   els.leaderboard.innerHTML = '<div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div>';
   state.leaderboardSearchController?.abort();
@@ -1740,8 +1743,9 @@ function updateSuggestionHighlight() {
 function enhanceSelect(select) {
   if (!select || select.dataset.enhancedSelect === 'true') return;
   select.dataset.enhancedSelect = 'true';
+  const isLeaderboardRegion = select.id === 'leaderboard-region';
   const wrapper = document.createElement('div');
-  wrapper.className = 'motion-select';
+  wrapper.className = `motion-select${isLeaderboardRegion ? ' motion-select-regions' : ''}`;
   const trigger = document.createElement('button');
   trigger.type = 'button';
   trigger.className = 'motion-select-trigger';
@@ -1754,10 +1758,16 @@ function enhanceSelect(select) {
   select.insertAdjacentElement('afterend', wrapper);
   wrapper.append(trigger, menu);
 
-  const sync = () => {
-    const selected = select.options[select.selectedIndex];
-    trigger.innerHTML = `<span>${escapeHtml(selected?.textContent || '')}</span><b>⌄</b>`;
-    menu.querySelectorAll('button').forEach((button) => button.classList.toggle('selected', button.dataset.value === select.value));
+  const optionLabel = (option) => {
+    if (!isLeaderboardRegion) return option?.textContent || '';
+    return regionLabel(option?.value || 'ALL');
+  };
+
+  const optionMarkup = (option) => {
+    if (!isLeaderboardRegion) return `<span>${escapeHtml(option?.textContent || '')}</span><b>✓</b>`;
+    const code = option?.value || 'ALL';
+    const scope = code === 'ALL' ? (state.language === 'ar' ? 'العالم' : 'WORLD') : code;
+    return `<span class="region-option-copy"><strong>${escapeHtml(regionLabel(code))}</strong><small>${escapeHtml(scope)}</small></span><b>✓</b>`;
   };
 
   [...select.options].forEach((option, index) => {
@@ -1766,7 +1776,7 @@ function enhanceSelect(select) {
     button.dataset.value = option.value;
     button.setAttribute('role', 'option');
     button.style.setProperty('--option-index', String(index));
-    button.innerHTML = `<span>${escapeHtml(option.textContent)}</span><b>✓</b>`;
+    button.innerHTML = optionMarkup(option);
     button.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -1780,6 +1790,22 @@ function enhanceSelect(select) {
     });
     menu.append(button);
   });
+
+  const sync = () => {
+    const selected = select.options[select.selectedIndex];
+    if (isLeaderboardRegion) {
+      const code = selected?.value || 'ALL';
+      trigger.innerHTML = `<span class="region-trigger-copy"><strong>${escapeHtml(regionLabel(code))}</strong><small>${escapeHtml(code === 'ALL' ? (state.language === 'ar' ? 'العالم' : 'WORLD') : code)}</small></span><b>⌄</b>`;
+      [...menu.querySelectorAll('button')].forEach((button, index) => {
+        button.innerHTML = optionMarkup(select.options[index]);
+        button.classList.toggle('selected', button.dataset.value === select.value);
+        button.setAttribute('aria-selected', String(button.dataset.value === select.value));
+      });
+    } else {
+      trigger.innerHTML = `<span>${escapeHtml(optionLabel(selected))}</span><b>⌄</b>`;
+      menu.querySelectorAll('button').forEach((button) => button.classList.toggle('selected', button.dataset.value === select.value));
+    }
+  };
 
   trigger.addEventListener('click', (event) => {
     event.preventDefault();

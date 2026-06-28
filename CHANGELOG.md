@@ -1,3 +1,11 @@
+# PeakHalla v7.31.0
+
+- Redesigned the region picker as a clean two-column menu with compact region-code badges.
+- Ranked name searches now respect the selected region instead of always using the worldwide leaderboard.
+- Selecting All regions shows the global rank; selecting Europe, US East, or another region shows that regional rank.
+- Old-name matches are filtered to the selected region and display the correct regional position when available.
+- Added GLOBAL or region-code labels beside every displayed leaderboard rank.
+
 # PeakHalla v7.30.0
 
 - Ranked name-search results now prioritize exact matches by current ELO, peak ELO, and global rank.
