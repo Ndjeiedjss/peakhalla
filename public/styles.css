@@ -2516,9 +2516,134 @@ body.player-page-mode #clans { display: none !important; }
   .leaderboard-pagination { flex-direction: column-reverse; gap: 10px; }
   .leaderboard-load-more { width: 100%; min-width: 0; }
 }
-\n\n/* PeakHalla v7.38 — Discord entry + News & Patch Notes */\n.discord-link {\n  position: relative;\n  height: 40px;\n  padding: 0 12px 0 9px;\n  display: inline-flex;\n  align-items: center;\n  gap: 8px;\n  isolation: isolate;\n  overflow: hidden;\n  color: #f7f4ff;\n  border: 1px solid rgba(133, 116, 255, .48);\n  border-radius: 12px;\n  background: linear-gradient(135deg, rgba(88,101,242,.28), rgba(139,92,246,.18));\n  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 10px 26px rgba(88,101,242,.14);\n  transition: transform .4s cubic-bezier(.16,1,.3,1), border-color .3s ease, box-shadow .4s ease;\n}\n.discord-link::before {\n  content: '';\n  position: absolute;\n  inset: -80%;\n  z-index: -2;\n  background: conic-gradient(from 0deg, transparent 0 40%, rgba(157,140,255,.75) 48%, transparent 56% 100%);\n  animation: discordOrbit 5.5s linear infinite;\n}\n.discord-link::after {\n  content: '';\n  position: absolute;\n  inset: 1px;\n  z-index: -1;\n  border-radius: 10px;\n  background: linear-gradient(135deg, #282253, #17132e 72%);\n}\n.discord-link:hover, .discord-link:focus-visible {\n  border-color: rgba(180,169,255,.86);\n  box-shadow: 0 15px 36px rgba(88,101,242,.25), 0 0 28px rgba(139,92,246,.13);\n  transform: translateY(-2px);\n}\n.discord-link:active { transform: scale(.98); }\n.discord-link:focus-visible { outline: 2px solid #b7adff; outline-offset: 4px; }\n.discord-icon {\n  width: 25px;\n  height: 25px;\n  display: grid;\n  place-items: center;\n  color: white;\n  border-radius: 8px;\n  background: linear-gradient(145deg, #7c83ff, #5865f2);\n  box-shadow: 0 7px 16px rgba(88,101,242,.32);\n  animation: discordFloat 3.2s ease-in-out infinite;\n}\n.discord-icon svg { width: 16px; height: 16px; }\n.discord-copy { display: grid; gap: 1px; line-height: 1; }\n.discord-copy small { color: #a9a2cb; font-size: 7px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }\n.discord-copy strong { font: 700 11px/1 var(--display); }\n.discord-link > i { color: #bbb4ff; font-size: 10px; font-style: normal; transition: transform .35s ease; }\n.discord-link:hover > i { transform: translate(2px,-2px); }\n@keyframes discordOrbit { to { transform: rotate(360deg); } }\n@keyframes discordFloat { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-2px) rotate(-3deg); } }\n\n.news-section { position: relative; }\n.news-section::before {\n  content: '';\n  position: absolute;\n  top: 120px;\n  left: 50%;\n  width: min(850px, 80vw);\n  height: 320px;\n  pointer-events: none;\n  opacity: .5;\n  background: radial-gradient(circle, rgba(139,92,246,.13), transparent 68%);\n  transform: translateX(-50%);\n  filter: blur(12px);\n}\n.news-heading { position: relative; z-index: 1; }\n.news-heading h2 { margin-bottom: 9px; }\n.news-filter {\n  padding: 5px;\n  display: flex;\n  align-items: center;\n  gap: 4px;\n  border: 1px solid var(--line);\n  border-radius: 13px;\n  background: rgba(17,11,28,.78);\n  box-shadow: inset 0 1px 0 rgba(255,255,255,.03);\n}\n.news-filter button {\n  min-height: 34px;\n  padding: 0 12px;\n  color: #8f849e;\n  border: 0;\n  border-radius: 9px;\n  background: transparent;\n  font-size: 10px;\n  font-weight: 800;\n  transition: color .25s ease, background .25s ease, transform .25s ease;\n}\n.news-filter button:hover { color: white; transform: translateY(-1px); }\n.news-filter button.active { color: white; background: linear-gradient(135deg, rgba(139,92,246,.88), rgba(109,59,229,.75)); box-shadow: 0 8px 20px rgba(109,59,229,.18); }\n.news-grid {\n  position: relative;\n  z-index: 1;\n  margin-top: 26px;\n  display: grid;\n  grid-template-columns: repeat(3, minmax(0, 1fr));\n  gap: 15px;\n}\n.news-card {\n  --news-tone: 139,92,246;\n  position: relative;\n  min-height: 320px;\n  padding: 18px;\n  display: flex;\n  flex-direction: column;\n  overflow: hidden;\n  isolation: isolate;\n  border: 1px solid rgba(var(--news-tone), .22);\n  border-radius: 18px;\n  background: linear-gradient(160deg, rgba(var(--news-tone), .10), transparent 42%), #151020;\n  box-shadow: 0 20px 48px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035);\n  animation: newsCardIn .72s var(--news-delay, 0ms) cubic-bezier(.16,1,.3,1) both;\n  transition: transform .45s cubic-bezier(.16,1,.3,1), border-color .35s ease, box-shadow .45s ease;\n}\n.news-card.is-featured { grid-column: span 2; min-height: 360px; }\n.news-card.news-balance { --news-tone: 75,222,151; }\n.news-card.news-esports { --news-tone: 255,164,91; }\n.news-card:hover {\n  border-color: rgba(var(--news-tone), .52);\n  box-shadow: 0 28px 65px rgba(0,0,0,.34), 0 0 35px rgba(var(--news-tone), .08);\n  transform: translateY(-7px);\n}\n.news-card::after {\n  content: '';\n  position: absolute;\n  inset: auto -70px -100px auto;\n  z-index: -1;\n  width: 220px;\n  height: 220px;\n  border-radius: 50%;\n  background: rgba(var(--news-tone), .10);\n  filter: blur(10px);\n}\n.news-card-glow {\n  position: absolute;\n  inset: -1px;\n  z-index: -1;\n  opacity: 0;\n  background: linear-gradient(120deg, transparent 10%, rgba(var(--news-tone), .10), transparent 70%);\n  transform: translateX(-70%);\n  transition: opacity .35s ease;\n}\n.news-card:hover .news-card-glow { opacity: 1; animation: newsSweep 1.2s cubic-bezier(.16,1,.3,1); }\n.news-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }\n.news-category {\n  padding: 6px 8px;\n  color: rgb(var(--news-tone));\n  border: 1px solid rgba(var(--news-tone), .25);\n  border-radius: 999px;\n  background: rgba(var(--news-tone), .08);\n  font-size: 8px;\n  font-weight: 900;\n  letter-spacing: .12em;\n  text-transform: uppercase;\n}\n.news-card time { color: #7f748f; font-size: 9px; }\n.news-card-art {\n  position: relative;\n  min-height: 92px;\n  margin: 20px 0 18px;\n  display: flex;\n  align-items: center;\n  gap: 13px;\n}\n.news-card-art::before {\n  content: '';\n  position: absolute;\n  left: 18px;\n  width: 74px;\n  height: 74px;\n  border: 1px solid rgba(var(--news-tone), .28);\n  border-radius: 24px;\n  background: rgba(var(--news-tone), .08);\n  transform: rotate(12deg);\n  animation: newsTileFloat 5s ease-in-out infinite;\n}\n.news-card-art i {\n  position: relative;\n  z-index: 1;\n  width: 74px;\n  height: 74px;\n  display: grid;\n  place-items: center;\n  color: white;\n  border: 1px solid rgba(255,255,255,.10);\n  border-radius: 22px;\n  background: linear-gradient(145deg, rgba(var(--news-tone), .85), rgba(var(--news-tone), .28));\n  box-shadow: 0 15px 35px rgba(var(--news-tone), .18);\n  font: 800 28px/1 var(--display);\n  font-style: normal;\n}\n.news-card-art strong { position: relative; z-index: 1; font: 700 clamp(22px, 3vw, 38px)/1 var(--display); letter-spacing: -.05em; }\n.news-card-art em { position: absolute; right: 0; top: 4px; padding: 6px 8px; color: #e9e2ff; border: 1px solid rgba(167,139,250,.26); border-radius: 8px; background: rgba(139,92,246,.11); font-size: 7px; font-style: normal; font-weight: 900; letter-spacing: .12em; }\n.news-card-copy { flex: 1; }\n.news-card h3 { margin: 0; font: 700 21px/1.16 var(--display); letter-spacing: -.025em; }\n.news-card p { margin: 10px 0 0; color: #a89eb8; font-size: 12px; line-height: 1.72; }\n.news-card-bottom { margin-top: 18px; padding-top: 15px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid rgba(255,255,255,.055); }\n.news-tags { display: flex; flex-wrap: wrap; gap: 5px; }\n.news-tags span { color: #80758e; font-size: 7px; font-weight: 900; letter-spacing: .08em; }\n.news-card-bottom a { display: inline-flex; align-items: center; gap: 7px; color: #ddd4ff; font-size: 9px; font-weight: 800; white-space: nowrap; }\n.news-card-bottom a b { color: rgb(var(--news-tone)); transition: transform .3s ease; }\n.news-card-bottom a:hover b { transform: translate(2px,-2px); }\n.news-footer-line { margin-top: 14px; padding: 0 4px; display: flex; align-items: center; justify-content: space-between; gap: 14px; color: #786e86; font-size: 9px; }\n.news-footer-line a { color: #bba9f6; font-weight: 800; }\n.news-skeleton { height: 320px; border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(90deg, var(--panel) 25%, #20182d 45%, var(--panel) 65%); background-size: 220% 100%; animation: skeleton 1.4s linear infinite; }\n@keyframes newsCardIn { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: none; } }\n@keyframes newsSweep { from { transform: translateX(-75%); } to { transform: translateX(75%); } }\n@keyframes newsTileFloat { 0%,100% { transform: rotate(12deg) translateY(0); } 50% { transform: rotate(8deg) translateY(-4px); } }\n\n@media (max-width: 1180px) {\n  .discord-copy small { display: none; }\n  .discord-link { padding-right: 10px; }\n}\n@media (max-width: 1000px) {\n  .news-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }\n  .news-card.is-featured { grid-column: span 2; }\n}\n@media (max-width: 680px) {\n  .discord-link { width: 38px; height: 36px; padding: 0; justify-content: center; }\n  .discord-copy, .discord-link > i { display: none; }\n  .discord-icon { width: 24px; height: 24px; background: transparent; box-shadow: none; }\n  .news-filter { width: 100%; overflow-x: auto; }\n  .news-filter button { flex: 1 0 auto; }\n  .news-grid { grid-template-columns: 1fr; }\n  .news-card.is-featured { grid-column: auto; min-height: 340px; }\n  .news-card { min-height: 300px; }\n  .news-footer-line { align-items: flex-start; flex-direction: column; }\n}\n@media (max-width: 430px) {\n  .header-actions { gap: 5px; }\n  .discord-link { width: 34px; }\n  .news-card { padding: 15px; }\n  .news-card-art strong { font-size: 24px; }\n  .news-card-bottom { align-items: flex-start; flex-direction: column; }\n}\n@media (prefers-reduced-motion: reduce) {\n  .discord-link::before, .discord-icon, .news-card, .news-card-art::before, .news-skeleton { animation: none !important; }\n  .discord-link, .news-card { transition: none !important; }\n}\n
-@media (max-width: 1180px) and (min-width: 1001px) {
-  nav { gap: 17px; }
-  .header-inner { gap: 18px; }
-  .live-pill { display: none; }
+
+
+/* PeakHalla v7.39 — compact animated Discord header button */
+.discord-link {
+  position: relative;
+  height: 38px;
+  padding: 0 12px 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  isolation: isolate;
+  overflow: hidden;
+  color: #f7f4ff;
+  border: 1px solid rgba(142, 125, 255, .38);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(88,101,242,.16), rgba(139,92,246,.11));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 10px 24px rgba(0,0,0,.14);
+  font: 800 10px/1 var(--display);
+  letter-spacing: .01em;
+  white-space: nowrap;
+  cursor: pointer;
+  transform: translateZ(0);
+  transition: transform .42s cubic-bezier(.16,1,.3,1), border-color .32s ease, background .32s ease, box-shadow .42s ease;
+}
+.discord-link::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -2;
+  opacity: .55;
+  border-radius: inherit;
+  background: radial-gradient(circle at 28% 20%, rgba(144,150,255,.28), transparent 42%), linear-gradient(125deg, rgba(88,101,242,.12), rgba(139,92,246,.08));
+  animation: discordGlow 4.8s ease-in-out infinite;
+}
+.discord-link::after {
+  content: '';
+  position: absolute;
+  top: -80%;
+  left: -45%;
+  z-index: -1;
+  width: 34%;
+  height: 260%;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+  transform: rotate(18deg);
+  transition: left .75s cubic-bezier(.16,1,.3,1), opacity .25s ease;
+}
+.discord-link:hover,
+.discord-link:focus-visible {
+  color: #fff;
+  border-color: rgba(166,154,255,.72);
+  background: linear-gradient(135deg, rgba(88,101,242,.25), rgba(139,92,246,.16));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 14px 34px rgba(88,101,242,.18), 0 0 24px rgba(139,92,246,.08);
+  transform: translateY(-2px);
+}
+.discord-link:hover::after,
+.discord-link:focus-visible::after { left: 115%; opacity: 1; }
+.discord-link:active { transform: translateY(0) scale(.98); }
+.discord-link:focus-visible { outline: 2px solid #b9afff; outline-offset: 4px; }
+.discord-mark {
+  position: relative;
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 8px;
+  background: linear-gradient(145deg, #737cff, #5865f2);
+  box-shadow: 0 7px 18px rgba(88,101,242,.28), inset 0 1px 0 rgba(255,255,255,.18);
+  transition: transform .42s cubic-bezier(.16,1,.3,1), box-shadow .35s ease;
+  animation: discordIconFloat 3.8s ease-in-out infinite;
+}
+.discord-mark::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  opacity: .36;
+  border-radius: 11px;
+  background: rgba(88,101,242,.22);
+  filter: blur(7px);
+  animation: discordIconPulse 3.8s ease-in-out infinite;
+}
+.discord-mark svg { width: 16px; height: 16px; display: block; }
+.discord-link:hover .discord-mark,
+.discord-link:focus-visible .discord-mark {
+  box-shadow: 0 10px 24px rgba(88,101,242,.40), inset 0 1px 0 rgba(255,255,255,.22);
+  transform: translateY(-1px) rotate(-3deg) scale(1.04);
+}
+.discord-text { display: inline-block; }
+.discord-arrow {
+  color: #bdb5ff;
+  font-size: 10px;
+  transition: color .3s ease, transform .42s cubic-bezier(.16,1,.3,1);
+}
+.discord-link:hover .discord-arrow,
+.discord-link:focus-visible .discord-arrow { color: #fff; transform: translate(2px,-2px); }
+@keyframes discordGlow {
+  0%,100% { opacity: .42; transform: scale(1); }
+  50% { opacity: .72; transform: scale(1.025); }
+}
+@keyframes discordIconFloat {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-1.5px); }
+}
+@keyframes discordIconPulse {
+  0%,100% { opacity: .20; transform: scale(.92); }
+  50% { opacity: .48; transform: scale(1.06); }
+}
+@media (max-width: 1180px) {
+  .discord-link { width: 38px; padding: 0; }
+  .discord-text, .discord-arrow { display: none; }
+}
+@media (max-width: 680px) {
+  .header-actions { gap: 6px; }
+  .discord-link { width: 36px; height: 36px; border-radius: 11px; }
+  .discord-mark { width: 23px; height: 23px; background: transparent; border-color: transparent; box-shadow: none; }
+  .discord-mark::after { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .discord-link,
+  .discord-mark,
+  .discord-arrow { transition: none !important; }
+  .discord-link::before,
+  .discord-mark,
+  .discord-mark::after { animation: none !important; }
+  .discord-link::after { display: none; }
 }

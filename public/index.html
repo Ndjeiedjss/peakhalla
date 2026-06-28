@@ -53,8 +53,7 @@
         },
         "sameAs": [
           "https://www.tiktok.com/@nadbh",
-          "https://paypal.me/Nadherr",
-          "https://discord.gg/zYmNM3FHVy"
+          "https://paypal.me/Nadherr"
         ]
       }
     ]
@@ -63,8 +62,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="/styles.css?v=7.38.0" as="style">
-  <link rel="stylesheet" href="/styles.css?v=7.38.0">
+  <link rel="preload" href="/styles.css?v=7.39.0" as="style">
+  <link rel="stylesheet" href="/styles.css?v=7.39.0">
 </head>
 <body>
   <header class="site-header">
@@ -132,18 +131,17 @@
           </div>
         </div>
         <a href="/arena" id="arena-nav-link" data-i18n="navArena">Arena Wall</a>
-        <a href="/#news" data-i18n="navNews">News</a>
         <a href="/#clans" data-i18n="navClans">Clans</a>
         <a href="/#esports" data-i18n="navEsports">Esports</a>
         <a href="/#about" data-i18n="navAbout">About</a>
       </nav>
       <div class="header-actions">
-        <a class="discord-link" href="https://discord.gg/zYmNM3FHVy" target="_blank" rel="noopener noreferrer" aria-label="Join the PeakHalla Discord server">
-          <span class="discord-icon" aria-hidden="true">
+        <a class="discord-link" href="https://discord.gg/zYmNM3FHVy" target="_blank" rel="noopener noreferrer" aria-label="Join the PeakHalla Discord server" data-i18n-aria-label="discordAria">
+          <span class="discord-mark" aria-hidden="true">
             <svg viewBox="0 0 24 24" focusable="false"><path fill="currentColor" d="M19.5 5.34A16.3 16.3 0 0 0 15.44 4l-.5 1.03a15.1 15.1 0 0 0-5.87 0L8.55 4A16.4 16.4 0 0 0 4.5 5.35C1.94 9.16 1.25 12.88 1.6 16.54a16.5 16.5 0 0 0 4.98 2.5l1.2-1.64a10.5 10.5 0 0 1-1.89-.9l.46-.36c3.65 1.69 7.61 1.69 11.22 0l.47.36c-.61.36-1.25.66-1.9.9l1.2 1.64a16.4 16.4 0 0 0 4.98-2.5c.42-4.24-.72-7.93-2.82-11.2ZM8.83 14.26c-1.1 0-2-1.01-2-2.25s.88-2.25 2-2.25c1.12 0 2.02 1.02 2 2.25 0 1.24-.88 2.25-2 2.25Zm6.34 0c-1.1 0-2-1.01-2-2.25s.88-2.25 2-2.25c1.12 0 2.02 1.02 2 2.25 0 1.24-.88 2.25-2 2.25Z"/></svg>
           </span>
-          <span class="discord-copy"><small data-i18n="discordJoin">Join server</small><strong data-i18n="navDiscord">Discord</strong></span>
-          <i aria-hidden="true">↗</i>
+          <span class="discord-text" data-i18n="navDiscord">Join Discord</span>
+          <span class="discord-arrow" aria-hidden="true">↗</span>
         </a>
         <a class="donation-link" href="https://paypal.me/Nadherr" target="_blank" rel="noopener noreferrer" aria-label="Support PeakHalla via PayPal">
           <span class="donation-heart" aria-hidden="true">♥</span>
@@ -365,29 +363,6 @@
     </section>
 
     <section id="status" class="status shell" hidden></section>
-
-    <section id="news" class="shell section news-section">
-      <div class="section-heading stacked-mobile news-heading">
-        <div>
-          <span class="eyebrow" data-i18n="newsEyebrow">BRAWLHALLA UPDATES</span>
-          <h2 data-i18n="newsTitle">News & Patch Notes</h2>
-          <p class="section-copy" data-i18n="newsText">Fast summaries for patches, buffs, nerfs, events, and competitive updates.</p>
-        </div>
-        <div class="news-filter" role="group" aria-label="News filters">
-          <button class="active" type="button" data-news-filter="all" data-i18n="newsAll">All</button>
-          <button type="button" data-news-filter="patch" data-i18n="newsPatch">Patch</button>
-          <button type="button" data-news-filter="balance" data-i18n="newsBalance">Balance</button>
-          <button type="button" data-news-filter="esports" data-i18n="newsEsports">Esports</button>
-        </div>
-      </div>
-      <div id="news-grid" class="news-grid" aria-live="polite">
-        <div class="news-skeleton"></div><div class="news-skeleton"></div><div class="news-skeleton"></div>
-      </div>
-      <div class="news-footer-line">
-        <span data-i18n="newsSourceNote">Summaries link to the official Brawlhalla source.</span>
-        <a href="https://www.brawlhalla.com/news" target="_blank" rel="noopener noreferrer"><span data-i18n="newsOfficial">Official Brawlhalla News</span> ↗</a>
-      </div>
-    </section>
 
     <section id="search-results" class="shell section" hidden>
       <div class="section-heading">
@@ -635,7 +610,7 @@
       </a>
     </div>
   </footer>
-  <script src="/app.js?v=7.38.0" defer></script>
+  <script src="/app.js?v=7.39.0" defer></script>
   <script src="/arena-v72.js?v=7.32.0" defer></script>
 </body>
 </html>
