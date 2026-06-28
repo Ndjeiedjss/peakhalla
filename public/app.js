@@ -143,7 +143,7 @@ function applyLanguage() {
   if (state.esportsCareer && !els.careerModal.hidden) renderCareer(state.esportsCareer);
 }
 
-const LEGEND_ASSET_VERSION = '7.55.0';
+const LEGEND_ASSET_VERSION = '7.56.0';
 
 function legendAssetSlug(name = '') {
   return String(name || '')
@@ -252,7 +252,10 @@ function legendImageMarkup(legend, options = {}) {
     ...suppliedCandidates
   ].filter(Boolean))];
   if (!candidates.length) return `<span class="legend-image-shell is-fallback"><span class="legend-fallback">${fallback}</span></span>`;
-  const eager = options.lazy === false;
+  // Portraits are small local assets. Eager loading is more reliable across
+  // mobile browsers and avoids the old 'appears only after refresh' issue.
+  // Very large lists can still opt into lazy loading explicitly.
+  const eager = options.lazy !== true;
   const loading = eager ? 'loading="eager" fetchpriority="high" data-image-visible="1"' : 'loading="lazy" fetchpriority="auto"';
   return `<span class="legend-image-shell"><img src="${escapeHtml(candidates[0])}" alt="${escapeHtml(name)}" ${loading} decoding="async" referrerpolicy="no-referrer" data-legend-image data-image-candidates='${escapeHtml(JSON.stringify(candidates))}' data-image-index="0" data-image-retry="0" onload="handleLegendImageLoad(this)" onerror="handleLegendImageError(this)"><span class="legend-fallback" hidden>${fallback}</span></span>`;
 }
@@ -261,12 +264,21 @@ function portraitMarkup(legend, className = 'row-portrait', options = {}) {
   return `<span class="${className}">${legendImageMarkup(legend, options)}</span>`;
 }
 
-function activateImageFallbacks() {
-  document.querySelectorAll('[data-legend-image]').forEach((image) => {
+function activateImageFallbacks(root = document) {
+  root.querySelectorAll?.('[data-legend-image]').forEach((image) => {
     if (image.complete && image.naturalWidth > 0) handleLegendImageLoad(image);
     else if (image.loading === 'lazy' && image.dataset.imageVisible !== '1') legendImageObserver?.observe(image);
     else armLegendImageTimeout(image);
   });
+}
+
+function stabilizeLegendImages(root = document) {
+  activateImageFallbacks(root);
+  // A second and third pass catch images inserted during the same render frame
+  // or restored from the browser back/forward cache without needing a refresh.
+  window.requestAnimationFrame(() => activateImageFallbacks(root));
+  window.setTimeout(() => activateImageFallbacks(root), 280);
+  window.setTimeout(() => activateImageFallbacks(root), 1400);
 }
 
 function formerNames(player) {
@@ -306,18 +318,35 @@ async function getJson(url, options = {}) {
 
 function playerPayloadSignature(data = {}) {
   const player = data.player || {};
-  const legends = (player.lifetime_legends || []).map((legend) => [legend.legend_id, legend.level, legend.xp, legend.games, legend.wins]);
+  const legends = (player.lifetime_legends || []).map((legend) => [
+    legend.legend_id, legend.name, legend.level, legend.xp, legend.games, legend.wins,
+    legend.image_url, legend.image_candidates
+  ]);
+  const rankedLegends = (player.legends || []).map((legend) => [
+    legend.legend_id, legend.name, legend.rating, legend.peak_rating, legend.games,
+    legend.image_url, legend.image_candidates
+  ]);
+  const topLegends = (player.top_legends || []).map((legend) => [
+    legend.legend_id, legend.name, legend.games, legend.image_url, legend.image_candidates
+  ]);
+  const mainWeapons = (player.main_weapons || []).map((weapon) => [weapon.name, weapon.games, weapon.kos, weapon.match_time_seconds]);
+  const mainLegend = player.main_legend ? [
+    player.main_legend.legend_id, player.main_legend.name,
+    player.main_legend.image_url, player.main_legend.image_candidates
+  ] : null;
   const names = (data.known_names || []).map((item) => item?.name || item);
   const regionRanks = (player.region_ranks || []).map((item) => [item.region, item.rank]);
   return JSON.stringify([
     player.brawlhalla_id, player.name, player.account_xp, player.level,
+    player.game_time_seconds, player.lifetime_games, player.lifetime_wins,
     player.rating, player.peak_rating, player.tier, player.region, player.global_rank,
     player.ranked_games, player.ranked_wins, player.ranked_win_rate, regionRanks,
-    player.guild?.guild_id || null, names, legends
+    player.guild?.guild_id || null, mainLegend, topLegends, mainWeapons,
+    names, legends, rankedLegends, player.updated_at
   ]);
 }
 
-const PLAYER_BROWSER_CACHE_KEY = 'peakhalla-player-cache-v2';
+const PLAYER_BROWSER_CACHE_KEY = 'peakhalla-player-cache-v3';
 const PLAYER_BROWSER_CACHE_MAX_AGE_MS = 24 * 60 * 60_000;
 function readPlayerBrowserCache(id) {
   try {
@@ -870,8 +899,8 @@ function navigateToPlayer(id, seed = null) {
 
 function teammateCard(item) {
   const main = item.main_legend || { name: item.name };
-  return `<button class="teammate-card" type="button" data-teammate-id="${Number(item.id)}">
-    ${portraitMarkup(main, 'teammate-portrait')}
+  return `<button class="teammate-card" type="button" data-teammate-id="${Number(item.id)}" data-player-id="${Number(item.id)}" data-needs-portrait="${item.main_legend ? '0' : '1'}">
+    ${portraitMarkup(main, 'teammate-portrait', { lazy: false })}
     <span class="teammate-copy">
       <span class="teammate-top"><b>${escapeHtml(item.name || 'Unknown')}</b><em>${escapeHtml(item.tier || item.team_tier || '—')}</em></span>
       <small>${escapeHtml(main?.name || t('unknownLegend'))}</small>
@@ -955,7 +984,8 @@ async function loadTeammates(id) {
       const teammateId = Number(button.dataset.teammateId);
       navigateToPlayer(teammateId, teammateSeeds.get(teammateId));
     }));
-    activateImageFallbacks();
+    stabilizeLegendImages(els.teammatesGrid);
+    enrichRenderedPortraits(els.teammatesGrid, '.teammate-card', '.teammate-portrait', 4);
     registerScrollReveal(els.teammatesPanel);
   } catch {
     if (!els.teammatesGrid || els.teammatesGrid.dataset.requestId !== requestId) return;
@@ -1017,27 +1047,36 @@ function renderPlayer(data, shouldScroll = true, renderOptions = {}) {
   $('#legends-body').innerHTML = legends.length ? legends.map((legend) => `<tr><td><span class="legend-name">${portraitMarkup(legend, 'legend-icon')}<span>${escapeHtml(legend.name)}</span></span></td><td>${escapeHtml(canonicalWeaponName(legend.weapon_one))} + ${escapeHtml(canonicalWeaponName(legend.weapon_two))}</td><td>${number(legend.games)}</td><td>${number(legend.wins)}</td><td class="rate">${number(legend.win_rate)}%</td><td>${number(legend.rating)}</td><td>${number(legend.peak_rating)}</td></tr>`).join('') : `<tr><td colspan="7" class="empty-copy">${escapeHtml(t('noRankedLegends'))}</td></tr>`;
   renderHistory(history);
   renderLifetimeLegends();
-  activateImageFallbacks();
+  stabilizeLegendImages(els.profile);
   registerScrollReveal(els.profile);
   if (renderOptions.refreshSecondary !== false) loadTeammates(player.brawlhalla_id);
   if (shouldScroll) els.profile.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function mergeRankedPreview(data, preview) {
-  if (!data?.player || !preview?.player || !data.background_refresh_recommended) return data;
+  if (!data?.player || !preview?.player) return data;
   const source = preview.player;
   const target = data.player;
   const rankedFields = [
     'rating', 'peak_rating', 'tier', 'region', 'global_rank', 'region_ranks',
     'ranked_games', 'ranked_wins', 'ranked_win_rate'
   ];
-  const sourceHasRankedData = Number(source.rating) > 0 || Number(source.peak_rating) > 0 || Number(source.global_rank) > 0;
-  if (!sourceHasRankedData) return data;
+
+  // Cached navigation data may fill a temporarily missing field, but it must
+  // never overwrite a fresh official value. The old behavior was responsible
+  // for profiles showing stale ranks such as #1 after the leaderboard showed #2.
   for (const field of rankedFields) {
-    if (source[field] !== undefined && source[field] !== null && source[field] !== '' && source[field] !== '—') target[field] = source[field];
+    const current = target[field];
+    const missing = current === undefined || current === null || current === '' || current === '—'
+      || (typeof current === 'number' && !Number.isFinite(current));
+    if (missing && source[field] !== undefined && source[field] !== null && source[field] !== '' && source[field] !== '—') {
+      target[field] = source[field];
+    }
   }
   if ((!target.name || /^Player\s+\d+$/i.test(target.name)) && source.name) target.name = source.name;
   if (!target.main_legend && source.main_legend) target.main_legend = source.main_legend;
+  if (!(target.top_legends || []).length && (source.top_legends || []).length) target.top_legends = source.top_legends;
+  if (!(target.main_weapons || []).length && (source.main_weapons || []).length) target.main_weapons = source.main_weapons;
   if (!target.guild && source.guild) target.guild = source.guild;
   target.updated_at = target.updated_at || source.updated_at;
   return data;

@@ -1,0 +1,2 @@
+Upload app.js, index.html, and styles.css inside the repository public/ folder and replace the old files.
+Do NOT upload these files to the repository root.
