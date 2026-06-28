@@ -152,6 +152,27 @@ async function initDatabase() {
       )
     `);
     await client.query(`
+      CREATE TABLE IF NOT EXISTS player_teams (
+        team_key TEXT PRIMARY KEY,
+        player_one_id BIGINT NOT NULL,
+        player_two_id BIGINT NOT NULL,
+        player_one_name TEXT,
+        player_two_name TEXT,
+        region TEXT,
+        rating INTEGER,
+        peak_rating INTEGER,
+        tier TEXT,
+        global_rank INTEGER,
+        games INTEGER,
+        wins INTEGER,
+        losses INTEGER,
+        source TEXT,
+        payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+        first_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query(`
       CREATE TABLE IF NOT EXISTS peakhalla_state (
         key TEXT PRIMARY KEY,
         value JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -240,6 +261,9 @@ async function initDatabase() {
     await client.query('CREATE INDEX IF NOT EXISTS aliases_normalized_idx ON player_aliases (alias_normalized)');
     await client.query('CREATE INDEX IF NOT EXISTS aliases_last_seen_idx ON player_aliases (last_seen DESC)');
     await client.query('CREATE INDEX IF NOT EXISTS snapshots_player_date_idx ON player_snapshots (player_id, snapshot_date DESC)');
+    await client.query('CREATE INDEX IF NOT EXISTS player_teams_one_idx ON player_teams (player_one_id, last_seen DESC)');
+    await client.query('CREATE INDEX IF NOT EXISTS player_teams_two_idx ON player_teams (player_two_id, last_seen DESC)');
+    await client.query('CREATE INDEX IF NOT EXISTS player_teams_rating_idx ON player_teams (rating DESC NULLS LAST)');
     await client.query('CREATE INDEX IF NOT EXISTS arena_users_username_key_idx ON arena_users (username_key)');
     await client.query('CREATE INDEX IF NOT EXISTS arena_sessions_user_idx ON arena_sessions (user_id, expires_at DESC)');
     await client.query('CREATE INDEX IF NOT EXISTS arena_sessions_expiry_idx ON arena_sessions (expires_at)');
@@ -509,10 +533,12 @@ async function saveSnapshotToDatabase(playerId, snapshot) {
 async function saveDiscoveredRankingsToDatabase(rankings = [], source = 'official-discovery') {
   if (!dbReady || !rankings.length) return;
   const aliases = [];
+  const teamRows = [];
   const client = await dbPool.connect();
   try {
     await client.query('BEGIN');
     for (const ranking of rankings) {
+      if (Array.isArray(ranking.players) && ranking.players.length >= 2) teamRows.push(ranking);
       for (const player of ranking.players || []) {
         const id = Number(player.id);
         const name = sanitizePlayerName(player.username || player.name || '');
@@ -548,6 +574,7 @@ async function saveDiscoveredRankingsToDatabase(rankings = [], source = 'officia
     client.release();
   }
   await saveAliasesToDatabase(aliases, source);
+  if (teamRows.length) await saveTeamRowsToDatabase(teamRows, source);
 }
 
 async function importLegacyJsonIntoDatabase() {
@@ -1713,7 +1740,7 @@ function legendImageCandidates(name) {
   const clean = String(name || '').trim();
   const slug = legendSlug(clean);
   if (!clean || !slug) return [];
-  const version = '7.46.0';
+  const version = '7.55.0';
   // User-supplied local portraits are the fastest and most consistent source.
   // The API proxy remains a fallback for future legends not yet in the pack.
   return [
@@ -5092,6 +5119,95 @@ function teammateRefsFromRows(rows, playerId) {
   return refs;
 }
 
+
+function playerTeamKey(firstId, secondId) {
+  const ids = [Number(firstId), Number(secondId)].filter((id) => Number.isSafeInteger(id) && id > 0).sort((a, b) => a - b);
+  return ids.length === 2 ? `${ids[0]}:${ids[1]}` : '';
+}
+
+async function saveTeamRowsToDatabase(rows = [], source = 'unknown') {
+  if (!dbReady || !Array.isArray(rows) || !rows.length) return;
+  const client = await dbPool.connect();
+  try {
+    await client.query('BEGIN');
+    for (const rawRow of rows) {
+      const team = normalizeTeamRow(rawRow);
+      const uniquePlayers = [];
+      const seen = new Set();
+      for (const player of team.players || []) {
+        const id = playerRefId(player);
+        if (!Number.isSafeInteger(id) || id <= 0 || seen.has(id)) continue;
+        seen.add(id);
+        uniquePlayers.push({ id, name: sanitizePlayerName(playerRefName(player) || `Player ${id}`) });
+      }
+      if (uniquePlayers.length < 2) continue;
+      const pair = uniquePlayers.slice(0, 2).sort((a, b) => a.id - b.id);
+      const teamKey = playerTeamKey(pair[0].id, pair[1].id);
+      if (!teamKey) continue;
+      await client.query(`
+        INSERT INTO player_teams (
+          team_key, player_one_id, player_two_id, player_one_name, player_two_name,
+          region, rating, peak_rating, tier, global_rank, games, wins, losses,
+          source, payload, first_seen, last_seen
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb,NOW(),NOW())
+        ON CONFLICT (team_key) DO UPDATE SET
+          player_one_name = CASE WHEN EXCLUDED.player_one_name !~ '^Player [0-9]+$' THEN EXCLUDED.player_one_name ELSE player_teams.player_one_name END,
+          player_two_name = CASE WHEN EXCLUDED.player_two_name !~ '^Player [0-9]+$' THEN EXCLUDED.player_two_name ELSE player_teams.player_two_name END,
+          region = COALESCE(EXCLUDED.region, player_teams.region),
+          rating = COALESCE(EXCLUDED.rating, player_teams.rating),
+          peak_rating = GREATEST(COALESCE(player_teams.peak_rating,0), COALESCE(EXCLUDED.peak_rating,0)),
+          tier = COALESCE(EXCLUDED.tier, player_teams.tier),
+          global_rank = COALESCE(EXCLUDED.global_rank, player_teams.global_rank),
+          games = GREATEST(COALESCE(player_teams.games,0), COALESCE(EXCLUDED.games,0)),
+          wins = GREATEST(COALESCE(player_teams.wins,0), COALESCE(EXCLUDED.wins,0)),
+          losses = GREATEST(COALESCE(player_teams.losses,0), COALESCE(EXCLUDED.losses,0)),
+          source = EXCLUDED.source,
+          payload = EXCLUDED.payload,
+          last_seen = NOW()
+      `, [
+        teamKey, pair[0].id, pair[1].id, pair[0].name, pair[1].name,
+        team.region || null, numberOrNull(team.rating), numberOrNull(team.peak_rating), team.tier || null,
+        numberOrNull(team.rank), numberOrNull(team.games), numberOrNull(team.wins), numberOrNull(team.losses),
+        String(source || 'unknown'), JSON.stringify(rawRow || {})
+      ]);
+    }
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => null);
+    console.warn('Could not save 2v2 teams to PostgreSQL:', error.message);
+  } finally {
+    client.release();
+  }
+}
+
+async function getTeamRowsFromDatabase(playerId, limit = 120) {
+  if (!dbReady) return [];
+  const id = Number(playerId);
+  const result = await dbQuery(`
+    SELECT *
+    FROM player_teams
+    WHERE player_one_id = $1 OR player_two_id = $1
+    ORDER BY last_seen DESC, rating DESC NULLS LAST
+    LIMIT $2
+  `, [id, Math.max(1, Math.min(300, Number(limit) || 120))]);
+  return (result?.rows || []).map((row) => ({
+    players: [
+      { id: Number(row.player_one_id), username: row.player_one_name || `Player ${row.player_one_id}` },
+      { id: Number(row.player_two_id), username: row.player_two_name || `Player ${row.player_two_id}` }
+    ],
+    rating: numberOrNull(row.rating),
+    best_rating: numberOrNull(row.peak_rating),
+    tier: row.tier || null,
+    global_rank: numberOrNull(row.global_rank),
+    region: row.region || null,
+    games: numberOrZero(row.games),
+    wins: numberOrZero(row.wins),
+    losses: numberOrZero(row.losses),
+    __source: 'peakhalla-team-database',
+    __last_seen: row.last_seen
+  }));
+}
+
 async function fetchPlayerTeamSources(id, forceFresh = false) {
   const fetchOfficial = (endpoint, ttl = 30_000) => forceFresh
     ? apiFetchFresh(endpoint).catch(() => null)
@@ -5136,6 +5252,10 @@ app.get('/api/player/:id/teammates', async (req, res, next) => {
       collected = sources.flatMap(([source, payload]) => collectTeamRows(payload, id).map((row) => ({ ...row, __source: source })));
     }
 
+    if (collected.length) await saveTeamRowsToDatabase(collected, [...new Set(collected.map((row) => row.__source).filter(Boolean))].join('+') || 'profile-teams');
+    const databaseRows = await getTeamRowsFromDatabase(id, 160);
+    if (databaseRows.length) collected.push(...databaseRows);
+
     const refs = teammateRefsFromRows(collected, id);
     const bestByPlayer = new Map();
     for (const item of refs) {
@@ -5161,13 +5281,16 @@ app.get('/api/player/:id/teammates', async (req, res, next) => {
       Number(b.games || 0) - Number(a.games || 0)
     );
     const usedSources = [...new Set(collected.map((row) => row.__source).filter(Boolean))];
-    res.setHeader('Cache-Control', teammates.length ? 'private, max-age=30, stale-while-revalidate=120' : 'no-store');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.json({
       player_id: id,
       teammates,
       source: usedSources.join('+') || 'no-current-team-source',
-      sources_checked: sources.map(([source, payload]) => ({ source, available: Boolean(payload) })),
-      current_season_only: true,
+      sources_checked: [
+        ...sources.map(([source, payload]) => ({ source, available: Boolean(payload) })),
+        { source: 'peakhalla-team-database', available: databaseRows.length > 0, rows: databaseRows.length }
+      ],
+      current_season_only: false,
       refreshed: forceFresh
     });
   } catch (error) {
@@ -5183,16 +5306,27 @@ app.get('/api/player/:id', async (req, res, next) => {
     const id = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
     if (!id) return res.status(400).json({ error: 'Invalid player ID.' });
     const forceFresh = String(req.query.refresh || '') === '1';
-    const live = String(req.query.live || '') === '1' && !forceFresh;
-    const fast = String(req.query.fast || '') === '1' && !forceFresh && !live;
+    const instant = String(req.query.instant || '') === '1' && !forceFresh;
+    const live = String(req.query.live || '') === '1' && !forceFresh && !instant;
+    const fast = String(req.query.fast || '') === '1' && !forceFresh && !live && !instant;
     const cachedProfile = fast ? (getCachedProfileResponse(id) || await getDatabaseCachedProfileResponse(id) || await getDiskCachedProfileResponse(id)) : null;
     if (cachedProfile) {
       res.setHeader('X-Profile-Cache', 'hit');
       return res.json({ ...cachedProfile, background_refresh_recommended: true });
     }
 
-    const localNamesSeedPromise = fast ? peekKnownNames(id).catch(() => []) : readKnownNames(id).catch(() => []);
-    const fetches = fast
+    const localNamesSeedPromise = (fast || instant) ? peekKnownNames(id).catch(() => []) : readKnownNames(id).catch(() => []);
+    const fetches = instant
+      ? [
+          settleWithin(apiFetchFresh(`/player/stats?brawlhalla_id=${id}&mode=all`), 3_800, null),
+          settleWithin(apiFetchFresh(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`), 3_800, null),
+          settleWithin(getLegendMap(), 1_800, new Map()),
+          Promise.resolve(null),
+          Promise.resolve([]),
+          localNamesSeedPromise,
+          settleWithin(getPlayerGuild(id, 5 * 60_000), 900, null)
+        ]
+      : fast
       ? [
           settleWithin(apiFetch(`/player/stats?brawlhalla_id=${id}&mode=all`, 5 * 60_000), 1600, null),
           settleWithin(apiFetch(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`, 5 * 60_000), 1600, null),
@@ -5274,7 +5408,7 @@ app.get('/api/player/:id', async (req, res, next) => {
       legends: rankedLegends,
       guild: playerGuild,
       data_quality: {
-        source: coreStats ? 'Fresh Brawlhalla + fresh Corehalla progression (highest XP/level wins)' : (fast ? 'Fast Brawlhalla profile · background refresh pending' : 'Live Brawlhalla stats'),
+        source: coreStats ? 'Fresh Brawlhalla + fresh Corehalla progression (highest XP/level wins)' : (instant ? 'Instant fresh Brawlhalla profile · deep enrichment pending' : (fast ? 'Fast Brawlhalla profile · background refresh pending' : 'Live Brawlhalla stats')),
         corehalla_enriched: Boolean(coreStats),
         live_fetch: !fast,
         fetched_at: new Date().toISOString(),
@@ -5295,12 +5429,12 @@ app.get('/api/player/:id', async (req, res, next) => {
         .then((guildSnapshot) => guildSnapshot ? rememberGuild(guildSnapshot) : null)
         .catch(() => null);
     }
-    if (fast) storeObservedNamesBatch([{ id, name: player.name }], 'profile-fast').catch(() => null);
+    if (fast || instant) storeObservedNamesBatch([{ id, name: player.name }], instant ? 'profile-instant' : 'profile-fast').catch(() => null);
     else await storeObservedNamesBatch([{ id, name: player.name }], 'profile');
-    const history = fast ? await readSnapshotHistory(id) : await storeSnapshot(player);
+    const history = (fast || instant) ? await readSnapshotHistory(id) : await storeSnapshot(player);
     const localNames = localNamesSeed;
     const knownNames = mergeKnownNameEntries(player.name, coreAliases, localNames);
-    const payload = { player, history, known_names: knownNames, background_refresh_recommended: fast };
+    const payload = { player, history, known_names: knownNames, background_refresh_recommended: fast || instant };
     const hasMeaningfulProfileData = Boolean(
       v1Lifetime || ranked || coreStats ||
       !isGeneratedPlayerName(player.name) ||
@@ -5318,9 +5452,9 @@ app.get('/api/player/:id', async (req, res, next) => {
       invalidateProfileSearchCacheForNames([player.name, ...knownNames.map((item) => item?.name)]);
     }
 
-    res.setHeader('X-Stats-Source', coreStats ? 'Brawlhalla-plus-fresh-Corehalla-highest-progression' : (fast ? 'Brawlhalla-fast' : 'Brawlhalla-live'));
+    res.setHeader('X-Stats-Source', coreStats ? 'Brawlhalla-plus-fresh-Corehalla-highest-progression' : (instant ? 'Brawlhalla-instant-fresh' : (fast ? 'Brawlhalla-fast' : 'Brawlhalla-live')));
     res.setHeader('X-Stats-Fetched-At', player.updated_at);
-    res.setHeader('X-Alias-Refresh', fast ? 'background-pending' : 'automatic-fresh');
+    res.setHeader('X-Alias-Refresh', (fast || instant) ? 'background-pending' : 'automatic-fresh');
     res.json(payload);
   } catch (error) {
     next(error);
@@ -5335,6 +5469,7 @@ app.get('/api/system/database', async (_req, res) => {
         (SELECT COUNT(*)::int FROM players) AS players,
         (SELECT COUNT(*)::int FROM player_aliases) AS aliases,
         (SELECT COUNT(*)::int FROM player_snapshots) AS snapshots,
+        (SELECT COUNT(*)::int FROM player_teams) AS teams,
         (SELECT COUNT(*)::int FROM arena_users) AS arena_users,
         (SELECT COUNT(*)::int FROM arena_sessions WHERE expires_at > NOW()) AS arena_sessions,
         (SELECT COUNT(*)::int FROM arena_notifications) AS arena_notifications,
@@ -5353,7 +5488,7 @@ app.get('/api/system/database', async (_req, res) => {
   res.json({
     configured: Boolean(DATABASE_URL),
     ready: dbReady,
-    counts: counts?.rows?.[0] || { players: 0, aliases: 0, snapshots: 0, arena_users: 0, arena_sessions: 0, arena_notifications: 0, arena_posts: 0, arena_comments: 0 },
+    counts: counts?.rows?.[0] || { players: 0, aliases: 0, snapshots: 0, teams: 0, arena_users: 0, arena_sessions: 0, arena_notifications: 0, arena_posts: 0, arena_comments: 0 },
     discovery_enabled: DATABASE_DISCOVERY_ENABLED,
     discovery_running: discoveryRunning,
     discovery_config: {
