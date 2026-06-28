@@ -243,7 +243,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await fetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.32'
+          'User-Agent': 'PeakHalla/7.42'
         },
         signal: controller.signal
       });
@@ -285,7 +285,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.32'
+        'User-Agent': 'PeakHalla/7.42'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -364,7 +364,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             ...(attempt.body ? { 'Content-Type': 'application/json' } : {}),
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.32'
+            'User-Agent': 'PeakHalla/7.42'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -438,7 +438,9 @@ function getCachedProfileSearch(kind, query, region = 'ALL', mode = '1v1') {
 
 function setCachedProfileSearch(kind, query, region, mode, value) {
   const key = profileSearchCacheKey(kind, query, region, mode);
-  profileSearchResponseCache.set(key, { value, expiresAt: Date.now() + PROFILE_SEARCH_RESPONSE_TTL_MS });
+  const resultCount = (value?.rankings || []).reduce((sum, item) => sum + (item?.players?.length || 0), 0);
+  const ttl = resultCount > 0 ? PROFILE_SEARCH_RESPONSE_TTL_MS : 8_000;
+  profileSearchResponseCache.set(key, { value, expiresAt: Date.now() + ttl });
   if (profileSearchResponseCache.size > 250) {
     const oldest = profileSearchResponseCache.keys().next().value;
     if (oldest) profileSearchResponseCache.delete(oldest);
@@ -961,7 +963,7 @@ function legendImageCandidates(name) {
   const clean = String(name || '').trim();
   const slug = legendSlug(clean);
   if (!clean || !slug) return [];
-  const version = '7.28.0';
+  const version = '7.42.0';
   // User-supplied local portraits are the fastest and most consistent source.
   // The API proxy remains a fallback for future legends not yet in the pack.
   return [
@@ -1005,7 +1007,7 @@ async function fetchLegendArtwork(name) {
       const response = await fetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.32',
+          'User-Agent': 'PeakHalla/7.42',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -1041,7 +1043,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await fetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.32'
+        'User-Agent': 'PeakHalla/7.42'
       },
       signal: controller.signal
     });
@@ -1878,7 +1880,12 @@ async function hydrateRankingPlayers(rankings, source, options = {}) {
   const legendById = new Map();
   if (includeLegends) {
     const uniqueIds = [...new Set(playerRefs.map((player) => Number(player.id)).filter(Boolean))];
-    const legendPairs = await mapWithConcurrency(uniqueIds, 6, async (id) => [id, await getMainLegendSummary(id)]);
+    const timeoutMs = Number(options.legendTimeoutMs || 900);
+    const concurrency = Number(options.legendConcurrency || 8);
+    const legendPairs = await mapWithConcurrency(uniqueIds, concurrency, async (id) => [
+      id,
+      await settleWithin(getMainLegendSummary(id), timeoutMs, null)
+    ]);
     for (const pair of legendPairs) legendById.set(pair[0], pair[1]);
   }
 
@@ -2051,6 +2058,9 @@ async function buildProfileSearchRanking(candidate, query, options = {}) {
     const mainStats = [...(lifetime?.legends || [])]
       .filter((legend) => numberOrZero(legend.games) > 0)
       .sort((a, b) => numberOrZero(b.games) - numberOrZero(a.games))[0];
+    const quickMainLegend = cachedPlayer?.main_legend || (quick
+      ? await settleWithin(getMainLegendSummary(id), Number(options.legendTimeoutMs || 700), null)
+      : makeLegendSummary(mainStats, legendMap.get(Number(mainStats?.legend_id))));
     const matchedAliases = knownAliases.filter((name) => normalizeName(name).includes(normalizeName(query)));
     const rating = numberOrNull(rankedSource?.rating);
     const bestRating = numberOrNull(rankedSource?.best_rating ?? rankedSource?.peak_rating);
@@ -2072,7 +2082,7 @@ async function buildProfileSearchRanking(candidate, query, options = {}) {
       players: [{
         id,
         username: currentName,
-        main_legend: cachedPlayer?.main_legend || makeLegendSummary(mainStats, legendMap.get(Number(mainStats?.legend_id))),
+        main_legend: quickMainLegend || null,
         matched_aliases: matchedAliases,
         known_names: knownAliases.map((name) => ({ name }))
       }]
@@ -2653,7 +2663,7 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.37.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.42.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
@@ -2688,21 +2698,29 @@ app.get('/api/suggestions', async (req, res, next) => {
         aliases: item.names?.map((name) => name.name) || []
       }));
       const profiles = (await mapWithConcurrency(candidates, 7, (item) =>
-        buildProfileSearchRanking(item, query, { quick: true, mode, region, rankTimeoutMs: 650 })
+        buildProfileSearchRanking(item, query, { quick: true, mode, region, rankTimeoutMs: 750, legendTimeoutMs: 650 })
       )).filter(Boolean);
       const payload = { rankings: sortSearchRankings(profiles, query).slice(0, 7), local_alias_hit: true };
       return res.json(setCachedProfileSearch('suggestions', query, region, mode, payload));
     }
 
-    const [official, coreMatches, esportsMatch] = await Promise.all([
-      isNumeric ? Promise.resolve({ rankings: [] }) : settleWithin(fetchOfficial(), 1100, { rankings: [] }),
-      isNumeric ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 2, false), 2300, []),
-      isNumeric ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 1000, null)
+    const officialPromise = isNumeric ? Promise.resolve({ rankings: [] }) : fetchOfficial();
+    const corePromise = isNumeric ? Promise.resolve([]) : searchCorehallaAliasesBroad(query, 2, false).catch(() => []);
+    const esportsPromise = isNumeric ? Promise.resolve(null) : findEsportsPlayerByName(query, '').catch(() => null);
+    let [official, coreMatches, esportsMatch] = await Promise.all([
+      settleWithin(officialPromise, 1200, null),
+      settleWithin(corePromise, 2300, []),
+      settleWithin(esportsPromise, 1000, null)
     ]);
+    if (!official && !coreMatches.length && !localMatches.length && !esportsMatch) {
+      official = await settleWithin(officialPromise, 2200, { rankings: [] });
+      coreMatches = await settleWithin(corePromise, 500, []);
+    }
+    official ||= { rankings: [] };
     warmAliasSearchInBackground(query);
     if (coreMatches.length) await rememberCorehallaAliasMatches(coreMatches).catch(() => null);
 
-    const rankings = await hydrateRankingPlayers(official?.rankings || [], 'suggestion', { includeLegends: false });
+    const rankings = await hydrateRankingPlayers(official?.rankings || [], 'suggestion', { includeLegends: true, legendTimeoutMs: 650, legendConcurrency: 10 });
     const existingIds = new Set(rankings.flatMap((item) => (item.players || []).map((player) => Number(player.id))));
     const candidates = [];
     if (isNumeric) candidates.push({ id: Number(numericId), name: `Player ${numericId}`, aliases: [] });
@@ -2715,7 +2733,7 @@ app.get('/api/suggestions', async (req, res, next) => {
       .sort((a, b) => candidateSearchScore(b, query) - candidateSearchScore(a, query))
       .slice(0, 8);
     const profiles = (await mapWithConcurrency(uniqueCandidates, 8, (item) =>
-      buildProfileSearchRanking(item, query, { quick: true, mode, region, rankTimeoutMs: 650 })
+      buildProfileSearchRanking(item, query, { quick: true, mode, region, rankTimeoutMs: 750, legendTimeoutMs: 650 })
     )).filter(Boolean);
     const combined = sortSearchRankings([...profiles, ...rankings], query);
     const payload = {
@@ -2748,15 +2766,27 @@ app.get('/api/search', async (req, res, next) => {
       page: '1', max_results: '20', game_mode: mode, region, search: query, order_by: 'rating'
     });
 
-    const [official, coreMatches, esportsMatch] = await Promise.all([
-      isNumeric ? Promise.resolve({ rankings: [], total_pages: 0 }) : settleWithin(apiFetch(`/leaderboard/ranked?${params}`), 1250, { rankings: [], total_pages: 0 }),
-      (isNumeric || exactLocal) ? Promise.resolve([]) : settleWithin(searchCorehallaAliasesBroad(query, 2, false), 2600, []),
-      isNumeric ? Promise.resolve(null) : settleWithin(findEsportsPlayerByName(query, ''), 1100, null)
+    const officialPromise = isNumeric
+      ? Promise.resolve({ rankings: [], total_pages: 0 })
+      : apiFetch(`/leaderboard/ranked?${params}`).catch(() => ({ rankings: [], total_pages: 0 }));
+    const corePromise = (isNumeric || exactLocal)
+      ? Promise.resolve([])
+      : searchCorehallaAliasesBroad(query, 2, false).catch(() => []);
+    const esportsPromise = isNumeric ? Promise.resolve(null) : findEsportsPlayerByName(query, '').catch(() => null);
+    let [official, coreMatches, esportsMatch] = await Promise.all([
+      settleWithin(officialPromise, 1700, null),
+      settleWithin(corePromise, 2800, []),
+      settleWithin(esportsPromise, 1200, null)
     ]);
+    if (!official && !coreMatches.length && !localMatches.length && !esportsMatch) {
+      official = await settleWithin(officialPromise, 2800, { rankings: [], total_pages: 0 });
+      coreMatches = await settleWithin(corePromise, 700, []);
+    }
+    official ||= { rankings: [], total_pages: 0 };
     warmAliasSearchInBackground(query);
     if (coreMatches.length) await rememberCorehallaAliasMatches(coreMatches).catch(() => null);
 
-    const hydratedOfficial = await hydrateRankingPlayers(official?.rankings || [], 'search', { includeLegends: false });
+    const hydratedOfficial = await hydrateRankingPlayers(official?.rankings || [], 'search', { includeLegends: true, legendTimeoutMs: 700, legendConcurrency: 10 });
     const needle = normalizeName(query);
     const officialRankings = hydratedOfficial.filter((item) => (item.players || []).some((player) =>
       normalizeName(player.username).includes(needle)
@@ -2774,7 +2804,7 @@ app.get('/api/search', async (req, res, next) => {
       .sort((a, b) => candidateSearchScore(b, query) - candidateSearchScore(a, query))
       .slice(0, 14);
     const profiles = (await mapWithConcurrency(uniqueCandidates, 8, (item) =>
-      buildProfileSearchRanking(item, query, { quick: true, mode, region, rankTimeoutMs: 750 })
+      buildProfileSearchRanking(item, query, { quick: true, mode, region, rankTimeoutMs: 900, legendTimeoutMs: 700 })
     )).filter(Boolean);
 
     const combined = sortSearchRankings([...profiles, ...officialRankings], query);
@@ -3439,20 +3469,19 @@ app.get('/api/player/:id/teammates', async (req, res, next) => {
       if (!previous || Number(item.team_rating || 0) > Number(previous.team_rating || 0)) bestByPlayer.set(item.id, item);
     }
 
-    const teammates = await mapWithConcurrency([...bestByPlayer.values()], 5, async (item) => {
-      const [lifetimePlayer, mainLegend] = await Promise.all([
-        apiFetch(`/player/stats?brawlhalla_id=${item.id}&mode=all`, 120_000).catch(() => null),
-        getMainLegendSummary(item.id)
-      ]);
+    const teammates = await mapWithConcurrency([...bestByPlayer.values()], 10, async (item) => {
+      const cachedPlayer = getCachedProfileResponse(item.id)?.player || null;
+      const mainLegend = cachedPlayer?.main_legend || await settleWithin(getMainLegendSummary(item.id), 700, null);
       return {
         ...item,
-        name: lifetimePlayer?.name || item.name,
+        name: cachedPlayer?.name || item.name,
         tier: item.team_tier || null,
         main_legend: mainLegend || null
       };
     });
 
     teammates.sort((a, b) => Number(b.team_rating || 0) - Number(a.team_rating || 0));
+    res.setHeader('Cache-Control', 'private, max-age=30, stale-while-revalidate=120');
     res.json({
       player_id: id,
       teammates,
