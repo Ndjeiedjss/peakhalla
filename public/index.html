@@ -62,8 +62,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="/styles.css?v=7.43.0" as="style">
-  <link rel="stylesheet" href="/styles.css?v=7.43.0">
+  <link rel="preload" href="/styles.css?v=7.44.0" as="style">
+  <link rel="stylesheet" href="/styles.css?v=7.44.0">
 </head>
 <body>
   <header class="site-header">
@@ -132,7 +132,15 @@
         </div>
         <a href="/arena" id="arena-nav-link" data-i18n="navArena">Arena Wall</a>
         <a href="/#clans" data-i18n="navClans">Clans</a>
-        <a href="/#esports" data-i18n="navEsports">Esports</a>
+        <div class="nav-dropdown esports-nav-dropdown" id="esports-nav-dropdown">
+          <button class="nav-dropdown-toggle" id="esports-nav-toggle" type="button" aria-expanded="false" aria-haspopup="true">
+            <span data-i18n="navEsports">Esports</span><b>⌄</b>
+          </button>
+          <div class="nav-dropdown-menu esports-nav-menu" id="esports-nav-menu" aria-hidden="true">
+            <button type="button" data-esports-view="power"><strong data-i18n="powerRanking">Power rankings</strong><small data-i18n="powerRankingNavNote">Official regional player rankings</small></button>
+            <button type="button" data-esports-view="tournaments"><strong data-i18n="tournamentsNav">Tournaments</strong><small data-i18n="tournamentsNavNote">Official and community events</small></button>
+          </div>
+        </div>
         <a href="/#about" data-i18n="navAbout">About</a>
       </nav>
       <div class="header-actions">
@@ -480,31 +488,51 @@
     </section>
 
     <section id="esports" class="shell section esports-section">
-      <div class="section-heading stacked-mobile">
-        <div><span class="eyebrow">COMPETITIVE</span><h2 data-i18n="esportsTitle">Esports power rankings</h2><p class="section-copy" data-i18n="esportsText">Official competitive names, medals, earnings, and a quick look at major tournament winners.</p></div>
-        <div class="toolbar">
-          <label class="compact-field"><span data-i18n="region">Region</span><select id="esports-region"><option value="NA">North America</option><option value="EU">Europe</option><option value="SA">South America</option><option value="SEA">Southeast Asia</option><option value="MENA">MENA</option></select></label>
-          <label class="compact-field"><span data-i18n="gameMode">Mode</span><select id="esports-mode"><option value="1v1">1v1</option><option value="2v2">2v2</option></select></label>
+      <div class="section-heading stacked-mobile esports-main-heading">
+        <div><span class="eyebrow">COMPETITIVE</span><h2 data-i18n="esportsHubTitle">PeakHalla Esports</h2><p class="section-copy" data-i18n="esportsHubText">Official power rankings and a live tournament directory for Brawlhalla esports.</p></div>
+        <div class="esports-view-switch" role="tablist" aria-label="Esports views">
+          <button class="active" type="button" data-esports-tab="power" role="tab" aria-selected="true"><span>01</span><strong data-i18n="powerRanking">Power rankings</strong></button>
+          <button type="button" data-esports-tab="tournaments" role="tab" aria-selected="false"><span>02</span><strong data-i18n="tournamentsNav">Tournaments</strong></button>
         </div>
       </div>
 
-      <div class="esports-grid">
-        <article class="panel power-panel">
-          <div class="panel-heading"><div><span class="eyebrow">OFFICIAL TABLE</span><h3 data-i18n="powerRanking">Power ranking</h3></div><span id="esports-updated" class="muted"></span></div>
+      <div id="esports-power-view" class="esports-view-panel">
+        <div class="esports-subheading stacked-mobile">
+          <div><span class="eyebrow">OFFICIAL TABLE</span><h3 data-i18n="esportsTitle">Esports power rankings</h3><p class="section-copy" data-i18n="esportsText">Official competitive names, medals, earnings, and major tournament results.</p></div>
+          <div class="toolbar">
+            <label class="compact-field"><span data-i18n="region">Region</span><select id="esports-region"><option value="NA">North America</option><option value="EU">Europe</option><option value="SA">South America</option><option value="SEA">Southeast Asia</option><option value="MENA">MENA</option></select></label>
+            <label class="compact-field"><span data-i18n="gameMode">Mode</span><select id="esports-mode"><option value="1v1">1v1</option><option value="2v2">2v2</option></select></label>
+          </div>
+        </div>
+        <article class="panel power-panel esports-power-card">
+          <div class="panel-heading"><div><span class="eyebrow">POWER RANK</span><h3 data-i18n="powerRanking">Power ranking</h3></div><span id="esports-updated" class="muted"></span></div>
           <div class="table-wrap"><table class="power-table"><thead><tr><th>#</th><th data-i18n="player">Player</th><th data-i18n="earnings">Earnings</th><th>TOP 8</th><th>🥇</th><th>🥈</th><th>🥉</th></tr></thead><tbody id="power-ranking-body"></tbody></table></div>
           <a id="esports-source" class="source-link" href="https://www.brawlhalla.com/rankings/esports" target="_blank" rel="noopener noreferrer" data-i18n="officialSource">Open official rankings ↗</a>
         </article>
-
-        <article class="panel tournament-panel">
-          <div class="panel-heading"><div><span class="eyebrow">EVENTS</span><h3 data-i18n="tournamentList">Tournament list</h3></div><span id="tournament-region-label" class="server-chip">MENA SERVER</span></div>
-          <div id="tournament-list" class="tournament-list"></div>
+        <article class="panel champions-panel">
+          <div class="panel-heading"><div><span class="eyebrow">HALL OF WINS</span><h3 data-i18n="proWinners">Pro players & major titles</h3></div><span class="muted" data-i18n="notExhaustive">Featured titles, not a complete career list</span></div>
+          <div id="champions-grid" class="champions-grid"></div>
         </article>
       </div>
 
-      <article class="panel champions-panel">
-        <div class="panel-heading"><div><span class="eyebrow">HALL OF WINS</span><h3 data-i18n="proWinners">Pro players & major titles</h3></div><span class="muted" data-i18n="notExhaustive">Featured titles, not a complete career list</span></div>
-        <div id="champions-grid" class="champions-grid"></div>
-      </article>
+      <div id="esports-tournaments-view" class="esports-view-panel" hidden>
+        <div class="tournament-directory-hero panel">
+          <div><span class="eyebrow" data-i18n="liveTournamentFeed">LIVE TOURNAMENT FEED</span><h3 data-i18n="tournamentDirectory">Tournament directory</h3><p data-i18n="tournamentDirectoryText">New Brawlhalla tournament announcements are checked automatically and added here.</p></div>
+          <span class="tournament-live-badge"><i></i><b data-i18n="autoUpdating">AUTO UPDATING</b></span>
+        </div>
+        <div class="tournament-controls panel">
+          <div class="tournament-type-tabs" role="tablist">
+            <button class="active" type="button" data-tournament-type="official" aria-selected="true"><span>★</span><strong data-i18n="officialTournaments">Official tournaments</strong></button>
+            <button type="button" data-tournament-type="community" aria-selected="false"><span>◎</span><strong data-i18n="communityTournaments">Community tournaments</strong></button>
+          </div>
+          <div class="tournament-filter-actions">
+            <label class="compact-field tournament-region-field"><span data-i18n="tournamentRegion">Tournament region</span><select id="tournament-directory-region"><option value="ALL">All regions</option><option value="NA">North America</option><option value="EU">Europe</option><option value="SA">South America</option><option value="SEA">Southeast Asia</option><option value="MENA">MENA</option><option value="AUS">Australia</option><option value="JPN">Japan</option></select></label>
+            <button id="tournament-directory-refresh" class="secondary-button tournament-refresh-button" type="button"><span data-i18n="refresh">Refresh</span><b>↻</b></button>
+          </div>
+        </div>
+        <div class="tournament-directory-meta"><span id="tournament-directory-updated" class="muted"></span><small id="tournament-directory-count"></small></div>
+        <div id="tournament-directory-list" class="tournament-directory-grid"><div class="tournament-directory-loading"><span></span><strong data-i18n="loadingTournaments">Loading tournaments…</strong></div></div>
+      </div>
     </section>
 
     <section id="about" class="shell about-strip">
@@ -610,7 +638,7 @@
       </a>
     </div>
   </footer>
-  <script src="/app.js?v=7.43.0" defer></script>
+  <script src="/app.js?v=7.44.0" defer></script>
   <script src="/arena-v72.js?v=7.32.0" defer></script>
 </body>
 </html>
