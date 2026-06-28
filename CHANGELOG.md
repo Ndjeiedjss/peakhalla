@@ -1,9 +1,9 @@
-# PeakHalla v7.46
+# PeakHalla v7.47 — Official Brawlhalla Data Trial
 
-- Rebuilt the desktop navigation into a compact, single-line header with smoother hover states and better Arabic spacing.
-- Improved unranked/profile-only name search with broader alias fallback and faster direct BH ID lookup.
-- Prefetches visible search results so player profiles render useful information immediately after opening.
-- Added more resilient legend image sources and retries before falling back to initials.
-- Hardened clan roster merging so current membership controls the list while official data enriches XP, points, roles, and dates.
-- Added Power Rankings player search and 20-player pagination.
-- Added responsive Power Rankings controls and polished load-more animations.
+- Official-only mode is now the default (`PEAKHALLA_DATA_MODE=official`).
+- Disables all CoreHalla and BrawlTools network calls.
+- Player stats, ranked data, 2v2 teams, guilds, legends, and leaderboards use the official Brawlhalla v1 API.
+- Esports power rankings and tournament news use official Brawlhalla pages.
+- Old names are limited to names PeakHalla previously observed from official Brawlhalla responses.
+- Ignores old third-party-enriched profile and guild cache entries.
+- Reversible: set Railway variable `PEAKHALLA_DATA_MODE=hybrid` or upload the supplied v7.46 rollback package.
