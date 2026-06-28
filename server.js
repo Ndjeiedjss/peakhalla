@@ -1123,6 +1123,21 @@ function normalizeGuildStats(payload = {}) {
     guild.guild_id ?? guild.clan_id ?? guild.guildId ?? guild.clanId ?? guild.id ?? 0
   );
   if (!Number.isSafeInteger(id) || id <= 0) return null;
+
+  // Corehalla uses `rank` as the clan tier on a clan profile, while ranking
+  // rows use it as the leaderboard position. Keep those two concepts separate.
+  const rankingRow = Boolean(guild.__ranking_row);
+  const rawRank = Number(guild.rank ?? 0) || null;
+  const xpRank = Number(
+    guild.xp_rank ?? guild.leaderboard_rank ?? guild.position ?? (rankingRow ? rawRank : 0)
+  ) || null;
+  const tier = Number(
+    guild.tier ?? guild.clan_tier ?? guild.guild_tier ?? (!rankingRow ? rawRank : 0)
+  ) || null;
+  const memberCapacity = Number(
+    guild.member_capacity ?? guild.max_members ?? guild.member_limit ?? guild.capacity ?? 200
+  ) || 200;
+
   return {
     guild_id: id,
     name: sanitizePlayerName(guild.name ?? guild.guild_name ?? guild.clan_name ?? `Clan ${id}`),
@@ -1132,10 +1147,12 @@ function normalizeGuildStats(payload = {}) {
     notice: String(guild.notice || guild.description || '').trim().slice(0, 240),
     tags: Array.isArray(guild.tags) ? guild.tags.map((item) => String(item || '').trim()).filter(Boolean).slice(0, 8) : [],
     discord_invite_code: String(guild.discord_invite_code || '').trim() || null,
-    guild_points: Number(guild.guild_points ?? guild.points ?? 0),
-    rank: Number(guild.rank ?? guild.position ?? 0) || null,
+    guild_points: Number(guild.guild_points ?? guild.points ?? guild.weekly_points ?? 0),
+    rank: xpRank,
+    tier,
     is_recruiting: Boolean(guild.is_recruiting),
     member_count: Number(guild.member_count ?? guild.members_count ?? guild.clan?.length ?? guild.members?.length ?? 0) || null,
+    member_capacity: memberCapacity,
     source: guild.source || null,
     updated_at: new Date().toISOString()
   };
@@ -1168,7 +1185,20 @@ function normalizeGuildMembers(payload = {}) {
     xp: Number(item?.xp ?? item?.personal_xp ?? 0),
     guild_points: Number(item?.guild_points ?? item?.personal_points ?? 0)
   })).filter((item) => Number.isSafeInteger(item.brawlhalla_id) && item.brawlhalla_id > 0);
-  return enforceGuildRoleIntegrity(members);
+
+  // Some upstream guild endpoints can return historical duplicate rows. Keep
+  // only the freshest/best row for each Brawlhalla ID before counting members.
+  const unique = new Map();
+  for (const member of members) {
+    const key = Number(member.brawlhalla_id);
+    const previous = unique.get(key);
+    if (!previous
+      || Number(member.join_date || 0) > Number(previous.join_date || 0)
+      || Number(member.xp || 0) > Number(previous.xp || 0)) {
+      unique.set(key, member);
+    }
+  }
+  return enforceGuildRoleIntegrity([...unique.values()]);
 }
 
 async function getPlayerGuild(playerId, ttlMs = 10 * 60_000) {
@@ -1209,10 +1239,10 @@ async function getCorehallaClanRankings(name = '', maxPages = 2, forceFresh = fa
     all.push(...rows);
   }
 
-  const guilds = all.map((row) => normalizeGuildStats({ ...row, source: 'corehalla' })).filter(Boolean);
+  const guilds = all.map((row) => normalizeGuildStats({ ...row, source: 'corehalla', __ranking_row: true })).filter(Boolean);
   const unique = [...new Map(guilds.map((guild) => [guild.guild_id, guild])).values()]
     .sort((a, b) => Number(b.xp || 0) - Number(a.xp || 0) || a.name.localeCompare(b.name));
-  return unique.map((guild, index) => ({ ...guild, rank: index + 1 }));
+  return unique.map((guild, index) => ({ ...guild, rank: guild.rank || index + 1 }));
 }
 
 async function getCorehallaClanStats(guildId, forceFresh = false) {
@@ -1227,7 +1257,14 @@ async function getCorehallaClanStats(guildId, forceFresh = false) {
     if (!payload) continue;
     const guild = normalizeGuildStats({ ...payload, source: 'corehalla' });
     const members = normalizeGuildMembers(payload);
-    if (guild) return { guild: { ...guild, member_count: guild.member_count || members.length }, members };
+    if (guild) return {
+      guild: {
+        ...guild,
+        member_count: members.length || guild.member_count,
+        member_capacity: guild.member_capacity || 200
+      },
+      members
+    };
   }
   return null;
 }
@@ -2711,26 +2748,65 @@ app.get('/api/clans/:id', async (req, res, next) => {
   try {
     const guildId = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
     if (!guildId) return res.status(400).json({ error: 'Invalid guild ID.' });
-    const [officialGuild, officialMembers, legacy, cached] = await Promise.all([
-      getGuildStats(guildId, 5 * 60_000),
-      getGuildMembers(guildId, 5 * 60_000).catch(() => null),
-      getCorehallaClanStats(guildId, false),
+    const forceFresh = String(req.query.refresh || '') === '1';
+
+    const [officialGuild, officialMembers, currentClan, cached] = await Promise.all([
+      forceFresh
+        ? apiFetchFresh(`/guild/stats?guild_id=${encodeURIComponent(guildId)}`).then(normalizeGuildStats).catch(() => null)
+        : getGuildStats(guildId, 5 * 60_000),
+      forceFresh
+        ? apiFetchFresh(`/guild/members?guild_id=${encodeURIComponent(guildId)}`).then(normalizeGuildMembers).catch(() => null)
+        : getGuildMembers(guildId, 5 * 60_000).catch(() => null),
+      getCorehallaClanStats(guildId, forceFresh),
       readGuildCache()
     ]);
-    const officialRosterAvailable = Array.isArray(officialMembers);
-    const members = enforceGuildRoleIntegrity(officialRosterAvailable ? officialMembers : (legacy?.members || []));
+
     const cachedGuild = cached.guilds.find((item) => Number(item.guild_id) === guildId);
-    const guild = mergeGuilds(legacy?.guild, cachedGuild, officialGuild);
-    if (!guild) return res.status(404).json({ error: 'Clan not found.' });
+    const currentMembers = Array.isArray(currentClan?.members) ? currentClan.members : [];
+    const officialRoster = Array.isArray(officialMembers) ? officialMembers : [];
+    const candidateGuild = mergeGuilds(cachedGuild, officialGuild, currentClan?.guild);
+    if (!candidateGuild) return res.status(404).json({ error: 'Clan not found.' });
+
+    const capacity = Math.max(1, Number(candidateGuild.member_capacity || 200));
+    // Corehalla's clan profile represents the current roster. The official
+    // members endpoint can include departed/historical members, which is why a
+    // clan capped at 200 could previously show 331 on PeakHalla.
+    let members = [];
+    let membersSource = 'unavailable';
+    if (currentMembers.length && currentMembers.length <= capacity) {
+      members = currentMembers;
+      membersSource = 'current-clan-snapshot';
+    } else if (officialRoster.length && officialRoster.length <= capacity) {
+      members = officialRoster;
+      membersSource = 'official-brawlhalla';
+    } else if (currentMembers.length) {
+      members = currentMembers.slice(0, capacity);
+      membersSource = 'current-clan-snapshot-capped';
+    }
+    members = enforceGuildRoleIntegrity(members);
+
+    let xpRank = Number(candidateGuild.rank || 0) || null;
+    if (!xpRank && candidateGuild.name) {
+      const rankingMatches = await getCorehallaClanRankings(candidateGuild.name, 2, forceFresh).catch(() => []);
+      const exact = rankingMatches.find((item) => Number(item.guild_id) === guildId)
+        || rankingMatches.find((item) => normalizeName(item.name) === normalizeName(candidateGuild.name));
+      xpRank = Number(exact?.rank || 0) || null;
+    }
+
     const fullGuild = {
-      ...guild,
-      member_count: officialRosterAvailable ? members.length : (guild.member_count ?? members.length)
+      ...candidateGuild,
+      rank: xpRank,
+      member_count: members.length,
+      member_capacity: capacity,
+      roster_checked_at: new Date().toISOString()
     };
     await rememberGuild(fullGuild).catch(() => null);
     res.json({
       guild: fullGuild,
       members,
-      members_source: officialRosterAvailable ? 'official-brawlhalla' : 'fallback-cache',
+      members_source: membersSource,
+      roster_is_current: membersSource.startsWith('current-clan-snapshot'),
+      official_roster_count: officialRoster.length || null,
       role_order: ['Recruit', 'Member', 'Officer', 'Leader'],
       role_integrity: { leader_count: members.filter((member) => member.rank === 'Leader').length }
     });
