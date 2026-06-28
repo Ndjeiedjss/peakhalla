@@ -1,0 +1,5 @@
+ROLL BACK TO PEAKHALLA v7.46 HYBRID MODE
+
+Upload server.js to the repository root.
+Upload public/app.js and public/index.html inside the public folder.
+Commit, wait for Railway, then hard refresh.

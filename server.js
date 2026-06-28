@@ -16,8 +16,6 @@ const COMMUNITY_TOURNAMENTS_URL = 'https://www.brawlhalla.com/news/upcoming-comm
 const OFFICIAL_LEGENDS_BASE = 'https://www.brawlhalla.com/legends';
 const BRAWLTOOLS_API_BASE = process.env.BRAWLTOOLS_API_BASE || 'https://api.brawltools.com/v2';
 const COREHALLA_TRPC_BASE = process.env.COREHALLA_TRPC_BASE || 'https://corehalla.com/api/trpc';
-const DATA_PROVIDER_MODE = String(process.env.PEAKHALLA_DATA_MODE || 'official').trim().toLowerCase();
-const OFFICIAL_ONLY_MODE = DATA_PROVIDER_MODE !== 'hybrid';
 const DATA_DIR = path.join(__dirname, 'data');
 const SNAPSHOTS_FILE = path.join(DATA_DIR, 'snapshots.json');
 const NAMES_FILE = path.join(DATA_DIR, 'name-history.json');
@@ -69,10 +67,6 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: '8mb' }));
-app.use((_req, res, next) => {
-  res.setHeader('X-PeakHalla-Data-Mode', OFFICIAL_ONLY_MODE ? 'official-brawlhalla-only' : 'hybrid');
-  next();
-});
 app.use((req, res, next) => {
   const isApi = req.path.startsWith('/api/');
   const isHtml = req.path === '/' || req.path.endsWith('.html') || req.path.startsWith('/player/') || req.path.startsWith('/clan/') || req.path === '/queue' || req.path === '/arena' || req.path.startsWith('/esports/');
@@ -193,7 +187,6 @@ function cleanNameHistoryList(list = []) {
     // Old builds scraped navigation labels from third-party HTML. Entries that
     // exist only because of that unreliable scraper are intentionally removed.
     .filter((item) => !(item.sources.length && item.sources.every((source) => source === 'external-profile')))
-    .filter((item) => !OFFICIAL_ONLY_MODE || !item.sources.length || item.sources.some((source) => !/(corehalla|brawltools|external-profile)/i.test(String(source))))
     .filter((item) => {
       const key = normalizeName(item.name);
       if (seen.has(key)) return false;
@@ -205,11 +198,6 @@ function cleanNameHistoryList(list = []) {
 }
 
 async function brawlToolsFetch(endpoint, ttlMs = 15 * 60_000) {
-  if (OFFICIAL_ONLY_MODE) {
-    const error = new Error('Third-party esports provider is disabled in official-only mode.');
-    error.status = 503;
-    throw error;
-  }
   const key = `brawltools:${endpoint}`;
   const now = Date.now();
   const cached = cache.get(key);
@@ -333,7 +321,6 @@ function unwrapTrpcPayload(body) {
 }
 
 async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFresh = false) {
-  if (OFFICIAL_ONLY_MODE) return null;
   const key = `corehalla:${procedure}:${JSON.stringify(input)}`;
   const now = Date.now();
   const cached = cache.get(key);
@@ -473,7 +460,6 @@ function hasExactAliasMatch(matches, query) {
 }
 
 function warmAliasSearchInBackground(query) {
-  if (OFFICIAL_ONLY_MODE) return;
   const key = normalizeName(query);
   if (key.length < 2 || aliasSearchWarmups.has(key)) return;
   const job = (async () => {
@@ -492,10 +478,6 @@ function getCachedProfileResponse(playerId) {
     profileResponseCache.delete(key);
     return null;
   }
-  if (OFFICIAL_ONLY_MODE && (cached.value?.player?.data_quality?.corehalla_enriched || cached.value?.player?.data_quality?.official_only !== true)) {
-    profileResponseCache.delete(key);
-    return null;
-  }
   return cached.value;
 }
 
@@ -505,7 +487,6 @@ async function getDiskCachedProfileResponse(playerId) {
   if (!entry?.value) return null;
   const age = Date.now() - Number(entry.saved_at || 0);
   if (!Number.isFinite(age) || age > PROFILE_DISK_CACHE_MAX_AGE_MS) return null;
-  if (OFFICIAL_ONLY_MODE && (entry.value?.player?.data_quality?.corehalla_enriched || entry.value?.player?.data_quality?.official_only !== true)) return null;
   profileResponseCache.set(String(playerId), {
     value: entry.value,
     expiresAt: Date.now() + PROFILE_RESPONSE_TTL_MS
@@ -543,7 +524,6 @@ async function readSnapshotHistory(playerId) {
 }
 
 async function getCorehallaPlayerStats(playerId, forceFresh = false) {
-  if (OFFICIAL_ONLY_MODE) return null;
   const variants = [String(playerId), Number(playerId)].map((value) =>
     corehallaFetch('getPlayerStats', { playerId: value }, 2 * 60_000, forceFresh).catch(() => null)
   );
@@ -556,7 +536,6 @@ async function getCorehallaPlayerStats(playerId, forceFresh = false) {
 }
 
 async function getCorehallaPlayerAliases(playerId, forceFresh = false) {
-  if (OFFICIAL_ONLY_MODE) return [];
   const variants = [String(playerId), Number(playerId)].map((value) =>
     corehallaFetch('getPlayerAliases', { playerId: value }, 15 * 60_000, forceFresh).catch(() => null)
   );
@@ -588,7 +567,6 @@ function cleanAliasForSearch(value) {
 }
 
 async function searchCorehallaAliases(alias, page = 1, forceFresh = false) {
-  if (OFFICIAL_ONLY_MODE) return [];
   const payload = await corehallaFetch(
     'searchPlayerAlias',
     { alias: String(alias).trim(), page: Number(page) || 1 },
@@ -613,7 +591,6 @@ async function searchCorehallaAliases(alias, page = 1, forceFresh = false) {
 }
 
 async function searchCorehallaAliasesBroad(alias, maxPages = 8, forceFresh = false) {
-  if (OFFICIAL_ONLY_MODE) return [];
   const needle = normalizeName(alias);
   let firstPage = await searchCorehallaAliases(alias, 1, false).catch(() => []);
   if (!firstPage.length && forceFresh) firstPage = await searchCorehallaAliases(alias, 1, true).catch(() => []);
@@ -1377,7 +1354,6 @@ async function getGuildMembers(guildId, ttlMs = 10 * 60_000) {
 }
 
 async function getCorehallaClanRankings(name = '', maxPages = 2, forceFresh = false) {
-  if (OFFICIAL_ONLY_MODE) return [];
   const all = [];
   for (let page = 1; page <= Math.max(1, maxPages); page += 1) {
     let payload = await corehallaFetch(
@@ -1416,7 +1392,6 @@ async function getCorehallaClanRankings(name = '', maxPages = 2, forceFresh = fa
 }
 
 async function getCorehallaClanStats(guildId, forceFresh = false) {
-  if (OFFICIAL_ONLY_MODE) return null;
   const variants = [String(guildId), Number(guildId)];
   for (const clanId of variants) {
     const payload = await corehallaFetch(
@@ -1460,11 +1435,10 @@ async function rememberGuilds(guilds = []) {
     const now = new Date().toISOString();
     for (const guild of valid) {
       const key = String(guild.guild_id);
-      const previous = OFFICIAL_ONLY_MODE ? {} : (data.guilds[key] || {});
-      const merged = OFFICIAL_ONLY_MODE ? { ...guild } : (mergeGuilds(previous, guild) || { ...previous, ...guild });
-      merged.xp = OFFICIAL_ONLY_MODE ? numberOrZero(guild.xp) : maxPositiveNumber(previous.xp, guild.xp);
-      merged.tier = OFFICIAL_ONLY_MODE ? (numberOrNull(guild.tier) || null) : (maxPositiveNumber(previous.tier, guild.tier) || null);
-      merged.data_policy = OFFICIAL_ONLY_MODE ? 'official-brawlhalla-only' : (merged.data_policy || 'hybrid');
+      const previous = data.guilds[key] || {};
+      const merged = mergeGuilds(previous, guild) || { ...previous, ...guild };
+      merged.xp = maxPositiveNumber(previous.xp, guild.xp);
+      merged.tier = maxPositiveNumber(previous.tier, guild.tier) || null;
 
       const verifiedRank = guild.rank_verified && Number(guild.rank) > 0
         ? guild
@@ -1484,9 +1458,7 @@ async function rememberGuild(guild) {
 
 async function readGuildCache() {
   const data = await readJson(GUILDS_FILE, { updated_at: null, guilds: {} });
-  const guilds = Object.values(data?.guilds || {}).filter((guild) =>
-    Number(guild?.guild_id) > 0 && (!OFFICIAL_ONLY_MODE || guild.data_policy === 'official-brawlhalla-only')
-  );
+  const guilds = Object.values(data?.guilds || {}).filter((guild) => Number(guild?.guild_id) > 0);
   return { updated_at: data?.updated_at || null, guilds };
 }
 
@@ -2311,10 +2283,36 @@ function esportsNameScore(searchResult, requestedName, region) {
   return score;
 }
 
-async function findEsportsPlayerByName(_name, _region) {
-  // Official gameplay search is handled by Brawlhalla leaderboards and PeakHalla's
-  // locally observed official-name history. Esports pages do not expose a BH ID.
-  return null;
+async function findEsportsPlayerByName(name, region) {
+  const terms = esportsSearchTerms(name);
+  const matches = [];
+  let lastTemporaryError = null;
+
+  for (const term of terms) {
+    try {
+      const params = new URLSearchParams({ query: term, maxResults: '25' });
+      const response = await brawlToolsFetch(`/player/search?${params}`, 30 * 60_000);
+      for (const item of response?.searchPlayers || []) {
+        const id = esportsPlayerId(item);
+        if (!id) continue;
+        matches.push({ ...item, esports_player_id: id });
+      }
+    } catch (error) {
+      // Some regional ranking names contain team tags or decorative symbols.
+      // The esports search endpoint only accepts word characters and dots,
+      // so skip rejected variants and continue with the sanitized candidates.
+      if (error.status === 400 || error.status === 422) continue;
+      lastTemporaryError = error;
+    }
+  }
+
+  if (!matches.length && lastTemporaryError) throw lastTemporaryError;
+
+  const unique = [...new Map(matches.map((item) => [item.esports_player_id, item])).values()];
+  const best = unique
+    .map((item) => ({ item, score: esportsNameScore(item, name, region) }))
+    .sort((a, b) => b.score - a.score)[0];
+  return best && best.score >= 45 ? best.item : null;
 }
 
 function tournamentSourceUrl(tournament = {}) {
@@ -2773,7 +2771,7 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.47.0', data_mode: OFFICIAL_ONLY_MODE ? 'official' : 'hybrid' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.46.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
@@ -2798,8 +2796,8 @@ app.get('/api/suggestions', async (req, res, next) => {
       return apiFetch(`/leaderboard/ranked?${params}`, 30_000).catch(() => ({ rankings: [] }));
     }
 
-    // Local names previously observed from official Brawlhalla responses return first.
-    // In official-only mode no third-party alias lookup is performed.
+    // Local old-name hits return first. A deeper Corehalla lookup continues in
+    // the background so the next keystroke or search is instant.
     if (exactLocal) {
       warmAliasSearchInBackground(query);
       const candidates = localMatches.slice(0, 7).map((item) => ({
@@ -3633,63 +3631,47 @@ app.get('/api/esports', async (req, res) => {
 app.get('/api/esports/player', async (req, res, next) => {
   try {
     const name = String(req.query.name || '').trim().slice(0, 80);
-    const requestedRegion = String(req.query.region || '').trim().toUpperCase().slice(0, 10);
+    const region = String(req.query.region || '').trim().toUpperCase().slice(0, 10);
     if (name.length < 2) return res.status(400).json({ error: 'Type a player name.' });
 
-    const supportedRegions = ['NA', 'EU', 'SA', 'SEA', 'MENA'];
-    const regions = supportedRegions.includes(requestedRegion) ? [requestedRegion] : supportedRegions;
-    const lookups = [];
-    for (const region of regions) {
-      for (const mode of ['1v1', '2v2']) {
-        lookups.push(
-          searchOfficialEsportsRankings(region, mode, name, 12)
-            .then((result) => ({ region, mode, result }))
-            .catch(() => ({ region, mode, result: { rankings: [], source_url: null } }))
-        );
-      }
-    }
+    const searchResult = await findEsportsPlayerByName(name, region);
+    if (!searchResult) return res.status(404).json({ error: 'No esports tournament profile was found for this player.' });
 
-    const results = await Promise.all(lookups);
-    const needle = normalizeName(name);
-    const matches = results.flatMap(({ region, mode, result }) =>
-      (result.rankings || []).map((item) => ({ ...item, region, mode, source_url: result.source_url }))
-    ).sort((a, b) => {
-      const aName = normalizeName(a.name);
-      const bName = normalizeName(b.name);
-      const aTier = aName === needle ? 0 : aName.startsWith(needle) ? 1 : 2;
-      const bTier = bName === needle ? 0 : bName.startsWith(needle) ? 1 : 2;
-      return aTier - bTier || Number(a.rank || Infinity) - Number(b.rank || Infinity);
-    });
+    const playerId = searchResult.esports_player_id;
+    const [detailsResult, singles, doubles] = await Promise.all([
+      brawlToolsFetch(`/player/${encodeURIComponent(playerId)}`, 60 * 60_000).catch(() => null),
+      getEsportsPlacements(playerId, 1),
+      getEsportsPlacements(playerId, 2)
+    ]);
 
-    if (!matches.length) return res.status(404).json({ error: 'No official esports power-ranking profile was found for this player.' });
-    const primary = matches[0];
-    const singles = matches.find((item) => item.mode === '1v1' && normalizeName(item.name) === normalizeName(primary.name));
-    const doubles = matches.find((item) => item.mode === '2v2' && normalizeName(item.name) === normalizeName(primary.name));
+    const player = detailsResult?.player || searchResult.player || {};
+    const seen = new Set();
+    const placements = [...singles, ...doubles]
+      .filter((item) => {
+        const tournament = item.tournament || {};
+        const key = [item.mode, tournament.slug || tournament.id || tournament.tournamentName, tournament.eventName, item.placement].join('|');
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => Number(b.tournament?.startTime || 0) - Number(a.tournament?.startTime || 0));
 
     res.json({
       player: {
-        id: null,
-        name: primary.name || name,
-        region: primary.region || requestedRegion || null,
-        country: null,
-        twitch: null,
-        twitter: null,
-        earnings: Number(primary.earnings || singles?.earnings || doubles?.earnings || 0),
-        pr1v1: singles?.rank ?? null,
-        pr2v2: doubles?.rank ?? null
+        id: playerId,
+        name: player.name || searchResult.player?.name || name,
+        region: searchResult.region || region || null,
+        country: player.country || null,
+        twitch: player.twitch || searchResult.player?.twitch || null,
+        twitter: player.twitter || searchResult.player?.twitter || null,
+        earnings: Number(searchResult.earnings || 0),
+        pr1v1: searchResult.pr1v1 ?? null,
+        pr2v2: searchResult.pr2v2 ?? null
       },
-      summary: {
-        events: 0,
-        titles: Number(primary.gold || 0),
-        podiums: Number(primary.gold || 0) + Number(primary.silver || 0) + Number(primary.bronze || 0),
-        top8: Number(primary.top8 || 0),
-        best_placement: null
-      },
-      placements: [],
-      current_rankings: matches.slice(0, 10),
-      source: 'Official Brawlhalla Esports Power Rankings',
-      source_url: primary.source_url || `${OFFICIAL_ESPORTS_BASE}/${primary.region}/${primary.mode}/1?sortBy=powerRanking`,
-      official_only: true
+      summary: summarizePlacements(placements),
+      placements,
+      source: 'Brawlhalla Esports Stats API',
+      source_url: 'https://www.docs.brawltools.com/v2/requests/player/placement/'
     });
   } catch (error) {
     next(error);
@@ -3862,13 +3844,12 @@ async function fetchPlayerTeamSources(id, forceFresh = false) {
     fetchOfficial(`/player/stats?brawlhalla_id=${id}&mode=all`, 5 * 60_000),
     getCorehallaPlayerStats(id, forceFresh).catch(() => null)
   ]);
-  const sources = [
+  return [
     ['official-player-teams', teamsPayload],
     ['official-ranked-2v2', ranked2v2Payload],
-    ['official-all-stats', allStatsPayload]
+    ['official-all-stats', allStatsPayload],
+    ['corehalla-player-stats', coreStatsPayload]
   ];
-  if (!OFFICIAL_ONLY_MODE) sources.push(['corehalla-player-stats', coreStatsPayload]);
-  return sources;
 }
 
 app.get('/api/player/:id/portrait', async (req, res, next) => {
@@ -4035,9 +4016,8 @@ app.get('/api/player/:id', async (req, res, next) => {
       legends: rankedLegends,
       guild: playerGuild,
       data_quality: {
-        source: OFFICIAL_ONLY_MODE ? (fast ? 'Fast official Brawlhalla profile · background refresh pending' : 'Live official Brawlhalla stats') : (coreStats ? 'Fresh Brawlhalla + fresh Corehalla progression (highest XP/level wins)' : (fast ? 'Fast Brawlhalla profile · background refresh pending' : 'Live Brawlhalla stats')),
-        corehalla_enriched: OFFICIAL_ONLY_MODE ? false : Boolean(coreStats),
-        official_only: OFFICIAL_ONLY_MODE,
+        source: coreStats ? 'Fresh Brawlhalla + fresh Corehalla progression (highest XP/level wins)' : (fast ? 'Fast Brawlhalla profile · background refresh pending' : 'Live Brawlhalla stats'),
+        corehalla_enriched: Boolean(coreStats),
         live_fetch: !fast,
         fetched_at: new Date().toISOString(),
         account_xp_reported: numberOrNull(lifetime?.xp) !== null,
@@ -4045,8 +4025,8 @@ app.get('/api/player/:id', async (req, res, next) => {
         legends_with_level: lifetimeLegends.filter((legend) => legend.level !== null).length,
         legends_with_xp: lifetimeLegends.filter((legend) => legend.xp !== null).length,
         played_legends: lifetimeLegends.filter((legend) => legend.games > 0).length,
-        progression_basis: OFFICIAL_ONLY_MODE ? 'Official Brawlhalla-reported account and legend progression' : (coreStats ? 'Highest current account and legend XP/level reported by Brawlhalla or Corehalla' : 'Brawlhalla-reported account and legend progression'),
-        game_time_basis: OFFICIAL_ONLY_MODE ? 'Sum of official Brawlhalla per-legend match_time fields' : (coreStats ? 'Live Brawlhalla match time with Corehalla fallback for missing fields' : 'Sum of Brawlhalla per-legend match_time fields')
+        progression_basis: coreStats ? 'Highest current account and legend XP/level reported by Brawlhalla or Corehalla' : 'Brawlhalla-reported account and legend progression',
+        game_time_basis: coreStats ? 'Live Brawlhalla match time with Corehalla fallback for missing fields' : 'Sum of Brawlhalla per-legend match_time fields'
       },
       updated_at: new Date().toISOString()
     };
@@ -4072,7 +4052,7 @@ app.get('/api/player/:id', async (req, res, next) => {
     );
     if (hasMeaningfulProfileData) setCachedProfileResponse(id, payload);
 
-    res.setHeader('X-Stats-Source', OFFICIAL_ONLY_MODE ? (fast ? 'Official-Brawlhalla-fast' : 'Official-Brawlhalla-live') : (coreStats ? 'Brawlhalla-plus-fresh-Corehalla-highest-progression' : (fast ? 'Brawlhalla-fast' : 'Brawlhalla-live')));
+    res.setHeader('X-Stats-Source', coreStats ? 'Brawlhalla-plus-fresh-Corehalla-highest-progression' : (fast ? 'Brawlhalla-fast' : 'Brawlhalla-live'));
     res.setHeader('X-Stats-Fetched-At', player.updated_at);
     res.setHeader('X-Alias-Refresh', fast ? 'background-pending' : 'automatic-fresh');
     res.json(payload);
