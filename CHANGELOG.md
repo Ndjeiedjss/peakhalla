@@ -1,8 +1,9 @@
-# PeakHalla v7.40
+# PeakHalla v7.46
 
-- Fixed clan rosters showing departed/historical members.
-- Current clan snapshot is now preferred over the historical official member feed.
-- Deduplicates clan members by Brawlhalla ID.
-- Separates XP rank from clan tier.
-- Shows members as current count / capacity (for example 199 / 200).
-- Clan pages request a fresh snapshot on open.
+- Rebuilt the desktop navigation into a compact, single-line header with smoother hover states and better Arabic spacing.
+- Improved unranked/profile-only name search with broader alias fallback and faster direct BH ID lookup.
+- Prefetches visible search results so player profiles render useful information immediately after opening.
+- Added more resilient legend image sources and retries before falling back to initials.
+- Hardened clan roster merging so current membership controls the list while official data enriches XP, points, roles, and dates.
+- Added Power Rankings player search and 20-player pagination.
+- Added responsive Power Rankings controls and polished load-more animations.
