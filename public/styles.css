@@ -2987,3 +2987,151 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
   .power-pagination { align-items: stretch; flex-direction: column; }
   .power-load-more { width: 100%; }
 }
+
+/* PeakHalla v7.52 — persistent Arena accounts and notifications */
+.arena-global-account { position: relative; flex: 0 0 auto; }
+.arena-global-login,
+.arena-global-profile,
+.arena-notification-button {
+  min-height: 44px;
+  border: 1px solid rgba(151, 111, 255, .26);
+  background: linear-gradient(145deg, rgba(29, 20, 47, .94), rgba(14, 9, 24, .94));
+  color: var(--text);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 28px rgba(5, 2, 12, .18);
+}
+.arena-global-login {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 13px;
+  border-radius: 14px;
+  text-decoration: none;
+  font: 800 11px/1 var(--sans);
+  letter-spacing: .08em;
+  transition: transform .24s ease, border-color .24s ease, box-shadow .24s ease;
+}
+.arena-global-login span { color: #b99aff; font-size: 18px; }
+.arena-global-login:hover { transform: translateY(-2px); border-color: rgba(185,154,255,.58); box-shadow: 0 14px 34px rgba(84,48,168,.22); }
+.arena-global-user { display: flex; align-items: center; gap: 7px; }
+.arena-notification-button {
+  position: relative;
+  width: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform .24s ease, border-color .24s ease, background .24s ease;
+}
+.arena-notification-button:hover,
+.arena-global-account.is-open .arena-notification-button { transform: translateY(-2px); border-color: rgba(185,154,255,.64); background: rgba(69,43,115,.74); }
+.arena-notification-button svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.arena-notification-button.has-unread svg { animation: arenaBellPulse 2.8s ease-in-out infinite; }
+.arena-notification-button > span {
+  position: absolute;
+  inset-block-start: -5px;
+  inset-inline-end: -5px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #0d0816;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff6f91, #8b5cf6);
+  color: white;
+  font: 800 9px/1 var(--sans);
+  box-shadow: 0 5px 16px rgba(139,92,246,.38);
+}
+.arena-global-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 12px 5px 6px;
+  border-radius: 15px;
+  text-decoration: none;
+  transition: transform .24s ease, border-color .24s ease;
+}
+.arena-global-profile:hover { transform: translateY(-2px); border-color: rgba(185,154,255,.58); }
+.arena-global-avatar,
+.arena-notification-avatar {
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: linear-gradient(145deg, #4c2c83, #201337);
+  color: #efe8ff;
+  font: 800 13px/1 var(--display);
+}
+.arena-global-avatar { width: 32px; height: 32px; }
+.arena-global-avatar img,
+.arena-notification-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.arena-global-profile strong { max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.arena-notification-panel {
+  position: absolute;
+  z-index: 150;
+  inset-block-start: calc(100% + 13px);
+  inset-inline-end: 0;
+  width: min(390px, calc(100vw - 24px));
+  overflow: hidden;
+  border: 1px solid rgba(151,111,255,.3);
+  border-radius: 20px;
+  background: rgba(15, 9, 25, .98);
+  box-shadow: 0 28px 70px rgba(2,1,7,.58), inset 0 1px 0 rgba(255,255,255,.04);
+  backdrop-filter: blur(22px);
+  transform-origin: top right;
+  animation: arenaNotificationIn .22s ease both;
+}
+[dir="rtl"] .arena-notification-panel { transform-origin: top left; }
+.arena-notification-panel > header,
+.arena-notification-panel > footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 15px 17px; }
+.arena-notification-panel > header { border-bottom: 1px solid var(--line); }
+.arena-notification-panel > header div { display: grid; gap: 4px; }
+.arena-notification-panel > header span { color: var(--accent-2); font: 800 8px/1 var(--sans); letter-spacing: .15em; }
+.arena-notification-panel > header strong { font: 700 17px/1.1 var(--display); }
+.arena-notification-panel button,
+.arena-notification-panel a { color: inherit; }
+.arena-notification-panel > header button,
+.arena-notification-panel > footer button,
+.arena-notification-panel > footer a { border: 0; background: none; color: #bcaed0; font: 700 10px/1 var(--sans); cursor: pointer; text-decoration: none; }
+.arena-notification-panel > header button:hover,
+.arena-notification-panel > footer button:hover,
+.arena-notification-panel > footer a:hover { color: #c9b6ff; }
+.arena-notification-list { max-height: 360px; overflow-y: auto; }
+.arena-notification-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 42px minmax(0,1fr) 8px;
+  align-items: center;
+  gap: 11px;
+  padding: 13px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.055);
+  text-decoration: none;
+  transition: background .2s ease, transform .2s ease;
+}
+.arena-notification-item:hover { background: rgba(139,92,246,.09); }
+.arena-notification-item.is-unread { background: linear-gradient(90deg, rgba(139,92,246,.13), transparent); }
+.arena-notification-avatar { width: 42px; height: 42px; border: 1px solid rgba(185,154,255,.22); }
+.arena-notification-copy { min-width: 0; display: grid; gap: 5px; }
+.arena-notification-copy strong { overflow: hidden; color: #f4efff; font: 650 12px/1.35 var(--sans); text-overflow: ellipsis; }
+.arena-notification-copy small { color: var(--muted); font-size: 9px; }
+.arena-notification-item > i { width: 7px; height: 7px; border-radius: 50%; background: #9b70ff; box-shadow: 0 0 14px #9b70ff; }
+.arena-notification-empty,
+.arena-notification-loading { min-height: 128px; display: grid; place-items: center; align-content: center; gap: 9px; padding: 24px; color: var(--muted); text-align: center; }
+.arena-notification-empty span { color: #84e8b2; font-size: 24px; }
+.arena-notification-loading span { width: 25px; height: 25px; border: 2px solid rgba(185,154,255,.2); border-top-color: #b99aff; border-radius: 50%; animation: spin .7s linear infinite; }
+.arena-notification-panel > footer { border-top: 1px solid var(--line); }
+.arena-post-highlight { animation: arenaPostHighlight 2.2s ease both !important; }
+@keyframes arenaNotificationIn { from { opacity: 0; transform: translateY(-8px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes arenaBellPulse { 0%, 82%, 100% { transform: rotate(0); } 86% { transform: rotate(12deg); } 90% { transform: rotate(-10deg); } 94% { transform: rotate(7deg); } }
+@keyframes arenaPostHighlight { 0%,100% { box-shadow: var(--panel-shadow); } 20%,72% { box-shadow: 0 0 0 2px rgba(155,112,255,.7), 0 0 45px rgba(139,92,246,.25); } }
+@media (max-width: 1180px) {
+  .arena-global-profile strong { display: none; }
+  .arena-global-profile { padding-inline-end: 6px; }
+}
+@media (max-width: 760px) {
+  .arena-global-login b { display: none; }
+  .arena-global-login { width: 42px; justify-content: center; padding: 0; }
+  .arena-global-login span { font-size: 20px; }
+  .arena-notification-panel { position: fixed; inset-inline: 12px; inset-block-start: 78px; width: auto; }
+}

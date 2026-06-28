@@ -74,7 +74,7 @@ const standaloneClanId = clanPathMatch ? clanPathMatch[1] : null;
 const isStandalonePlayerPage = Boolean(standalonePlayerId);
 const isClanPage = Boolean(standaloneClanId);
 const isLiveQueuePage = /^\/queue\/?$/.test(location.pathname);
-const isArenaPage = /^\/arena\/?$/.test(location.pathname);
+const isArenaPage = /^\/arena(?:\/profile\/[^/]+)?\/?$/.test(location.pathname);
 const esportsPathMatch = location.pathname.match(/^\/esports\/(power|tournaments)\/?$/);
 const esportsRouteView = esportsPathMatch ? esportsPathMatch[1] : null;
 const isEsportsPage = Boolean(esportsRouteView);
@@ -1997,6 +1997,7 @@ async function submitArenaAuth(event) {
     const endpoint = state.arenaAuthMode === 'login' ? '/api/arena/login' : '/api/arena/register';
     const data = await arenaRequest(endpoint, { method: 'POST', body: JSON.stringify({ username, password }) });
     state.arenaUser = data.user;
+    window.dispatchEvent(new CustomEvent('arena-account-changed'));
     els.arenaAuthForm.reset();
     renderArenaAccount();
     setArenaFormStatus(els.arenaPostStatus, state.arenaAuthMode === 'login' ? t('arenaSignedIn') : t('arenaAccountReady'), 'success');
@@ -2459,7 +2460,7 @@ els.legendStatsSort?.addEventListener('change', renderLifetimeLegends);
 
 document.querySelectorAll('[data-arena-auth-mode]').forEach((button) => button.addEventListener('click', () => setArenaAuthMode(button.dataset.arenaAuthMode)));
 els.arenaAuthForm?.addEventListener('submit', submitArenaAuth);
-els.arenaLogout?.addEventListener('click', async () => { await arenaRequest('/api/arena/logout', { method: 'POST' }).catch(() => null); state.arenaUser = null; renderArenaAccount(); renderArenaPosts(); });
+els.arenaLogout?.addEventListener('click', async () => { await arenaRequest('/api/arena/logout', { method: 'POST' }).catch(() => null); state.arenaUser = null; window.dispatchEvent(new CustomEvent('arena-account-changed')); renderArenaAccount(); renderArenaPosts(); });
 els.arenaImageInput?.addEventListener('change', async () => {
   try {
     state.arenaImageData = await readArenaImage(els.arenaImageInput.files?.[0]);

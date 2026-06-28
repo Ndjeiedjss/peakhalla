@@ -1,5 +1,6 @@
 (() => {
-  if (!/^\/arena\/?$/.test(location.pathname)) return;
+  const arenaProfilePath = location.pathname.match(/^\/arena\/profile\/([^/]+)\/?$/);
+  if (!/^\/arena(?:\/profile\/[^/]+)?\/?$/.test(location.pathname)) return;
 
   Object.assign(translations.en, {
     arenaMyProfile: 'My profile', arenaProfileEyebrow: 'PLAYER PROFILE', arenaNoBio: 'No bio yet.',
@@ -87,7 +88,7 @@
     const commentForm = state.arenaUser
       ? `<form class="arena-comment-form" data-arena-post-id="${escapeHtml(post.id)}"><div class="arena-replying" hidden><span></span><button type="button" data-arena-cancel-reply>×</button></div><input type="hidden" name="parent_id"><input name="text" maxlength="500" autocomplete="off" placeholder="${escapeHtml(t('arenaWriteComment'))}" required><button type="submit">${escapeHtml(t('arenaSend'))}</button></form>`
       : `<p class="arena-signin-note">${escapeHtml(t('arenaSignInToComment'))}</p>`;
-    return `<article class="arena-post panel" data-v72-post-id="${escapeHtml(post.id)}" style="--arena-delay:${Math.min(index, 10) * 55}ms">
+    return `<article id="arena-post-${escapeHtml(post.id)}" class="arena-post panel" data-v72-post-id="${escapeHtml(post.id)}" style="--arena-delay:${Math.min(index, 10) * 55}ms">
       <header class="arena-post-header">${authorButton(post.author || post.username)}<div class="arena-post-header-meta"><time>${escapeHtml(arenaDate(post.created_at))}</time>${post.updated_at ? `<span class="arena-edited">${escapeHtml(t('arenaEdited'))}</span>` : ''}${post.is_owner ? ownerActions('post', post.id) : ''}</div></header>
       <div class="arena-post-image"><img src="${escapeHtml(post.image_url)}" alt="Screenshot shared by ${escapeHtml(post.username)}" loading="lazy"></div>
       <div class="arena-post-caption-wrap"><p class="arena-post-caption ${post.caption ? '' : 'arena-empty-caption'}" data-v72-caption>${post.caption ? escapeHtml(post.caption) : '—'}</p></div>
@@ -124,6 +125,7 @@
     document.body.classList.remove('arena-profile-open');
     state.arenaProfileAvatarData = null;
     state.arenaRemoveAvatar = false;
+    if (/^\/arena\/profile\//.test(location.pathname)) history.pushState({}, '', '/arena');
   };
 
   const profileAvatar = (profile) => profile.avatar_url ? `<img src="${escapeHtml(profile.avatar_url)}" alt="${escapeHtml(profile.username)}">` : `<span>${escapeHtml(initials(profile.username || 'P').slice(0, 1))}</span>`;
@@ -141,8 +143,9 @@
       setArenaFormStatus(ui.status);
     }
   };
-  const openProfile = async (username) => {
+  const openProfile = async (username, options = {}) => {
     if (!username) return;
+    if (options.updateUrl !== false) history.pushState({}, '', `/arena/profile/${encodeURIComponent(username)}`);
     ui.modal.hidden = false;
     document.body.classList.add('arena-profile-open');
     ui.name.textContent = username;
@@ -214,6 +217,7 @@
       ui.save.disabled = true;
       const data = await arenaRequest('/api/arena/profile', { method: 'PATCH', body: JSON.stringify({ bio: ui.bioInput.value.trim(), avatar_data: state.arenaProfileAvatarData, remove_avatar: state.arenaRemoveAvatar }) });
       state.arenaUser = data.user;
+      window.dispatchEvent(new CustomEvent('arena-account-changed'));
       state.arenaProfileAvatarData = null;
       state.arenaRemoveAvatar = false;
       window.renderArenaAccount();
@@ -296,7 +300,19 @@
 
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !ui.modal.hidden) closeProfile(); });
 
+  const revealRequestedPost = () => {
+    if (!location.hash.startsWith('#arena-post-')) return;
+    const target = document.querySelector(location.hash);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.classList.add('arena-post-highlight');
+      window.setTimeout(() => target.classList.remove('arena-post-highlight'), 2200);
+    }
+  };
+
   applyLanguage();
-  loadArenaUser();
-  loadArenaPosts({ silent: true });
+  Promise.all([loadArenaUser(), loadArenaPosts({ silent: true })]).finally(() => {
+    if (arenaProfilePath?.[1]) openProfile(decodeURIComponent(arenaProfilePath[1]), { updateUrl: false });
+    window.setTimeout(revealRequestedPost, 120);
+  });
 })();
