@@ -1,7 +1,10 @@
-# PeakHalla v7.55
+# PeakHalla v7.56
 
-- Added instant fresh official profile loading, followed by deeper background enrichment.
-- Added persistent PostgreSQL storage for discovered 2v2 teams and teammate fallback results.
-- Improved portrait reliability with local-first assets, cache-busted retries, and restore handling.
-- Fixed Ranked navigation while browsing standalone Esports pages.
-- Bumped all frontend and portrait asset versions to clear stale browser/CDN failures.
+- Fixed current-season 2v2 teammate discovery with an official leaderboard fallback and persistent PostgreSQL team caching.
+- Prevented 2v2 team ratings and ranks from overwriting individual 1v1 player records.
+- Verified profile global rank against the official 1v1 leaderboard before display.
+- Fixed stale cached navigation data overwriting fresh profile rank and ELO values.
+- Made legend portraits local-first and eager by default, with automatic multi-pass loading and retry behavior.
+- Made background profile updates re-render when legends, weapons, play time, XP, images, or rank change.
+- Hydrated missing teammate portraits in the browser without delaying the teammate list.
+- Bumped frontend asset versions to clear old browser and CDN caches.

@@ -534,16 +534,38 @@ async function saveDiscoveredRankingsToDatabase(rankings = [], source = 'officia
   if (!dbReady || !rankings.length) return;
   const aliases = [];
   const teamRows = [];
+  const sourceIsTeamMode = /(?:^|[-_])2v2(?:[-_]|$)/i.test(String(source || ''));
   const client = await dbPool.connect();
   try {
     await client.query('BEGIN');
     for (const ranking of rankings) {
-      if (Array.isArray(ranking.players) && ranking.players.length >= 2) teamRows.push(ranking);
-      for (const player of ranking.players || []) {
+      const players = Array.isArray(ranking.players) ? ranking.players : [];
+      const isTeamRanking = sourceIsTeamMode || players.length >= 2;
+      if (players.length >= 2) teamRows.push(ranking);
+      for (const player of players) {
         const id = Number(player.id);
         const name = sanitizePlayerName(player.username || player.name || '');
         if (!Number.isSafeInteger(id) || id <= 0 || !isPlausiblePlayerName(name)) continue;
         aliases.push({ id, name });
+
+        // A 2v2 row describes the TEAM, not the individual player's 1v1 rating
+        // or world position. Storing those values on the player record caused
+        // profiles such as Raydish to display the wrong global rank.
+        if (isTeamRanking) {
+          await client.query(`
+            INSERT INTO players (
+              brawlhalla_id, current_name, normalized_name, region, main_legend, first_seen, last_seen
+            ) VALUES ($1,$2,$3,$4,$5::jsonb,NOW(),NOW())
+            ON CONFLICT (brawlhalla_id) DO UPDATE SET
+              current_name = EXCLUDED.current_name,
+              normalized_name = EXCLUDED.normalized_name,
+              region = COALESCE(EXCLUDED.region, players.region),
+              main_legend = COALESCE(EXCLUDED.main_legend, players.main_legend),
+              last_seen = NOW()
+          `, [id, name, normalizeName(name), ranking.region || null, JSON.stringify(player.main_legend || null)]);
+          continue;
+        }
+
         await client.query(`
           INSERT INTO players (
             brawlhalla_id, current_name, normalized_name, region, rating, peak_rating, tier,
@@ -3798,7 +3820,7 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.46.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.56.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
@@ -5226,6 +5248,136 @@ async function fetchPlayerTeamSources(id, forceFresh = false) {
   ];
 }
 
+
+const officialTeamLookupCache = new Map();
+const officialTeamLookupInFlight = new Map();
+
+async function getIndexedPlayerRegion(playerId) {
+  if (!dbReady) return null;
+  const result = await dbQuery('SELECT region FROM players WHERE brawlhalla_id = $1 LIMIT 1', [Number(playerId)]).catch(() => null);
+  const region = String(result?.rows?.[0]?.region || '').trim().toUpperCase();
+  return DISCOVERY_REGIONS.includes(region) && region !== 'ALL' ? region : null;
+}
+
+async function fetchOfficial2v2LeaderboardPage(region, page, forceFresh = false) {
+  const params = new URLSearchParams({
+    page: String(page),
+    max_results: '50',
+    game_mode: '2v2',
+    region: region || 'ALL',
+    order_by: 'rating'
+  });
+  const endpoint = `/leaderboard/ranked?${params}`;
+  return forceFresh ? apiFetchFresh(endpoint) : apiFetch(endpoint, 45_000);
+}
+
+async function searchOfficial2v2LeaderboardForPlayer(playerId, forceFresh = false) {
+  const id = Number(playerId);
+  if (!Number.isSafeInteger(id) || id <= 0) return [];
+  const cacheKey = String(id);
+  const cached = officialTeamLookupCache.get(cacheKey);
+  if (!forceFresh && cached && cached.expiresAt > Date.now()) return cached.rows;
+  if (officialTeamLookupInFlight.has(cacheKey)) return officialTeamLookupInFlight.get(cacheKey);
+
+  const task = (async () => {
+    const indexedRegion = await getIndexedPlayerRegion(id);
+    const pagePlan = [];
+    const addPage = (region, page) => {
+      const key = `${region}:${page}`;
+      if (!pagePlan.some((item) => item.key === key)) pagePlan.push({ key, region, page });
+    };
+
+    // Most actively played current-season teams are found immediately on the
+    // first global/regional pages. A bounded deeper scan is used only when the
+    // direct player teams endpoint did not return anything.
+    addPage('ALL', 1);
+    if (indexedRegion) addPage(indexedRegion, 1);
+    for (let page = 2; page <= (forceFresh ? 14 : 8); page += 1) addPage('ALL', page);
+    if (indexedRegion) for (let page = 2; page <= (forceFresh ? 8 : 4); page += 1) addPage(indexedRegion, page);
+
+    const foundRows = [];
+    for (let offset = 0; offset < pagePlan.length && !foundRows.length; offset += 3) {
+      const batch = pagePlan.slice(offset, offset + 3);
+      const payloads = await Promise.all(batch.map(async (item) => {
+        const payload = await fetchOfficial2v2LeaderboardPage(item.region, item.page, forceFresh).catch(() => null);
+        return { ...item, payload };
+      }));
+      for (const item of payloads) {
+        const rankings = Array.isArray(item.payload?.rankings) ? item.payload.rankings : [];
+        if (rankings.length) {
+          // Persist every discovered team so future teammate lookups are instant.
+          await saveDiscoveredRankingsToDatabase(rankings, `official-2v2-${item.region}-lookup`).catch(() => null);
+        }
+        const rows = collectTeamRows(item.payload, id).map((row) => ({
+          ...row,
+          __source: `official-2v2-leaderboard-${item.region}`
+        }));
+        if (rows.length) foundRows.push(...rows);
+      }
+    }
+
+    if (foundRows.length) await saveTeamRowsToDatabase(foundRows, 'official-2v2-leaderboard-lookup');
+    officialTeamLookupCache.set(cacheKey, {
+      rows: foundRows,
+      expiresAt: Date.now() + (foundRows.length ? 10 * 60_000 : 90_000)
+    });
+    return foundRows;
+  })().finally(() => officialTeamLookupInFlight.delete(cacheKey));
+
+  officialTeamLookupInFlight.set(cacheKey, task);
+  return task;
+}
+
+async function verifyOfficialGlobalRank(playerId, rankedPayload, forceFresh = false) {
+  if (!rankedPayload || typeof rankedPayload !== 'object') return rankedPayload;
+  const id = Number(playerId);
+  if (!Number.isSafeInteger(id) || id <= 0 || numberOrZero(rankedPayload.rating) <= 0) return rankedPayload;
+
+  const pageSize = 50;
+  const expectedRank = numberOrZero(rankedPayload.global_rank);
+  const expectedPage = expectedRank > 0 ? Math.ceil(expectedRank / pageSize) : 1;
+  const pages = [...new Set([1, expectedPage, expectedPage - 1, expectedPage + 1])]
+    .filter((page) => page >= 1 && page <= DATABASE_DISCOVERY_MAX_PAGE);
+
+  for (const page of pages) {
+    const params = new URLSearchParams({
+      page: String(page),
+      max_results: String(pageSize),
+      game_mode: '1v1',
+      region: 'ALL',
+      order_by: 'rating'
+    });
+    const endpoint = `/leaderboard/ranked?${params}`;
+    const board = await (forceFresh ? apiFetchFresh(endpoint) : apiFetch(endpoint, 20_000)).catch(() => null);
+    const row = (board?.rankings || []).find((ranking) =>
+      (ranking.players || []).some((player) => Number(player?.id) === id)
+    );
+    if (!row) continue;
+
+    const verifiedRank = numberOrNull(row.rank);
+    const verified = {
+      ...rankedPayload,
+      global_rank: verifiedRank ?? numberOrNull(rankedPayload.global_rank),
+      rating: numberOrNull(rankedPayload.rating) ?? numberOrNull(row.rating),
+      best_rating: numberOrNull(rankedPayload.best_rating ?? rankedPayload.peak_rating) ?? numberOrNull(row.best_rating ?? row.peak_rating),
+      region: rankedPayload.region || row.region || null,
+      tier: rankedPayload.tier || row.tier || null
+    };
+    if (dbReady && verifiedRank) {
+      await dbQuery(`
+        UPDATE players
+        SET global_rank = $2,
+            rating = COALESCE($3, rating),
+            peak_rating = GREATEST(COALESCE(peak_rating, 0), COALESCE($4, 0)),
+            last_seen = NOW()
+        WHERE brawlhalla_id = $1
+      `, [id, verifiedRank, numberOrNull(verified.rating), numberOrNull(verified.best_rating ?? verified.peak_rating)]).catch(() => null);
+    }
+    return verified;
+  }
+  return rankedPayload;
+}
+
 app.get('/api/player/:id/portrait', async (req, res, next) => {
   try {
     const id = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
@@ -5252,11 +5404,29 @@ app.get('/api/player/:id/teammates', async (req, res, next) => {
       collected = sources.flatMap(([source, payload]) => collectTeamRows(payload, id).map((row) => ({ ...row, __source: source })));
     }
 
-    if (collected.length) await saveTeamRowsToDatabase(collected, [...new Set(collected.map((row) => row.__source).filter(Boolean))].join('+') || 'profile-teams');
-    const databaseRows = await getTeamRowsFromDatabase(id, 160);
+    if (collected.length) {
+      await saveTeamRowsToDatabase(
+        collected,
+        [...new Set(collected.map((row) => row.__source).filter(Boolean))].join('+') || 'profile-teams'
+      );
+    }
+
+    let databaseRows = await getTeamRowsFromDatabase(id, 160);
     if (databaseRows.length) collected.push(...databaseRows);
 
-    const refs = teammateRefsFromRows(collected, id);
+    let refs = teammateRefsFromRows(collected, id);
+    let leaderboardFallbackRows = [];
+    if (!refs.length) {
+      // The player/teams endpoint is occasionally empty even though the team is
+      // present on the official 2v2 leaderboard. Scan a bounded set of current
+      // leaderboard pages, save the result, then return it immediately.
+      leaderboardFallbackRows = await searchOfficial2v2LeaderboardForPlayer(id, forceFresh).catch(() => []);
+      if (leaderboardFallbackRows.length) collected.push(...leaderboardFallbackRows);
+      databaseRows = await getTeamRowsFromDatabase(id, 160);
+      if (databaseRows.length) collected.push(...databaseRows);
+      refs = teammateRefsFromRows(collected, id);
+    }
+
     const bestByPlayer = new Map();
     for (const item of refs) {
       const previous = bestByPlayer.get(item.id);
@@ -5265,14 +5435,16 @@ app.get('/api/player/:id/teammates', async (req, res, next) => {
       if (!previous || itemScore > previousScore) bestByPlayer.set(item.id, item);
     }
 
-    const teammates = await mapWithConcurrency([...bestByPlayer.values()], 6, async (item) => {
+    // Do not make the whole teammate section wait for portrait enrichment.
+    // Cached portraits are returned immediately; the browser hydrates any
+    // missing legend images through /api/player/:id/portrait in parallel.
+    const teammates = [...bestByPlayer.values()].map((item) => {
       const cachedPlayer = getCachedProfileResponse(item.id)?.player || null;
-      const mainLegend = cachedPlayer?.main_legend || await settleWithin(getMainLegendSummary(item.id), 2_500, null);
       return {
         ...item,
         name: cachedPlayer?.name || item.name,
         tier: item.team_tier || null,
-        main_legend: mainLegend || null
+        main_legend: cachedPlayer?.main_legend || null
       };
     });
 
@@ -5288,9 +5460,10 @@ app.get('/api/player/:id/teammates', async (req, res, next) => {
       source: usedSources.join('+') || 'no-current-team-source',
       sources_checked: [
         ...sources.map(([source, payload]) => ({ source, available: Boolean(payload) })),
+        { source: 'official-2v2-leaderboard-fallback', available: leaderboardFallbackRows.length > 0, rows: leaderboardFallbackRows.length },
         { source: 'peakhalla-team-database', available: databaseRows.length > 0, rows: databaseRows.length }
       ],
-      current_season_only: false,
+      current_season_only: true,
       refreshed: forceFresh
     });
   } catch (error) {
@@ -5345,7 +5518,12 @@ app.get('/api/player/:id', async (req, res, next) => {
           localNamesSeedPromise,
           getPlayerGuild(id, 10 * 60_000).catch(() => null)
         ];
-    const [v1Lifetime, ranked, legendMap, coreStats, coreAliases, localNamesSeed, playerGuild] = await Promise.all(fetches);
+    const [v1Lifetime, rankedResponse, legendMap, coreStats, coreAliases, localNamesSeed, playerGuild] = await Promise.all(fetches);
+    const ranked = await settleWithin(
+      verifyOfficialGlobalRank(id, rankedResponse, forceFresh || live),
+      instant ? 2_200 : 4_500,
+      rankedResponse
+    );
 
     const lifetime = mergeLifetimeStats(v1Lifetime || {}, coreStats);
     const lifetimeByLegend = new Map((lifetime?.legends || []).map((legend) => [Number(legend.legend_id), legend]));
