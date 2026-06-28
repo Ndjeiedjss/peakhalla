@@ -47,8 +47,12 @@ const aliasSearchWarmups = new Map();
 const PROFILE_SEARCH_RESPONSE_TTL_MS = 2 * 60_000;
 const DATABASE_URL = String(process.env.DATABASE_URL || '').trim();
 const DATABASE_PROFILE_MAX_AGE_MS = Number(process.env.DATABASE_PROFILE_MAX_AGE_MS || 30 * 24 * 60 * 60_000);
-const DATABASE_DISCOVERY_INTERVAL_MS = Math.max(60_000, Number(process.env.DATABASE_DISCOVERY_INTERVAL_MS || 90_000));
+const DATABASE_DISCOVERY_INTERVAL_MS = Math.max(45_000, Number(process.env.DATABASE_DISCOVERY_INTERVAL_MS || 60_000));
 const DATABASE_DISCOVERY_ENABLED = String(process.env.DATABASE_DISCOVERY_ENABLED || '1') !== '0';
+const DATABASE_DISCOVERY_BATCH_SIZE = Math.max(1, Math.min(5, Number(process.env.DATABASE_DISCOVERY_BATCH_SIZE || 2)));
+const DATABASE_DISCOVERY_MAX_PAGE = Math.max(20, Math.min(500, Number(process.env.DATABASE_DISCOVERY_MAX_PAGE || 100)));
+const DATABASE_DISCOVERY_PAGE_SIZE = Math.max(10, Math.min(50, Number(process.env.DATABASE_DISCOVERY_PAGE_SIZE || 25)));
+const DATABASE_DISCOVERY_PRIORITY_EVERY = Math.max(5, Math.min(60, Number(process.env.DATABASE_DISCOVERY_PRIORITY_EVERY || 10)));
 let dbPool = null;
 let dbReady = false;
 let dbLastError = null;
@@ -489,50 +493,120 @@ async function importLegacyJsonIntoDatabase() {
 const DISCOVERY_REGIONS = ['ALL', 'EU', 'US-E', 'US-W', 'BRZ', 'SEA', 'AUS', 'JPS', 'SA', 'ME'];
 const DISCOVERY_MODES = ['1v1', '2v2'];
 
+function normalizeDiscoveryCursor(value = {}) {
+  return {
+    region_index: Math.max(0, Number(value.region_index || 0)) % DISCOVERY_REGIONS.length,
+    mode_index: Math.max(0, Number(value.mode_index || 0)) % DISCOVERY_MODES.length,
+    page: Math.max(1, Math.min(DATABASE_DISCOVERY_MAX_PAGE, Number(value.page || 1))),
+    cycles: Math.max(0, Number(value.cycles || 0)),
+    pages_scanned_total: Math.max(0, Number(value.pages_scanned_total || 0)),
+    players_seen_total: Math.max(0, Number(value.players_seen_total || 0)),
+    new_players_total: Math.max(0, Number(value.new_players_total || 0))
+  };
+}
+
+function nextDiscoveryCursor(cursor, rankingsLength, reportedTotalPages) {
+  let nextPage = Number(cursor.page || 1) + 1;
+  let nextRegion = Number(cursor.region_index || 0);
+  let nextMode = Number(cursor.mode_index || 0);
+  const totalPages = Number(reportedTotalPages || 0);
+  const pageLimit = totalPages > 0
+    ? Math.max(1, Math.min(DATABASE_DISCOVERY_MAX_PAGE, totalPages))
+    : DATABASE_DISCOVERY_MAX_PAGE;
+
+  if (nextPage > pageLimit || rankingsLength < Math.min(5, DATABASE_DISCOVERY_PAGE_SIZE)) {
+    nextPage = 1;
+    nextRegion += 1;
+    if (nextRegion >= DISCOVERY_REGIONS.length) {
+      nextRegion = 0;
+      nextMode = (nextMode + 1) % DISCOVERY_MODES.length;
+    }
+  }
+
+  return { ...cursor, region_index: nextRegion, mode_index: nextMode, page: nextPage };
+}
+
+async function databasePlayerCount() {
+  const result = await dbQuery('SELECT COUNT(*)::int AS count FROM players');
+  return Number(result?.rows?.[0]?.count || 0);
+}
+
+async function fetchDiscoveryPage(region, mode, page) {
+  const params = new URLSearchParams({
+    page: String(page),
+    max_results: String(DATABASE_DISCOVERY_PAGE_SIZE),
+    game_mode: mode,
+    region,
+    order_by: 'rating'
+  });
+  return apiFetch(`/leaderboard/ranked?${params}`, 30_000);
+}
+
 async function runDatabaseDiscoveryCycle() {
   if (!dbReady || !DATABASE_DISCOVERY_ENABLED || discoveryRunning) return;
   discoveryRunning = true;
+  const startedAt = Date.now();
   try {
-    const cursor = await getDatabaseState('official_discovery_cursor_v1', { region_index: 0, mode_index: 0, page: 1 });
-    const regionIndex = Number(cursor?.region_index || 0) % DISCOVERY_REGIONS.length;
-    const modeIndex = Number(cursor?.mode_index || 0) % DISCOVERY_MODES.length;
-    const page = Math.max(1, Math.min(20, Number(cursor?.page || 1)));
-    const region = DISCOVERY_REGIONS[regionIndex];
-    const mode = DISCOVERY_MODES[modeIndex];
-    const params = new URLSearchParams({
-      page: String(page),
-      max_results: '25',
-      game_mode: mode,
-      region,
-      order_by: 'rating'
-    });
-    const response = await apiFetch(`/leaderboard/ranked?${params}`, 45_000).catch(() => null);
-    const rankings = response?.rankings || [];
-    if (rankings.length) await saveDiscoveredRankingsToDatabase(rankings, `official-${mode}-${region}`);
+    const previous = normalizeDiscoveryCursor(await getDatabaseState('official_discovery_cursor_v2', null)
+      || await getDatabaseState('official_discovery_cursor_v1', null)
+      || {});
+    let cursor = { ...previous };
+    const beforeCount = await databasePlayerCount();
+    const pages = [];
+    let playersSeen = 0;
 
-    let nextPage = page + 1;
-    let nextRegion = regionIndex;
-    let nextMode = modeIndex;
-    if (nextPage > 20 || rankings.length < 10) {
-      nextPage = 1;
-      nextRegion += 1;
-      if (nextRegion >= DISCOVERY_REGIONS.length) {
-        nextRegion = 0;
-        nextMode = (nextMode + 1) % DISCOVERY_MODES.length;
+    for (let index = 0; index < DATABASE_DISCOVERY_BATCH_SIZE; index += 1) {
+      const region = DISCOVERY_REGIONS[cursor.region_index];
+      const mode = DISCOVERY_MODES[cursor.mode_index];
+      const page = cursor.page;
+      const response = await fetchDiscoveryPage(region, mode, page);
+      const rankings = Array.isArray(response?.rankings) ? response.rankings : [];
+      const pagePlayers = rankings.reduce((sum, item) => sum + (item.players || []).length, 0);
+      if (rankings.length) await saveDiscoveredRankingsToDatabase(rankings, `official-${mode}-${region}`);
+      pages.push({ region, mode, page, rows: rankings.length, players: pagePlayers });
+      playersSeen += pagePlayers;
+      cursor = nextDiscoveryCursor(cursor, rankings.length, response?.total_pages ?? response?.totalPages);
+      if (index + 1 < DATABASE_DISCOVERY_BATCH_SIZE) await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+
+    const cycleNumber = previous.cycles + 1;
+    if (cycleNumber % DATABASE_DISCOVERY_PRIORITY_EVERY === 0) {
+      const priority = await fetchDiscoveryPage('ALL', '1v1', 1).catch(() => null);
+      const rankings = Array.isArray(priority?.rankings) ? priority.rankings : [];
+      if (rankings.length) {
+        await saveDiscoveredRankingsToDatabase(rankings, 'official-priority-1v1-ALL');
+        const priorityPlayers = rankings.reduce((sum, item) => sum + (item.players || []).length, 0);
+        playersSeen += priorityPlayers;
+        pages.push({ region: 'ALL', mode: '1v1', page: 1, rows: rankings.length, players: priorityPlayers, priority: true });
       }
     }
-    await setDatabaseState('official_discovery_cursor_v1', {
-      region_index: nextRegion,
-      mode_index: nextMode,
-      page: nextPage,
-      last_region: region,
-      last_mode: mode,
-      last_page: page,
-      players_seen: rankings.reduce((sum, item) => sum + (item.players || []).length, 0),
-      updated_at: new Date().toISOString()
-    });
+
+    const afterCount = await databasePlayerCount();
+    const newPlayers = Math.max(0, afterCount - beforeCount);
+    const state = {
+      ...cursor,
+      cycles: cycleNumber,
+      pages_scanned_total: previous.pages_scanned_total + pages.length,
+      players_seen_total: previous.players_seen_total + playersSeen,
+      new_players_total: previous.new_players_total + newPlayers,
+      pages,
+      last_cycle_players_seen: playersSeen,
+      last_cycle_new_players: newPlayers,
+      total_players: afterCount,
+      duration_ms: Date.now() - startedAt,
+      last_success_at: new Date().toISOString(),
+      last_error: null
+    };
+    await setDatabaseState('official_discovery_cursor_v2', state);
   } catch (error) {
     console.warn('PeakHalla background player discovery failed:', error.message);
+    const previous = normalizeDiscoveryCursor(await getDatabaseState('official_discovery_cursor_v2', {}));
+    await setDatabaseState('official_discovery_cursor_v2', {
+      ...previous,
+      last_error: error.message,
+      last_error_at: new Date().toISOString(),
+      duration_ms: Date.now() - startedAt
+    }).catch(() => null);
   } finally {
     discoveryRunning = false;
   }
@@ -543,7 +617,7 @@ function scheduleDatabaseDiscovery() {
   discoveryTimer = setTimeout(() => {
     runDatabaseDiscoveryCycle().catch(() => null);
     discoveryTimer = setInterval(() => runDatabaseDiscoveryCycle().catch(() => null), DATABASE_DISCOVERY_INTERVAL_MS);
-  }, 15_000);
+  }, 5_000);
 }
 
 // Permanently move every legacy Railway URL to the public PeakHalla domain.
@@ -745,7 +819,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await fetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.46'
+          'User-Agent': 'PeakHalla/7.49'
         },
         signal: controller.signal
       });
@@ -787,7 +861,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.46'
+        'User-Agent': 'PeakHalla/7.49'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -866,7 +940,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             ...(attempt.body ? { 'Content-Type': 'application/json' } : {}),
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.46'
+            'User-Agent': 'PeakHalla/7.49'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -1575,7 +1649,7 @@ async function fetchLegendArtwork(name) {
       const response = await fetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.46',
+          'User-Agent': 'PeakHalla/7.49',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -1611,7 +1685,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await fetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.46'
+        'User-Agent': 'PeakHalla/7.49'
       },
       signal: controller.signal
     });
@@ -4621,17 +4695,38 @@ app.get('/api/player/:id', async (req, res, next) => {
 
 
 app.get('/api/system/database', async (_req, res) => {
-  const counts = dbReady ? await dbQuery(`
-    SELECT
-      (SELECT COUNT(*)::int FROM players) AS players,
-      (SELECT COUNT(*)::int FROM player_aliases) AS aliases,
-      (SELECT COUNT(*)::int FROM player_snapshots) AS snapshots
-  `) : null;
+  const [counts, coverage, discovery] = dbReady ? await Promise.all([
+    dbQuery(`
+      SELECT
+        (SELECT COUNT(*)::int FROM players) AS players,
+        (SELECT COUNT(*)::int FROM player_aliases) AS aliases,
+        (SELECT COUNT(*)::int FROM player_snapshots) AS snapshots
+    `),
+    dbQuery(`
+      SELECT COALESCE(NULLIF(region, ''), 'UNKNOWN') AS region, COUNT(*)::int AS players
+      FROM players
+      GROUP BY COALESCE(NULLIF(region, ''), 'UNKNOWN')
+      ORDER BY players DESC
+      LIMIT 20
+    `),
+    getDatabaseState('official_discovery_cursor_v2', null)
+  ]) : [null, null, null];
   res.json({
     configured: Boolean(DATABASE_URL),
     ready: dbReady,
     counts: counts?.rows?.[0] || { players: 0, aliases: 0, snapshots: 0 },
     discovery_enabled: DATABASE_DISCOVERY_ENABLED,
+    discovery_running: discoveryRunning,
+    discovery_config: {
+      interval_ms: DATABASE_DISCOVERY_INTERVAL_MS,
+      batch_size: DATABASE_DISCOVERY_BATCH_SIZE,
+      max_page: DATABASE_DISCOVERY_MAX_PAGE,
+      page_size: DATABASE_DISCOVERY_PAGE_SIZE,
+      regions: DISCOVERY_REGIONS.length,
+      modes: DISCOVERY_MODES
+    },
+    discovery: discovery || null,
+    coverage: coverage?.rows || [],
     last_error: dbLastError ? dbLastError.message : null
   });
 });

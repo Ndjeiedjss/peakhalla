@@ -1,0 +1,15 @@
+PeakHalla v7.49
+
+Upload these files to the GitHub repository root:
+- server.js
+- package.json
+- package-lock.json
+
+Do not place them inside public.
+
+Optional Railway variables:
+DATABASE_DISCOVERY_INTERVAL_MS=60000
+DATABASE_DISCOVERY_BATCH_SIZE=2
+DATABASE_DISCOVERY_MAX_PAGE=100
+DATABASE_DISCOVERY_PAGE_SIZE=25
+DATABASE_DISCOVERY_PRIORITY_EVERY=10
