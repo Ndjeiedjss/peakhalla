@@ -3227,3 +3227,17 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
   .esports-view-switch button > i, .esports-view-switch .esports-switch-copy small { display: none; }
   .esports-view-switch .esports-switch-copy strong { font-size: 11px; white-space: normal; }
 }
+
+/* v7.55 — stable local portraits across browsers and restored pages */
+.legend-image-shell img[data-legend-image] {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  color: transparent;
+}
+.legend-image-shell:not(.is-loaded):not(.is-fallback) img[data-legend-image] {
+  opacity: .96 !important;
+}
+.legend-image-shell.is-fallback img[data-legend-image] {
+  display: none !important;
+}

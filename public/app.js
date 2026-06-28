@@ -143,6 +143,27 @@ function applyLanguage() {
   if (state.esportsCareer && !els.careerModal.hidden) renderCareer(state.esportsCareer);
 }
 
+const LEGEND_ASSET_VERSION = '7.55.0';
+
+function legendAssetSlug(name = '') {
+  return String(name || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+function localLegendImageCandidates(name = '') {
+  const slug = legendAssetSlug(name);
+  if (!slug) return [];
+  return [
+    `/assets/legends/${encodeURIComponent(slug)}.webp?v=${LEGEND_ASSET_VERSION}`,
+    `/api/legend-image/${encodeURIComponent(String(name).trim())}?v=${LEGEND_ASSET_VERSION}`,
+    `/api/legend-art/${encodeURIComponent(String(name).trim())}?v=${LEGEND_ASSET_VERSION}`
+  ];
+}
+
 const legendImageObserver = 'IntersectionObserver' in window
   ? new IntersectionObserver((entries) => {
       for (const entry of entries) {
@@ -171,14 +192,34 @@ function handleLegendImageError(image) {
   clearLegendImageTimer(image);
   let candidates = [];
   try { candidates = JSON.parse(image.dataset.imageCandidates || '[]'); } catch { candidates = []; }
-  const nextIndex = Number(image.dataset.imageIndex || '0') + 1;
+  const currentIndex = Number(image.dataset.imageIndex || '0');
+  const nextIndex = currentIndex + 1;
   if (candidates[nextIndex]) {
     image.dataset.imageIndex = String(nextIndex);
     image.classList.remove('is-loaded');
+    image.hidden = false;
     image.src = candidates[nextIndex];
     if (image.dataset.imageVisible === '1' || image.loading === 'eager') armLegendImageTimeout(image);
     return;
   }
+
+  // A CDN or mobile connection can transiently fail even for a local image.
+  // Retry the local portrait twice with a cache-busting query before showing initials.
+  const retryCount = Number(image.dataset.imageRetry || '0');
+  if (candidates[0] && retryCount < 2) {
+    image.dataset.imageRetry = String(retryCount + 1);
+    image.dataset.imageIndex = '0';
+    image.hidden = false;
+    image.classList.remove('is-loaded');
+    const separator = candidates[0].includes('?') ? '&' : '?';
+    window.setTimeout(() => {
+      if (!image.isConnected) return;
+      image.src = `${candidates[0]}${separator}retry=${Date.now()}`;
+      armLegendImageTimeout(image);
+    }, 500 + (retryCount * 700));
+    return;
+  }
+
   image.hidden = true;
   image.closest('.legend-image-shell')?.classList.add('is-fallback');
   if (image.nextElementSibling) image.nextElementSibling.hidden = false;
@@ -194,7 +235,7 @@ function armLegendImageTimeout(image) {
   }
   const timer = window.setTimeout(() => {
     if (!image.complete || image.naturalWidth === 0) handleLegendImageError(image);
-  }, 10_000);
+  }, 14_000);
   image.dataset.imageTimer = String(timer);
 }
 window.handleLegendImageError = handleLegendImageError;
@@ -203,13 +244,17 @@ window.handleLegendImageLoad = handleLegendImageLoad;
 function legendImageMarkup(legend, options = {}) {
   const name = legend?.name || options.fallbackName || '';
   const fallback = escapeHtml(initials(name || 'BH'));
-  const candidates = Array.isArray(legend?.image_candidates)
-    ? [...new Set(legend.image_candidates.filter(Boolean))]
+  const suppliedCandidates = Array.isArray(legend?.image_candidates)
+    ? legend.image_candidates.filter(Boolean)
     : (legend?.image_url ? [legend.image_url] : []);
+  const candidates = [...new Set([
+    ...localLegendImageCandidates(name),
+    ...suppliedCandidates
+  ].filter(Boolean))];
   if (!candidates.length) return `<span class="legend-image-shell is-fallback"><span class="legend-fallback">${fallback}</span></span>`;
   const eager = options.lazy === false;
-  const loading = eager ? 'loading="eager" fetchpriority="high" data-image-visible="1"' : 'loading="lazy" fetchpriority="low"';
-  return `<span class="legend-image-shell"><img src="${escapeHtml(candidates[0])}" alt="${escapeHtml(name)}" ${loading} decoding="async" data-legend-image data-image-candidates='${escapeHtml(JSON.stringify(candidates))}' data-image-index="0" onload="handleLegendImageLoad(this)" onerror="handleLegendImageError(this)"><span class="legend-fallback" hidden>${fallback}</span></span>`;
+  const loading = eager ? 'loading="eager" fetchpriority="high" data-image-visible="1"' : 'loading="lazy" fetchpriority="auto"';
+  return `<span class="legend-image-shell"><img src="${escapeHtml(candidates[0])}" alt="${escapeHtml(name)}" ${loading} decoding="async" referrerpolicy="no-referrer" data-legend-image data-image-candidates='${escapeHtml(JSON.stringify(candidates))}' data-image-index="0" data-image-retry="0" onload="handleLegendImageLoad(this)" onerror="handleLegendImageError(this)"><span class="legend-fallback" hidden>${fallback}</span></span>`;
 }
 
 function portraitMarkup(legend, className = 'row-portrait', options = {}) {
@@ -882,15 +927,27 @@ function makeTeammateSeedPayload(item = {}) {
 
 async function loadTeammates(id) {
   if (!els.teammatesGrid) return;
+  const requestId = `${id}:${Date.now()}`;
+  els.teammatesGrid.dataset.requestId = requestId;
   els.teammatesCount.textContent = '';
   els.teammatesGrid.innerHTML = `<div class="teammates-loading"><span>${escapeHtml(t('loadingTeammates'))}</span></div>`;
   try {
-    let data = await getJson(`/api/player/${encodeURIComponent(id)}/teammates`, { timeoutMs: 22000 });
-    let teammates = data.teammates || [];
-    if (!teammates.length && !data.refreshed) {
-      data = await getJson(`/api/player/${encodeURIComponent(id)}/teammates?refresh=1&_=${Date.now()}`, { timeoutMs: 30000 });
-      teammates = data.teammates || [];
+    let data = null;
+    try {
+      data = await getJson(`/api/player/${encodeURIComponent(id)}/teammates?_=${Date.now()}`, { timeoutMs: 32000 });
+    } catch {
+      data = null;
     }
+    let teammates = data?.teammates || [];
+    if (!teammates.length) {
+      try {
+        data = await getJson(`/api/player/${encodeURIComponent(id)}/teammates?refresh=1&_=${Date.now()}`, { timeoutMs: 45000 });
+        teammates = data?.teammates || [];
+      } catch {
+        teammates = [];
+      }
+    }
+    if (!els.teammatesGrid || els.teammatesGrid.dataset.requestId !== requestId) return;
     els.teammatesCount.textContent = teammates.length ? `${number(teammates.length)} ${t('twoVTwoPartners')}` : '';
     els.teammatesGrid.innerHTML = teammates.length ? teammates.map(teammateCard).join('') : `<p class="empty-copy">${escapeHtml(t('noTeammates'))}</p>`;
     const teammateSeeds = new Map(teammates.map((item) => [Number(item.id), makeTeammateSeedPayload(item)]));
@@ -901,6 +958,7 @@ async function loadTeammates(id) {
     activateImageFallbacks();
     registerScrollReveal(els.teammatesPanel);
   } catch {
+    if (!els.teammatesGrid || els.teammatesGrid.dataset.requestId !== requestId) return;
     els.teammatesCount.textContent = '';
     els.teammatesGrid.innerHTML = `<p class="empty-copy">${escapeHtml(t('noTeammates'))}</p>`;
   }
@@ -1004,7 +1062,7 @@ async function loadPlayer(id, options = {}) {
     }
     if (!silent && !renderedInstantData) showStatus(manualRefresh ? t('refreshingLiveStats') : t('loadingPlayer'));
     const params = new URLSearchParams({
-      [manualRefresh ? 'refresh' : (backgroundRefresh ? 'live' : 'fast')]: '1',
+      [manualRefresh ? 'refresh' : (backgroundRefresh ? 'live' : 'instant')]: '1',
       _: String(Date.now())
     });
     if (manualRefresh) {
@@ -1029,7 +1087,7 @@ async function loadPlayer(id, options = {}) {
     if (options.autoVerify !== false && !manualRefresh && !backgroundRefresh) {
       window.clearTimeout(state.playerAutoRefreshTimer);
       const refreshInBackground = () => loadPlayer(id, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
-      state.playerAutoRefreshTimer = window.setTimeout(refreshInBackground, renderedInstantData ? 250 : 500);
+      state.playerAutoRefreshTimer = window.setTimeout(refreshInBackground, 40);
     }
     return data;
   } catch (error) {
@@ -1668,7 +1726,7 @@ function toggleRankedMenu() {
 
 async function chooseRankedMode(mode) {
   if (!['1v1', '2v2', '3v3'].includes(mode)) return;
-  if (isLiveQueuePage || isStandalonePlayerPage || isClanPage || isArenaPage) {
+  if (isLiveQueuePage || isStandalonePlayerPage || isClanPage || isArenaPage || isEsportsPage) {
     document.body.classList.add('page-leaving');
     window.setTimeout(() => { location.href = `/?ranked=${encodeURIComponent(mode)}#leaderboard`; }, 260);
     return;
@@ -2558,12 +2616,15 @@ function resetBrowserNavigationState() {
 // never returns to a black, non-interactive screen.
 window.addEventListener('pageshow', () => {
   resetBrowserNavigationState();
-  requestAnimationFrame(resetBrowserNavigationState);
+  requestAnimationFrame(() => {
+    resetBrowserNavigationState();
+    activateImageFallbacks();
+  });
 });
 window.addEventListener('popstate', resetBrowserNavigationState);
 window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && els.clanModal && !els.clanModal.hidden) closeClanModal(); });
 window.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') resetBrowserNavigationState();
+  if (document.visibilityState === 'visible') { resetBrowserNavigationState(); activateImageFallbacks(); }
 });
 
 const pageParams = new URLSearchParams(location.search);
