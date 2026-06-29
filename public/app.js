@@ -3,7 +3,8 @@ const $ = (selector) => document.querySelector(selector);
 const translations = {
   en: {
     navLeaderboard: 'Ranked', navQueue: 'Queue', navArena: 'Arena Wall', rankedSolo: 'Solo ranked search', rankedDoubles: 'Team ranked search', rankedThrees: '3-player team search', queueSolo: 'Find solo players', queueDoubles: 'Find a ranked partner', queueThrees: 'Build a 3-player team', queueSoloLive: 'Solo ranked activity', queueDoublesLive: 'Team ranked activity', queueThreesLive: '3-player ranked activity', navDiscord: 'Join Discord', discordAria: 'Join the PeakHalla Discord server', navClans: 'Clans', navEsports: 'Esports', powerRankingNavNote: 'Official regional player rankings', tournamentsNav: 'Tournaments', tournamentsNavNote: 'Official and community events', navAbout: 'About', navDonation: 'Donation', liveData: 'LIVE DATA',
-    heroTitle: 'Track the player.<br><em>Know the main.</em>', heroText: 'Search every known Brawlhalla profile across all regions, discover main legends, clans, and competitive rankings.',
+    heroTitle: 'Brawlhalla Tracker.<br><em>Live stats, ELO & rankings.</em>', heroText: 'PeakHalla is a fast, free Brawlhalla tracker for live player stats, current and peak ELO, legends, clans, 2v2 teams, and competitive rankings.',
+    seoTitle: 'Free Brawlhalla tracker for player stats, ELO and rankings', seoIntro: 'Search any known Brawlhalla player by current name, old name, or Brawlhalla ID. PeakHalla combines live ranked data, lifetime account progression, legend performance, clans, 2v2 teammates, leaderboards, and esports rankings in one place.', seoPlayerTitle: 'Live player statistics', seoPlayerText: 'View current ELO, season peak, ranked tier, wins, losses, account XP, legend levels, match time, weapons, and lifetime combat data.', seoSearchTitle: 'Current and previous names', seoSearchText: 'Find profiles using a current name, a known old name, or a Brawlhalla ID without needing the player to be currently ranked.', seoRankingsTitle: 'Rankings, clans and esports', seoRankingsText: 'Browse regional ranked leaderboards, top clans by lifetime XP, clan rosters, 2v2 teammates, esports power rankings, and tournaments.', seoSearchLink: 'Search a player', seoRankedLink: 'Ranked leaderboards', seoClansLink: 'Brawlhalla clans', seoEsportsLink: 'Brawlhalla esports', seoFaqTitle: 'Brawlhalla tracker questions', seoFaqQ1: 'How do I track a Brawlhalla player?', seoFaqA1: 'Enter the player’s current name, previous name, or Brawlhalla ID in the search box. PeakHalla opens the matching profile and refreshes official data automatically.', seoFaqQ2: 'Does PeakHalla show current and peak ELO?', seoFaqA2: 'Yes. Player profiles show current ELO, season peak ELO, ranked tier, regional rank, wins, losses, and ranked legend performance when available.', seoFaqQ3: 'Can I search by an old Brawlhalla name?', seoFaqA3: 'Yes. PeakHalla searches known aliases as well as current names and Brawlhalla IDs.', seoFaqQ4: 'Can I view clans and ranked 2v2 teammates?', seoFaqA4: 'Yes. PeakHalla includes clan profiles and rosters, lifetime clan XP, and current-season ranked 2v2 teammates when official data is available.',
     mainLegendFeature: 'Main legend', aliasFeature: 'Name history', boardsFeature: 'All regions', esportsFeature: 'Esports power rankings', findPlayer: 'Find a player',
     playerName: 'Player name, old name, or BH ID', playerPlaceholder: 'Sandstorm', region: 'Region', gameMode: 'Mode', searchButton: 'Search player',
     searchNote: 'Searches player profiles directly by current name, old name, or BH ID across all regions.', searchResults: 'Search results', playerIdLabel: 'BH ID', updatedLabel: 'Updated', currentRank: 'Current rank',
@@ -33,7 +34,8 @@ const translations = {
   },
   ar: {
     navLeaderboard: 'الرانك', navQueue: 'الكيو', navArena: 'ساحة الصور', rankedSolo: 'بحث رانك فردي', rankedDoubles: 'بحث رانك ثنائي', rankedThrees: 'بحث فريق 3 لاعبين', queueSolo: 'دور لاعبين 1v1', queueDoubles: 'دور شريك رانك', queueThrees: 'كوّن فريق 3 لاعبين', queueSoloLive: 'نشاط رانك 1v1', queueDoublesLive: 'نشاط فرق 2v2', queueThreesLive: 'نشاط فرق 3v3', navDiscord: 'دخول الديسكورد', discordAria: 'انضم إلى سيرفر PeakHalla في ديسكورد', navClans: 'الكلانات', navEsports: 'البطولات', powerRankingNavNote: 'ترتيب اللاعبين الرسمي حسب الريجون', tournamentsNav: 'البطولات', tournamentsNavNote: 'بطولات رسمية ومجتمعية', navAbout: 'عن الموقع', navDonation: 'دعم الموقع', liveData: 'البيانات مباشرة',
-    heroTitle: 'تتبّع اللاعب.<br><em>واعرف شخصيته.</em>', heroText: 'ابحث عن كل بروفايلات براولهالا في جميع المناطق، وشاهد الشخصية الأساسية والكلانات والترتيب.',
+    heroTitle: 'تراكر براولهالا.<br><em>إحصائيات وإيلو وترتيب مباشر.</em>', heroText: 'PeakHalla تراكر براولهالا سريع ومجاني يعرض بيانات اللاعبين المباشرة، الإيلو الحالي والبيك، الشخصيات، الكلانات، فرق 2v2، والترتيب التنافسي.',
+    seoTitle: 'تراكر براولهالا مجاني لإحصائيات اللاعبين والإيلو والترتيب', seoIntro: 'ابحث عن أي لاعب معروف بالاسم الحالي أو الاسم القديم أو رقم Brawlhalla ID. يجمع PeakHalla بيانات الرانك المباشرة، تقدم الحساب، أداء الشخصيات، الكلانات، شركاء 2v2، لوحات الترتيب، وبطولات الإيسبورت في مكان واحد.', seoPlayerTitle: 'إحصائيات اللاعب مباشرة', seoPlayerText: 'شاهد الإيلو الحالي، بيك الموسم، رتبة الرانك، الفوز والخسارة، إكس بي الحساب، لفلات الشخصيات، وقت اللعب، الأسلحة، وإحصائيات الحساب.', seoSearchTitle: 'الأسماء الحالية والقديمة', seoSearchText: 'ابحث بالاسم الحالي أو اسم قديم معروف أو رقم Brawlhalla ID حتى لو لم يكن اللاعب مصنفًا حاليًا.', seoRankingsTitle: 'الترتيب والكلانات والبطولات', seoRankingsText: 'تصفح ترتيب الرانك حسب المنطقة، أفضل الكلانات حسب Lifetime XP، أعضاء الكلان، شركاء 2v2، باور رانكنق المحترفين، والبطولات.', seoSearchLink: 'ابحث عن لاعب', seoRankedLink: 'ترتيب الرانك', seoClansLink: 'كلانات براولهالا', seoEsportsLink: 'بطولات براولهالا', seoFaqTitle: 'أسئلة تراكر براولهالا', seoFaqQ1: 'كيف أبحث عن لاعب براولهالا؟', seoFaqA1: 'اكتب اسم اللاعب الحالي أو اسمه القديم أو رقم Brawlhalla ID في مربع البحث. يفتح PeakHalla البروفايل ويحدث البيانات الرسمية تلقائيًا.', seoFaqQ2: 'هل يظهر PeakHalla الإيلو الحالي والبيك؟', seoFaqA2: 'نعم. يظهر البروفايل الإيلو الحالي وبيك الموسم ورتبة الرانك وترتيب المنطقة والفوز والخسارة وأداء الشخصيات في الرانك عند توفر البيانات.', seoFaqQ3: 'هل أقدر أبحث بالاسم القديم؟', seoFaqA3: 'نعم. يبحث PeakHalla في الأسماء القديمة المعروفة إلى جانب الاسم الحالي ورقم Brawlhalla ID.', seoFaqQ4: 'هل أقدر أشوف الكلان وشركاء 2v2؟', seoFaqA4: 'نعم. يعرض PeakHalla صفحة الكلان والأعضاء وLifetime XP وشركاء رانك 2v2 للموسم الحالي عند توفر البيانات الرسمية.',
     mainLegendFeature: 'الشخصية الأساسية', aliasFeature: 'الأسماء القديمة', boardsFeature: 'كل المناطق', esportsFeature: 'باور رانكنق البطولات', findPlayer: 'دور على لاعب',
     playerName: 'اسم اللاعب أو اسمه القديم أو BH ID', playerPlaceholder: 'مثال: Sandstorm', region: 'المنطقة', gameMode: 'النمط', searchButton: 'ابحث',
     searchNote: 'يبحث مباشرة في بروفايلات اللاعبين بالاسم الحالي أو القديم أو BH ID في كل المناطق.', searchResults: 'نتائج البحث', playerIdLabel: 'معرّف BH', updatedLabel: 'آخر تحديث', currentRank: 'الرانك الحالي',
@@ -221,7 +223,7 @@ function validHistoryName(value) {
   if (/=>|==|!=|&&|\|\||[{};:=<>]/.test(clean)) return false;
   return true;
 }
-const regionKeys = { ALL: 'allRegions', ME: 'MiddleEast', EU: 'Europe', 'US-E': 'USEast', 'US-W': 'USWest', SA: 'SouthernAfrica', SEA: 'SoutheastAsia', BRZ: 'Brazil', AUS: 'Australia', JPS: 'Japan' };
+const regionKeys = { ALL: 'allRegions', ME: 'MiddleEast', EU: 'Europe', 'US-E': 'USEast', 'US-W': 'USWest', SA: 'SouthernAfrica', SEA: 'SoutheastAsia', BRZ: 'Brazil', AUS: 'Australia', JPN: 'Japan' };
 function regionLabel(code) { return t(regionKeys[code]) || code; }
 
 function applyLanguage() {
@@ -1145,6 +1147,24 @@ function renderProfileAliases(names = [], currentName = '') {
 function renderPlayer(data, shouldScroll = true, renderOptions = {}) {
   state.currentPlayer = data;
   const { player, history, known_names: knownNames = [] } = data;
+  const profileUrl = `${location.origin}/player/${encodeURIComponent(player.brawlhalla_id)}`;
+  const profileTitle = `${player.name} Brawlhalla Stats, ELO & Legends | PeakHalla`;
+  const profileDescription = `View ${player.name}'s live Brawlhalla stats, current and peak ELO, ranked tier, legends, account XP, clans, aliases, and 2v2 teams.`;
+  document.title = profileTitle;
+  const canonicalLink = document.querySelector('link[rel="canonical"]');
+  if (canonicalLink) canonicalLink.href = profileUrl;
+  const seoValues = [
+    ['meta[name="description"]', 'content', profileDescription],
+    ['meta[property="og:title"]', 'content', profileTitle],
+    ['meta[property="og:description"]', 'content', profileDescription],
+    ['meta[property="og:url"]', 'content', profileUrl],
+    ['meta[name="twitter:title"]', 'content', profileTitle],
+    ['meta[name="twitter:description"]', 'content', profileDescription]
+  ];
+  for (const [selector, attribute, value] of seoValues) {
+    const node = document.querySelector(selector);
+    if (node) node.setAttribute(attribute, value);
+  }
   const partial = playerResponseIsPartial(data);
   const rankedVerified = Boolean(player.data_quality?.official_ranked_ok);
   const lifetimeVerified = Boolean(player.data_quality?.official_lifetime_ok || player.data_quality?.corehalla_enriched);
@@ -2167,8 +2187,9 @@ function setupLiveQueuePage() {
   if (els.queuePage) els.queuePage.hidden = false;
   const params = new URLSearchParams(location.search);
   state.queueMode = ['1v1', '2v2', '3v3'].includes(params.get('mode')) ? params.get('mode') : '1v1';
-  const regions = ['US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'];
-  state.queueRegion = regions.includes(params.get('region')) ? params.get('region') : 'EU';
+  const regions = ['US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPN', 'SA', 'ME'];
+  const requestedRegion = params.get('region') === 'JPS' ? 'JPN' : params.get('region');
+  state.queueRegion = regions.includes(requestedRegion) ? requestedRegion : 'EU';
   if (els.queueRegion) {
     els.queueRegion.value = state.queueRegion;
     els.queueRegion._motionSync?.();

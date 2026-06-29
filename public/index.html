@@ -11,7 +11,7 @@
   </script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Search any Brawlhalla player by name, old name, or Brawlhalla ID. View live account XP, legend levels, ranked leaderboards, win/loss records, Arena Wall, and esports stats.">
+  <meta name="description" content="PeakHalla is a free Brawlhalla tracker for live player stats, current and peak ELO, ranked leaderboards, legend levels, clans, old names, 2v2 teams, and esports rankings.">
   <meta name="author" content="PeakHalla">
   <meta name="application-name" content="PeakHalla">
   <meta name="theme-color" content="#0c0714">
@@ -43,19 +43,19 @@
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="PeakHalla">
-  <meta property="og:title" content="PeakHalla — Brawlhalla Stats Tracker">
-  <meta property="og:description" content="Search Brawlhalla players, old names and IDs. Explore live XP, legend levels, ranked leaderboards, W/L records, Arena Wall and esports stats.">
+  <meta property="og:title" content="Brawlhalla Tracker — Player Stats, ELO & Rankings | PeakHalla">
+  <meta property="og:description" content="Free Brawlhalla tracker with live player stats, current and peak ELO, ranked leaderboards, legend levels, clans, old-name search, 2v2 teams, and esports rankings.">
   <meta property="og:url" content="https://peakhalla.com/">
   <meta property="og:image" content="https://peakhalla.com/peakhalla-mark.svg">
   <meta property="og:locale" content="en_US">
   <meta property="og:locale:alternate" content="ar_SA">
 
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="PeakHalla — Brawlhalla Stats Tracker">
-  <meta name="twitter:description" content="Live Brawlhalla player stats, legend levels, ranked leaderboards, old-name search and esports data.">
+  <meta name="twitter:title" content="Brawlhalla Tracker — Player Stats, ELO & Rankings | PeakHalla">
+  <meta name="twitter:description" content="Track Brawlhalla players with live stats, current and peak ELO, ranked leaderboards, legends, clans, old names, 2v2 teams, and esports rankings.">
   <meta name="twitter:image" content="https://peakhalla.com/peakhalla-mark.svg">
 
-  <title>PeakHalla — Brawlhalla Stats Tracker, Player Search & Leaderboards</title>
+  <title>Brawlhalla Tracker – Player Stats, ELO, Rankings & Clans | PeakHalla</title>
 
   <script type="application/ld+json">
   {
@@ -66,9 +66,25 @@
         "@id": "https://peakhalla.com/#website",
         "url": "https://peakhalla.com/",
         "name": "PeakHalla",
-        "alternateName": "PeakHalla Brawlhalla Tracker",
-        "description": "Brawlhalla player search, live account XP, legend levels, ranked leaderboards, Arena Wall and esports statistics.",
+        "alternateName": "Brawlhalla Tracker by PeakHalla",
+        "description": "Free Brawlhalla tracker for live player stats, current and peak ELO, ranked leaderboards, legend levels, clans, old names, 2v2 teams, and esports rankings.",
         "inLanguage": ["en", "ar"],
+        "publisher": { "@id": "https://peakhalla.com/#organization" }
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "https://peakhalla.com/#app",
+        "name": "PeakHalla Brawlhalla Tracker",
+        "url": "https://peakhalla.com/",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript",
+        "description": "Track Brawlhalla player stats, ELO, rankings, legends, clans, aliases, 2v2 teams, and esports results.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
         "publisher": { "@id": "https://peakhalla.com/#organization" }
       },
       {
@@ -81,8 +97,47 @@
           "url": "https://peakhalla.com/peakhalla-mark.svg"
         },
         "sameAs": [
+          "https://discord.gg/tCcSDAHKuf",
           "https://www.tiktok.com/@nadbh",
           "https://paypal.me/Nadherr"
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://peakhalla.com/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How do I track a Brawlhalla player?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Search PeakHalla by current player name, previous name, or Brawlhalla ID to open live player stats and ranked information."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does PeakHalla show current and peak ELO?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. PeakHalla shows current ELO, season peak ELO, ranked tier, regional rank, wins, losses, and ranked legend performance when available."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I search a Brawlhalla player by an old name?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. PeakHalla can search current names, known previous names, and Brawlhalla IDs."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I view Brawlhalla clans and 2v2 teammates?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. PeakHalla includes clan profiles and rosters, lifetime clan XP, and current-season ranked 2v2 teammates when official data is available."
+            }
+          }
         ]
       }
     ]
@@ -91,8 +146,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="/styles.css?v=7.60.0" as="style">
-  <link rel="stylesheet" href="/styles.css?v=7.60.0">
+  <link rel="preload" href="/styles.css?v=7.63.0" as="style">
+  <link rel="stylesheet" href="/styles.css?v=7.63.0">
 </head>
 <body>
   <header class="site-header">
@@ -298,7 +353,7 @@
             <option value="SEA">Southeast Asia · SEA</option>
             <option value="BRZ">Brazil · BRZ</option>
             <option value="AUS">Australia · AUS</option>
-            <option value="JPS">Japan · JPS</option>
+            <option value="JPN">Japan · JPN</option>
             <option value="SA">Southern Africa · SA</option>
           </select>
         </label>
@@ -412,8 +467,8 @@
     <section id="home" class="hero shell hero-intro">
       <div class="hero-copy">
         <span class="eyebrow">PLAYER DATABASE · BRAWLHALLA</span>
-        <h1 data-i18n-html="heroTitle">Track the player.<br><em>Know the main.</em></h1>
-        <p data-i18n="heroText">Search ranked players, see their main legend, compare regions, and browse competitive rankings.</p>
+        <h1 data-i18n-html="heroTitle">Brawlhalla Tracker.<br><em>Live stats, ELO &amp; rankings.</em></h1>
+        <p data-i18n="heroText">PeakHalla is a fast, free Brawlhalla tracker for live player stats, current and peak ELO, legends, clans, 2v2 teams, and competitive rankings.</p>
         <div class="hero-tags">
           <span data-i18n="mainLegendFeature">Main legend</span>
           <span data-i18n="boardsFeature">All regions</span>
@@ -525,7 +580,7 @@
         <div><span class="eyebrow">RANKED LADDER</span><h2 id="leaderboard-title">Top players · All regions</h2></div>
         <div class="toolbar leaderboard-toolbar">
           <label class="compact-field leaderboard-search-field"><span data-i18n="leaderboardSearch">Find a rank</span><span class="leaderboard-search-box"><i>⌕</i><input id="leaderboard-search" type="search" autocomplete="off" data-i18n-placeholder="leaderboardSearchPlaceholder" placeholder="Search a player"></span></label>
-          <label class="compact-field"><span data-i18n="region">Region</span><select id="leaderboard-region"><option value="ALL">All regions</option><option value="ME">Middle East · ME</option><option value="EU">Europe · EU</option><option value="US-E">US East · US-E</option><option value="US-W">US West · US-W</option><option value="SA">Southern Africa · SA</option><option value="SEA">Southeast Asia · SEA</option><option value="BRZ">Brazil · BRZ</option><option value="AUS">Australia · AUS</option><option value="JPS">Japan · JPS</option></select></label>
+          <label class="compact-field"><span data-i18n="region">Region</span><select id="leaderboard-region"><option value="ALL">All regions</option><option value="ME">Middle East · ME</option><option value="EU">Europe · EU</option><option value="US-E">US East · US-E</option><option value="US-W">US West · US-W</option><option value="SA">Southern Africa · SA</option><option value="SEA">Southeast Asia · SEA</option><option value="BRZ">Brazil · BRZ</option><option value="AUS">Australia · AUS</option><option value="JPN">Japan · JPN</option></select></label>
           <label class="compact-field"><span data-i18n="gameMode">Mode</span><select id="leaderboard-mode"><option value="1v1">1v1</option><option value="2v2">2v2</option><option value="3v3">3v3</option></select></label>
           <button id="refresh-leaderboard" class="secondary-button" data-i18n="refresh">Refresh</button>
         </div>
@@ -608,6 +663,38 @@
         </div>
         <div class="tournament-directory-meta"><span id="tournament-directory-updated" class="muted"></span><small id="tournament-directory-count"></small></div>
         <div id="tournament-directory-list" class="tournament-directory-grid"><div class="tournament-directory-loading"><span></span><strong data-i18n="loadingTournaments">Loading tournaments…</strong></div></div>
+      </div>
+    </section>
+
+
+    <section id="brawlhalla-tracker" class="shell section seo-tracker-section" aria-labelledby="seo-tracker-title">
+      <article class="panel seo-tracker-panel">
+        <div class="seo-tracker-heading">
+          <span class="eyebrow">BRAWLHALLA TRACKER</span>
+          <h2 id="seo-tracker-title" data-i18n="seoTitle">Free Brawlhalla tracker for player stats, ELO and rankings</h2>
+          <p data-i18n="seoIntro">Search any known Brawlhalla player by current name, old name, or Brawlhalla ID. PeakHalla combines live ranked data, lifetime account progression, legend performance, clans, 2v2 teammates, leaderboards, and esports rankings in one place.</p>
+        </div>
+        <div class="seo-feature-grid">
+          <article><span>01</span><h3 data-i18n="seoPlayerTitle">Live player statistics</h3><p data-i18n="seoPlayerText">View current ELO, season peak, ranked tier, wins, losses, account XP, legend levels, match time, weapons, and lifetime combat data.</p></article>
+          <article><span>02</span><h3 data-i18n="seoSearchTitle">Current and previous names</h3><p data-i18n="seoSearchText">Find profiles using a current name, a known old name, or a Brawlhalla ID without needing the player to be currently ranked.</p></article>
+          <article><span>03</span><h3 data-i18n="seoRankingsTitle">Rankings, clans and esports</h3><p data-i18n="seoRankingsText">Browse regional ranked leaderboards, top clans by lifetime XP, clan rosters, 2v2 teammates, esports power rankings, and tournaments.</p></article>
+        </div>
+        <nav class="seo-links" aria-label="Brawlhalla tracker sections">
+          <a href="#home" data-i18n="seoSearchLink">Search a player</a>
+          <a href="#leaderboard" data-i18n="seoRankedLink">Ranked leaderboards</a>
+          <a href="#clans" data-i18n="seoClansLink">Brawlhalla clans</a>
+          <a href="#esports" data-i18n="seoEsportsLink">Brawlhalla esports</a>
+        </nav>
+      </article>
+
+      <div class="seo-faq" aria-labelledby="seo-faq-title">
+        <div class="seo-faq-heading"><span class="eyebrow">FAQ</span><h2 id="seo-faq-title" data-i18n="seoFaqTitle">Brawlhalla tracker questions</h2></div>
+        <div class="seo-faq-list">
+          <details><summary data-i18n="seoFaqQ1">How do I track a Brawlhalla player?</summary><p data-i18n="seoFaqA1">Enter the player’s current name, previous name, or Brawlhalla ID in the search box. PeakHalla opens the matching profile and refreshes official data automatically.</p></details>
+          <details><summary data-i18n="seoFaqQ2">Does PeakHalla show current and peak ELO?</summary><p data-i18n="seoFaqA2">Yes. Player profiles show current ELO, season peak ELO, ranked tier, regional rank, wins, losses, and ranked legend performance when available.</p></details>
+          <details><summary data-i18n="seoFaqQ3">Can I search by an old Brawlhalla name?</summary><p data-i18n="seoFaqA3">Yes. PeakHalla searches known aliases as well as current names and Brawlhalla IDs.</p></details>
+          <details><summary data-i18n="seoFaqQ4">Can I view clans and ranked 2v2 teammates?</summary><p data-i18n="seoFaqA4">Yes. PeakHalla includes clan profiles and rosters, lifetime clan XP, and current-season ranked 2v2 teammates when official data is available.</p></details>
+        </div>
       </div>
     </section>
 
@@ -714,8 +801,8 @@
       </a>
     </div>
   </footer>
-  <script src="/app.js?v=7.61.0" defer></script>
-  <script src="/arena-v72.js?v=7.60.0" defer></script>
-  <script src="/arena-account.js?v=7.60.0" defer></script>
+  <script src="/app.js?v=7.63.0" defer></script>
+  <script src="/arena-v72.js?v=7.63.0" defer></script>
+  <script src="/arena-account.js?v=7.63.0" defer></script>
 </body>
 </html>
