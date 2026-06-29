@@ -53,11 +53,15 @@ const DATABASE_DISCOVERY_BATCH_SIZE = Math.max(1, Math.min(5, Number(process.env
 const DATABASE_DISCOVERY_MAX_PAGE = Math.max(20, Math.min(500, Number(process.env.DATABASE_DISCOVERY_MAX_PAGE || 100)));
 const DATABASE_DISCOVERY_PAGE_SIZE = Math.max(10, Math.min(50, Number(process.env.DATABASE_DISCOVERY_PAGE_SIZE || 25)));
 const DATABASE_DISCOVERY_PRIORITY_EVERY = Math.max(5, Math.min(60, Number(process.env.DATABASE_DISCOVERY_PRIORITY_EVERY || 10)));
+// Background discovery kill-switch and region override (off by default until stability is confirmed).
+const BACKGROUND_DISCOVERY_ENABLED = String(process.env.BACKGROUND_DISCOVERY_ENABLED || 'false').trim().toLowerCase() === 'true';
+const DISCOVERY_REGION_RAW = String(process.env.DISCOVERY_REGION || 'ALL');
 let dbPool = null;
 let dbReady = false;
 let dbLastError = null;
 let discoveryTimer = null;
 let discoveryRunning = false;
+let serverInitialized = false;
 let nameHistorySearchCache = { expiresAt: 0, value: null };
 
 app.disable('x-powered-by');
@@ -530,71 +534,122 @@ async function saveSnapshotToDatabase(playerId, snapshot) {
   ]);
 }
 
+/**
+ * Retry a database operation on PostgreSQL deadlock (error code 40P01) with
+ * exponential back-off.  Up to maxRetries attempts are made before giving up.
+ */
+async function withDeadlockRetry(fn, maxRetries = 3) {
+  let attempt = 0;
+  while (true) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (error.code === '40P01' && attempt < maxRetries) {
+        attempt += 1;
+        const delay = 100 * Math.pow(2, attempt - 1); // 100 ms, 200 ms, 400 ms
+        console.warn(`PeakHalla discovery: deadlock detected, retry ${attempt}/${maxRetries} in ${delay} ms`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        throw error;
+      }
+    }
+  }
+}
+
 async function saveDiscoveredRankingsToDatabase(rankings = [], source = 'official-discovery') {
   if (!dbReady || !rankings.length) return;
   const aliases = [];
   const teamRows = [];
   const sourceIsTeamMode = /(?:^|[-_])2v2(?:[-_]|$)/i.test(String(source || ''));
-  const client = await dbPool.connect();
-  try {
-    await client.query('BEGIN');
-    for (const ranking of rankings) {
-      const players = Array.isArray(ranking.players) ? ranking.players : [];
-      const isTeamRanking = sourceIsTeamMode || players.length >= 2;
-      if (players.length >= 2) teamRows.push(ranking);
-      for (const player of players) {
-        const id = Number(player.id);
-        const name = sanitizePlayerName(player.username || player.name || '');
-        if (!Number.isSafeInteger(id) || id <= 0 || !isPlausiblePlayerName(name)) continue;
-        aliases.push({ id, name });
 
-        // A 2v2 row describes the TEAM, not the individual player's 1v1 rating
-        // or world position. Storing those values on the player record caused
-        // profiles such as Raydish to display the wrong global rank.
-        if (isTeamRanking) {
-          await client.query(`
-            INSERT INTO players (
-              brawlhalla_id, current_name, normalized_name, region, main_legend, first_seen, last_seen
-            ) VALUES ($1,$2,$3,$4,$5::jsonb,NOW(),NOW())
-            ON CONFLICT (brawlhalla_id) DO UPDATE SET
-              current_name = EXCLUDED.current_name,
-              normalized_name = EXCLUDED.normalized_name,
-              region = COALESCE(EXCLUDED.region, players.region),
-              main_legend = COALESCE(EXCLUDED.main_legend, players.main_legend),
-              last_seen = NOW()
-          `, [id, name, normalizeName(name), ranking.region || null, JSON.stringify(player.main_legend || null)]);
-          continue;
-        }
-
-        await client.query(`
-          INSERT INTO players (
-            brawlhalla_id, current_name, normalized_name, region, rating, peak_rating, tier,
-            global_rank, main_legend, first_seen, last_seen
-          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,NOW(),NOW())
-          ON CONFLICT (brawlhalla_id) DO UPDATE SET
-            current_name = EXCLUDED.current_name,
-            normalized_name = EXCLUDED.normalized_name,
-            region = COALESCE(EXCLUDED.region, players.region),
-            rating = COALESCE(EXCLUDED.rating, players.rating),
-            peak_rating = GREATEST(COALESCE(players.peak_rating,0), COALESCE(EXCLUDED.peak_rating,0)),
-            tier = COALESCE(EXCLUDED.tier, players.tier),
-            global_rank = COALESCE(EXCLUDED.global_rank, players.global_rank),
-            main_legend = COALESCE(EXCLUDED.main_legend, players.main_legend),
-            last_seen = NOW()
-        `, [
-          id, name, normalizeName(name), ranking.region || null, numberOrNull(ranking.rating),
-          numberOrNull(ranking.best_rating ?? ranking.peak_rating), ranking.tier || null,
-          numberOrNull(ranking.rank), JSON.stringify(player.main_legend || null)
-        ]);
-      }
+  // Collect all player rows first, sorted by player_id ascending to prevent
+  // deadlocks caused by concurrent transactions locking rows in different orders.
+  const playerRows = [];
+  for (const ranking of rankings) {
+    const players = Array.isArray(ranking.players) ? ranking.players : [];
+    const isTeamRanking = sourceIsTeamMode || players.length >= 2;
+    if (players.length >= 2) teamRows.push(ranking);
+    for (const player of players) {
+      const id = Number(player.id);
+      const name = sanitizePlayerName(player.username || player.name || '');
+      if (!Number.isSafeInteger(id) || id <= 0 || !isPlausiblePlayerName(name)) continue;
+      aliases.push({ id, name });
+      playerRows.push({ id, name, ranking, isTeamRanking, player });
     }
-    await client.query('COMMIT');
-  } catch (error) {
-    await client.query('ROLLBACK').catch(() => null);
-    console.warn('Could not save discovered rankings:', error.message);
-  } finally {
-    client.release();
   }
+  // Consistent lock order: always process rows by ascending player_id.
+  playerRows.sort((a, b) => a.id - b.id);
+
+  // Process in batches of 25 to avoid loading the full player set into memory
+  // and to keep individual transactions short (reduces deadlock window).
+  const BATCH_SIZE = 25;
+  const totalBatches = Math.ceil(playerRows.length / BATCH_SIZE);
+  for (let batchIndex = 0; batchIndex < totalBatches; batchIndex += 1) {
+    const batch = playerRows.slice(batchIndex * BATCH_SIZE, (batchIndex + 1) * BATCH_SIZE);
+    console.log(
+      `PeakHalla discovery [${source}]: batch ${batchIndex + 1}/${totalBatches}, ` +
+      `${batch.length} players`
+    );
+
+    await withDeadlockRetry(async () => {
+      const client = await dbPool.connect();
+      try {
+        await client.query('BEGIN');
+        for (const { id, name, ranking, isTeamRanking, player } of batch) {
+          // A 2v2 row describes the TEAM, not the individual player's 1v1 rating
+          // or world position. Storing those values on the player record caused
+          // profiles such as Raydish to display the wrong global rank.
+          if (isTeamRanking) {
+            await client.query(`
+              INSERT INTO players (
+                brawlhalla_id, current_name, normalized_name, region, main_legend, first_seen, last_seen
+              ) VALUES ($1,$2,$3,$4,$5::jsonb,NOW(),NOW())
+              ON CONFLICT (brawlhalla_id) DO UPDATE SET
+                current_name = EXCLUDED.current_name,
+                normalized_name = EXCLUDED.normalized_name,
+                region = COALESCE(EXCLUDED.region, players.region),
+                main_legend = COALESCE(EXCLUDED.main_legend, players.main_legend),
+                last_seen = NOW()
+            `, [id, name, normalizeName(name), ranking.region || null, JSON.stringify(player.main_legend || null)]);
+          } else {
+            await client.query(`
+              INSERT INTO players (
+                brawlhalla_id, current_name, normalized_name, region, rating, peak_rating, tier,
+                global_rank, main_legend, first_seen, last_seen
+              ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,NOW(),NOW())
+              ON CONFLICT (brawlhalla_id) DO UPDATE SET
+                current_name = EXCLUDED.current_name,
+                normalized_name = EXCLUDED.normalized_name,
+                region = COALESCE(EXCLUDED.region, players.region),
+                rating = COALESCE(EXCLUDED.rating, players.rating),
+                peak_rating = GREATEST(COALESCE(players.peak_rating,0), COALESCE(EXCLUDED.peak_rating,0)),
+                tier = COALESCE(EXCLUDED.tier, players.tier),
+                global_rank = COALESCE(EXCLUDED.global_rank, players.global_rank),
+                main_legend = COALESCE(EXCLUDED.main_legend, players.main_legend),
+                last_seen = NOW()
+            `, [
+              id, name, normalizeName(name), ranking.region || null, numberOrNull(ranking.rating),
+              numberOrNull(ranking.best_rating ?? ranking.peak_rating), ranking.tier || null,
+              numberOrNull(ranking.rank), JSON.stringify(player.main_legend || null)
+            ]);
+          }
+        }
+        await client.query('COMMIT');
+      } catch (error) {
+        await client.query('ROLLBACK').catch(() => null);
+        throw error; // re-throw so withDeadlockRetry can inspect the error code
+      } finally {
+        client.release();
+      }
+    });
+
+    // Release the batch reference so GC can reclaim memory between batches.
+    batch.length = 0;
+  }
+
+  // Clear the full player-rows array now that all batches are done.
+  playerRows.length = 0;
+
   await saveAliasesToDatabase(aliases, source);
   if (teamRows.length) await saveTeamRowsToDatabase(teamRows, source);
 }
@@ -630,8 +685,22 @@ async function importLegacyJsonIntoDatabase() {
   console.log('Existing PeakHalla cache imported into PostgreSQL.');
 }
 
-const DISCOVERY_REGIONS = ['ALL', 'EU', 'US-E', 'US-W', 'BRZ', 'SEA', 'AUS', 'JPS', 'SA', 'ME'];
+const DISCOVERY_REGIONS = ['ALL', 'EU', 'US-E', 'US-W', 'BRZ', 'SEA', 'AUS', 'JPN', 'SA', 'ME'];
 const DISCOVERY_MODES = ['1v1', '2v2'];
+
+/**
+ * Validates a raw DISCOVERY_REGION env-var value.
+ * Returns the normalised region string on success, or null if invalid.
+ */
+function validateDiscoveryRegion(value) {
+  const normalised = String(value || '').trim().toUpperCase();
+  if (DISCOVERY_REGIONS.includes(normalised)) return normalised;
+  console.warn(
+    `PeakHalla discovery: DISCOVERY_REGION value "${value}" is not valid. ` +
+    `Must be one of: [${DISCOVERY_REGIONS.join(',')}]. Background discovery will not start.`
+  );
+  return null;
+}
 
 function normalizeDiscoveryCursor(value = {}) {
   return {
@@ -682,10 +751,43 @@ async function fetchDiscoveryPage(region, mode, page) {
   return apiFetch(`/leaderboard/ranked?${params}`, 30_000);
 }
 
+// Advisory lock key used to ensure only one discovery cycle runs at a time
+// across all server instances connected to the same PostgreSQL database.
+const DISCOVERY_ADVISORY_LOCK_KEY = 12345;
+
 async function runDatabaseDiscoveryCycle() {
-  if (!dbReady || !DATABASE_DISCOVERY_ENABLED || discoveryRunning) return;
+  // Guard: do not run until the server has fully initialised (migrations done).
+  if (!serverInitialized) {
+    console.log('PeakHalla discovery: skipping cycle — server not yet fully initialised.');
+    return;
+  }
+  if (!dbReady || !DATABASE_DISCOVERY_ENABLED || !BACKGROUND_DISCOVERY_ENABLED) return;
+  if (discoveryRunning) {
+    console.log('PeakHalla discovery: skipping cycle — another cycle is already active.');
+    return;
+  }
   discoveryRunning = true;
   const startedAt = Date.now();
+  const memBefore = process.memoryUsage();
+  console.log(
+    `PeakHalla discovery: cycle starting at ${new Date(startedAt).toISOString()} ` +
+    `(heapUsed=${Math.round(memBefore.heapUsed / 1024 / 1024)} MB)`
+  );
+
+  // Acquire a PostgreSQL advisory lock so that only one server instance runs
+  // the discovery cycle at a time.  pg_advisory_lock blocks until the lock is
+  // available; pg_advisory_unlock releases it in the finally block.
+  let lockClient = null;
+  try {
+    lockClient = await dbPool.connect();
+    await lockClient.query('SELECT pg_advisory_lock($1)', [DISCOVERY_ADVISORY_LOCK_KEY]);
+  } catch (lockError) {
+    console.warn('PeakHalla discovery: could not acquire advisory lock:', lockError.message);
+    if (lockClient) lockClient.release();
+    discoveryRunning = false;
+    return;
+  }
+
   try {
     const previous = normalizeDiscoveryCursor(await getDatabaseState('official_discovery_cursor_v2', null)
       || await getDatabaseState('official_discovery_cursor_v1', null)
@@ -699,6 +801,7 @@ async function runDatabaseDiscoveryCycle() {
       const region = DISCOVERY_REGIONS[cursor.region_index];
       const mode = DISCOVERY_MODES[cursor.mode_index];
       const page = cursor.page;
+      console.log(`PeakHalla discovery: fetching page ${page} — region=${region} mode=${mode}`);
       const response = await fetchDiscoveryPage(region, mode, page);
       const rankings = Array.isArray(response?.rankings) ? response.rankings : [];
       const pagePlayers = rankings.reduce((sum, item) => sum + (item.players || []).length, 0);
@@ -723,6 +826,14 @@ async function runDatabaseDiscoveryCycle() {
 
     const afterCount = await databasePlayerCount();
     const newPlayers = Math.max(0, afterCount - beforeCount);
+    const durationMs = Date.now() - startedAt;
+    const memAfter = process.memoryUsage();
+    console.log(
+      `PeakHalla discovery: cycle ${cycleNumber} complete — ` +
+      `playersSeen=${playersSeen} newPlayers=${newPlayers} totalPlayers=${afterCount} ` +
+      `pages=${pages.length} duration=${durationMs} ms ` +
+      `heapUsed=${Math.round(memAfter.heapUsed / 1024 / 1024)} MB`
+    );
     const state = {
       ...cursor,
       cycles: cycleNumber,
@@ -733,7 +844,7 @@ async function runDatabaseDiscoveryCycle() {
       last_cycle_players_seen: playersSeen,
       last_cycle_new_players: newPlayers,
       total_players: afterCount,
-      duration_ms: Date.now() - startedAt,
+      duration_ms: durationMs,
       last_success_at: new Date().toISOString(),
       last_error: null
     };
@@ -748,12 +859,34 @@ async function runDatabaseDiscoveryCycle() {
       duration_ms: Date.now() - startedAt
     }).catch(() => null);
   } finally {
+    // Always release the advisory lock and the client, even on error.
+    try {
+      await lockClient.query('SELECT pg_advisory_unlock($1)', [DISCOVERY_ADVISORY_LOCK_KEY]);
+    } catch (_unlockError) {
+      // Ignore unlock errors — the lock will be released when the connection closes.
+    }
+    lockClient.release();
     discoveryRunning = false;
   }
 }
 
 function scheduleDatabaseDiscovery() {
-  if (!dbReady || !DATABASE_DISCOVERY_ENABLED || discoveryTimer) return;
+  // Validate the DISCOVERY_REGION env var before registering any timers.
+  // If the value is invalid we log the problem and bail out immediately so the
+  // server does not spam the error log every minute.
+  const validatedRegion = validateDiscoveryRegion(DISCOVERY_REGION_RAW);
+  if (!validatedRegion) return; // warning already logged inside validateDiscoveryRegion
+
+  if (!dbReady || !DATABASE_DISCOVERY_ENABLED || !BACKGROUND_DISCOVERY_ENABLED) {
+    if (!BACKGROUND_DISCOVERY_ENABLED) {
+      console.log('PeakHalla discovery: BACKGROUND_DISCOVERY_ENABLED is false — background discovery is disabled.');
+    }
+    return;
+  }
+  // Guard against duplicate timer registration (e.g. called twice during startup).
+  if (discoveryTimer) return;
+
+  console.log(`PeakHalla discovery: scheduling background discovery (region=${validatedRegion}, interval=${DATABASE_DISCOVERY_INTERVAL_MS} ms)`);
   discoveryTimer = setTimeout(() => {
     runDatabaseDiscoveryCycle().catch(() => null);
     discoveryTimer = setInterval(() => runDatabaseDiscoveryCycle().catch(() => null), DATABASE_DISCOVERY_INTERVAL_MS);
@@ -5703,11 +5836,19 @@ async function startServer() {
     const connected = await initDatabase();
     if (connected) {
       await importLegacyJsonIntoDatabase().catch((error) => console.warn('Legacy database import failed:', error.message));
-      scheduleDatabaseDiscovery();
     }
   } catch (error) {
     console.warn('PeakHalla database startup failed; continuing with JSON storage:', error.message);
   }
+
+  // Mark the server as fully initialised *before* scheduling background work
+  // so that the discovery cycle guard in runDatabaseDiscoveryCycle() passes.
+  serverInitialized = true;
+
+  // Schedule background discovery only after all migrations are complete.
+  // scheduleDatabaseDiscovery() is a no-op when BACKGROUND_DISCOVERY_ENABLED
+  // is false (the default), so this is safe to call unconditionally.
+  if (dbReady) scheduleDatabaseDiscovery();
 
   app.listen(PORT, () => {
     console.log(`PeakHalla running on http://localhost:${PORT}`);
