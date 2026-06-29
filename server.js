@@ -15,6 +15,7 @@ const API_BASE = process.env.BRAWLHALLA_API_BASE || 'https://api.brawlhalla.com/
 const OFFICIAL_ESPORTS_BASE = 'https://www.brawlhalla.com/rankings/esports';
 const OFFICIAL_ESPORTS_NEWS_URL = 'https://www.brawlhalla.com/news/esports';
 const COMMUNITY_TOURNAMENTS_URL = 'https://www.brawlhalla.com/news/upcoming-community-tournaments';
+const CHALLENGERMODE_BRAWLHALLA_URL = 'https://www.challengermode.com/s/Brawlhalla';
 const OFFICIAL_LEGENDS_BASE = 'https://www.brawlhalla.com/legends';
 const BRAWLTOOLS_API_BASE = process.env.BRAWLTOOLS_API_BASE || 'https://api.brawltools.com/v2';
 const COREHALLA_TRPC_BASE = process.env.COREHALLA_TRPC_BASE || 'https://corehalla.com/api/trpc';
@@ -40,7 +41,12 @@ const imageCache = new Map();
 const fileQueues = new Map();
 const queueTrackers = new Map();
 const profileResponseCache = new Map();
+const leaderboardResponseCache = new Map();
+const leaderboardRefreshes = new Map();
 const PROFILE_RESPONSE_TTL_MS = 12 * 60_000;
+const LEADERBOARD_FAST_TTL_MS = 45_000;
+const LEADERBOARD_STALE_MAX_AGE_MS = 30 * 60_000;
+const LEADERBOARD_RESPONSE_CACHE_LIMIT = 120;
 const PROFILE_RESPONSE_CACHE_LIMIT = Math.max(12, Math.min(100, Number(process.env.PROFILE_RESPONSE_CACHE_LIMIT || 36)));
 const PROFILE_DISK_CACHE_MAX_AGE_MS = 6 * 60 * 60_000;
 const PROFILE_DISK_CACHE_LIMIT = Math.max(40, Math.min(200, Number(process.env.PROFILE_DISK_CACHE_LIMIT || 100)));
@@ -254,6 +260,7 @@ function cleanupRuntimeCaches(aggressive = false) {
   trimMap(cache, aggressive ? Math.min(80, GENERAL_CACHE_LIMIT) : GENERAL_CACHE_LIMIT);
   trimMap(profileResponseCache, aggressive ? Math.min(12, PROFILE_RESPONSE_CACHE_LIMIT) : PROFILE_RESPONSE_CACHE_LIMIT);
   trimMap(profileSearchResponseCache, aggressive ? 40 : 120);
+  trimMap(leaderboardResponseCache, aggressive ? 24 : LEADERBOARD_RESPONSE_CACHE_LIMIT);
   trimMap(officialTeamLookupCache, aggressive ? 20 : TEAM_LOOKUP_CACHE_LIMIT);
   if (aggressive) {
     while (imageCache.size > 6 || imageCacheBytes > 5 * 1024 * 1024) {
@@ -1288,7 +1295,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await limitedFetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.67'
+          'User-Agent': 'PeakHalla/7.68'
         },
         signal: controller.signal
       });
@@ -1330,7 +1337,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.67'
+        'User-Agent': 'PeakHalla/7.68'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -1412,7 +1419,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             ...(attempt.body ? { 'Content-Type': 'application/json' } : {}),
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.67'
+            'User-Agent': 'PeakHalla/7.68'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -2150,7 +2157,7 @@ async function fetchLegendArtwork(name) {
       const response = await limitedFetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.67',
+          'User-Agent': 'PeakHalla/7.68',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -2189,7 +2196,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await limitedFetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.67'
+        'User-Agent': 'PeakHalla/7.68'
       },
       signal: pageController.signal
     });
@@ -2210,7 +2217,7 @@ async function fetchOfficialLegendImage(name) {
       headers: {
         Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
         Referer: 'https://www.brawlhalla.com/',
-        'User-Agent': 'PeakHalla/7.67'
+        'User-Agent': 'PeakHalla/7.68'
       },
       signal: imageController.signal
     });
@@ -4270,7 +4277,7 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.63.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.68.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
@@ -4584,6 +4591,141 @@ app.get('/api/clans/:id', async (req, res, next) => {
   } catch (error) { next(error); }
 });
 
+
+function leaderboardStateKey({ region, mode, page, orderBy }) {
+  return `leaderboard:${region}:${mode}:${page}:${orderBy}`;
+}
+
+function rememberLeaderboardPayload(key, payload, savedAt = Date.now()) {
+  leaderboardResponseCache.delete(key);
+  leaderboardResponseCache.set(key, { payload, savedAt: Number(savedAt) || Date.now() });
+  while (leaderboardResponseCache.size > LEADERBOARD_RESPONSE_CACHE_LIMIT) {
+    const oldest = leaderboardResponseCache.keys().next().value;
+    if (!oldest) break;
+    leaderboardResponseCache.delete(oldest);
+  }
+}
+
+async function readLeaderboardPayload(key) {
+  const memory = leaderboardResponseCache.get(key);
+  if (memory?.payload) return memory;
+  if (!dbReady) return null;
+  const stored = await settleWithin(getDatabaseState(key, null), 700, null);
+  if (!stored?.payload?.rankings) return null;
+  const entry = { payload: stored.payload, savedAt: Number(stored.saved_at || stored.savedAt || 0) || Date.now() };
+  rememberLeaderboardPayload(key, entry.payload, entry.savedAt);
+  return entry;
+}
+
+async function persistLeaderboardPayload(key, payload, savedAt = Date.now()) {
+  rememberLeaderboardPayload(key, payload, savedAt);
+  if (dbReady) setDatabaseState(key, { saved_at: savedAt, payload }).catch(() => null);
+}
+
+async function databaseLeaderboardFallback({ region, mode, page }) {
+  if (!dbReady) return null;
+  const limit = 20;
+  const offset = Math.max(0, (page - 1) * limit);
+  if (mode === '1v1') {
+    const params = [];
+    let where = `rating IS NOT NULL AND rating > 0`;
+    if (region !== 'ALL') {
+      params.push(region);
+      where += ` AND region = $${params.length}`;
+    }
+    params.push(limit, offset);
+    const rows = await dbQuery(`
+      SELECT brawlhalla_id, current_name, region, rating, peak_rating, tier,
+             global_rank, main_legend, profile_payload
+      FROM players
+      WHERE ${where}
+      ORDER BY rating DESC NULLS LAST, peak_rating DESC NULLS LAST, last_seen DESC
+      LIMIT $${params.length - 1} OFFSET $${params.length}
+    `, params).then((result) => result?.rows || []).catch(() => []);
+    if (!rows.length) return null;
+    const rankings = rows.map((row, index) => {
+      const profile = row.profile_payload?.player || {};
+      const wins = numberOrZero(profile.ranked_wins);
+      const games = Math.max(wins, numberOrZero(profile.ranked_games));
+      return {
+        rank: numberOrNull(row.global_rank) || offset + index + 1,
+        rating: numberOrNull(row.rating),
+        best_rating: maxPositiveNumber(row.peak_rating, profile.peak_rating, row.rating),
+        tier: row.tier || profile.tier || 'Unranked',
+        region: row.region || region,
+        games,
+        wins,
+        losses: Math.max(0, games - wins),
+        players: [{
+          id: Number(row.brawlhalla_id),
+          username: row.current_name || profile.name || `Player ${row.brawlhalla_id}`,
+          main_legend: row.main_legend || profile.main_legend || null
+        }]
+      };
+    });
+    return { rankings, total_pages: rows.length >= limit ? page + 1 : page, source: 'database-fallback' };
+  }
+
+  if (mode === '2v2') {
+    const params = [];
+    let where = `rating IS NOT NULL AND rating > 0`;
+    if (region !== 'ALL') {
+      params.push(region);
+      where += ` AND region = $${params.length}`;
+    }
+    params.push(limit, offset);
+    const rows = await dbQuery(`
+      SELECT player_one_id, player_two_id, player_one_name, player_two_name,
+             region, rating, peak_rating, tier, global_rank, games, wins, losses
+      FROM player_teams
+      WHERE ${where}
+      ORDER BY rating DESC NULLS LAST, peak_rating DESC NULLS LAST, last_seen DESC
+      LIMIT $${params.length - 1} OFFSET $${params.length}
+    `, params).then((result) => result?.rows || []).catch(() => []);
+    if (!rows.length) return null;
+    const playerIds = [...new Set(rows.flatMap((row) => [Number(row.player_one_id), Number(row.player_two_id)]).filter(Boolean))];
+    const legendById = await getCachedMainLegendMap(playerIds);
+    const rankings = rows.map((row, index) => ({
+      rank: numberOrNull(row.global_rank) || offset + index + 1,
+      rating: numberOrNull(row.rating),
+      best_rating: maxPositiveNumber(row.peak_rating, row.rating),
+      tier: row.tier || 'Unranked',
+      region: row.region || region,
+      games: numberOrZero(row.games),
+      wins: numberOrZero(row.wins),
+      losses: Number.isFinite(Number(row.losses)) ? numberOrZero(row.losses) : Math.max(0, numberOrZero(row.games) - numberOrZero(row.wins)),
+      players: [
+        { id: Number(row.player_one_id), username: row.player_one_name || `Player ${row.player_one_id}`, main_legend: legendById.get(Number(row.player_one_id)) || null },
+        { id: Number(row.player_two_id), username: row.player_two_name || `Player ${row.player_two_id}`, main_legend: legendById.get(Number(row.player_two_id)) || null }
+      ]
+    }));
+    return { rankings, total_pages: rows.length >= limit ? page + 1 : page, source: 'database-fallback' };
+  }
+  return null;
+}
+
+async function refreshLeaderboardPayload(context) {
+  const key = leaderboardStateKey(context);
+  if (leaderboardRefreshes.has(key)) return leaderboardRefreshes.get(key);
+  const task = (async () => {
+    const params = new URLSearchParams({
+      page: String(context.page),
+      max_results: '20',
+      game_mode: context.mode,
+      region: context.region,
+      order_by: context.orderBy
+    });
+    const data = await apiFetch(`/leaderboard/ranked?${params}`, 30_000);
+    const rankings = await hydrateRankingPlayers(data?.rankings || [], 'leaderboard', { warmMissingLegends: true });
+    const payload = { ...data, rankings, source: 'official', updated_at: new Date().toISOString() };
+    await persistLeaderboardPayload(key, payload, Date.now());
+    return payload;
+  })();
+  leaderboardRefreshes.set(key, task);
+  try { return await task; }
+  finally { leaderboardRefreshes.delete(key); }
+}
+
 app.get('/api/leaderboard', async (req, res, next) => {
   try {
     const page = asInt(req.query.page, 1, 1, 1000);
@@ -4592,19 +4734,47 @@ app.get('/api/leaderboard', async (req, res, next) => {
     const mode = allowed(String(req.query.mode || '1v1'), ['1v1', '2v2', '3v3'], '1v1');
     const orderBy = allowed(String(req.query.order_by || 'rating'),
       ['rating', 'best_rating', 'wl_ratio', 'wins', 'games'], 'rating');
-    const params = new URLSearchParams({
-      page: String(page), max_results: '20', game_mode: mode, region, order_by: orderBy
-    });
+    const force = String(req.query.refresh || '') === '1';
+    const context = { page, region, mode, orderBy };
+    const key = leaderboardStateKey(context);
+    const cached = await readLeaderboardPayload(key);
+    const cacheAge = cached ? Date.now() - Number(cached.savedAt || 0) : Infinity;
 
-    const data = await apiFetch(`/leaderboard/ranked?${params}`);
-    const rankings = await hydrateRankingPlayers(data?.rankings || [], 'leaderboard', { warmMissingLegends: true });
-    res.setHeader('Cache-Control', 'private, max-age=15, stale-while-revalidate=60');
-    res.json({ ...data, rankings });
+    if (cached?.payload?.rankings?.length && !force) {
+      const stale = cacheAge > LEADERBOARD_FAST_TTL_MS;
+      if (stale) refreshLeaderboardPayload(context).catch((error) => {
+        console.warn(`Could not refresh cached leaderboard ${region} ${mode} page ${page}:`, error.message);
+      });
+      res.setHeader('Cache-Control', 'private, max-age=10, stale-while-revalidate=120');
+      return res.json({ ...cached.payload, cached: true, stale, refreshing: stale });
+    }
+
+    if (!force) {
+      const fallback = await settleWithin(databaseLeaderboardFallback(context), 900, null);
+      if (fallback?.rankings?.length) {
+        refreshLeaderboardPayload(context).catch((error) => {
+          console.warn(`Could not refresh database leaderboard fallback ${region} ${mode} page ${page}:`, error.message);
+        });
+        res.setHeader('Cache-Control', 'private, max-age=5, stale-while-revalidate=60');
+        return res.json({ ...fallback, stale: true, refreshing: true, updated_at: new Date().toISOString() });
+      }
+    }
+
+    try {
+      const payload = await refreshLeaderboardPayload(context);
+      res.setHeader('Cache-Control', 'private, max-age=15, stale-while-revalidate=60');
+      return res.json(payload);
+    } catch (error) {
+      if (cached?.payload?.rankings?.length && cacheAge <= LEADERBOARD_STALE_MAX_AGE_MS) {
+        res.setHeader('Cache-Control', 'private, max-age=5, stale-while-revalidate=60');
+        return res.json({ ...cached.payload, cached: true, stale: true, refreshing: false, upstream_error: error.message });
+      }
+      throw error;
+    }
   } catch (error) {
     next(error);
   }
 });
-
 
 app.get('/api/queue/activity', async (req, res, next) => {
   try {
@@ -5166,6 +5336,54 @@ function normalizeTournamentUrl(href, base = 'https://www.brawlhalla.com') {
   }
 }
 
+
+const CURRENT_OFFICIAL_TOURNAMENTS = Object.freeze([
+  { name: 'Summer Championship — Middle East 2026 — 1v1', regions: ['MENA'], modes: ['1v1'], date: '2026-07-17T11:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/d57d1465-41d8-4d62-e242-08deac38d3d7' },
+  { name: 'Summer Championship — Southeast Asia 2026 — 1v1', regions: ['SEA'], modes: ['1v1'], date: '2026-07-17T09:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/9db3cc52-8c73-4152-6d13-08dea8b61f65' },
+  { name: 'Summer Championship — Europe 2026 — 1v1', regions: ['EU'], modes: ['1v1'], date: '2026-07-18T10:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/44268709-24b7-405c-6d14-08dea8b61f65' },
+  { name: 'Summer Championship — South America 2026 — 1v1', regions: ['SA'], modes: ['1v1'], date: '2026-07-18T17:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/7db875a5-4452-4f81-e243-08deac38d3d7' },
+  { name: 'Summer Championship — North America 2026 — 1v1', regions: ['NA'], modes: ['1v1'], date: '2026-07-19T14:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/2a4486e4-cfe5-4d25-6d16-08dea8b61f65' },
+  { name: 'Summer Championship — Middle East 2026 — 2v2', regions: ['MENA'], modes: ['2v2'], date: '2026-07-24T11:15:00.000Z', source_url: CHALLENGERMODE_BRAWLHALLA_URL },
+  { name: 'Summer Championship — Southeast Asia 2026 — 2v2', regions: ['SEA'], modes: ['2v2'], date: '2026-07-24T09:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/948d2501-6b6b-468d-6d18-08dea8b61f65' },
+  { name: 'Summer Championship — Europe 2026 — 2v2', regions: ['EU'], modes: ['2v2'], date: '2026-07-25T10:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/eb136372-9608-404d-e246-08deac38d3d7' },
+  { name: 'Summer Championship — South America 2026 — 2v2', regions: ['SA'], modes: ['2v2'], date: '2026-07-25T17:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/62c15d77-842c-4546-6d1a-08dea8b61f65' },
+  { name: 'Summer Championship — North America 2026 — 2v2', regions: ['NA'], modes: ['2v2'], date: '2026-07-26T14:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/632dcc5d-5697-4b12-6d1b-08dea8b61f65' }
+].map((event, index) => ({
+  id: `official-summer-2026-${index + 1}`,
+  category: 'official',
+  status: 'upcoming',
+  series: 'Summer Championship 2026',
+  note: 'Official regional Summer Championship registration.',
+  source: 'Brawlhalla Esports',
+  ...event
+})));
+
+function parseChallengermodeTournamentDirectory(html = '') {
+  const events = [];
+  const raw = String(html || '');
+  for (const match of raw.matchAll(/<a\b([^>]*?)href=["']([^"']*\/s\/Brawlhalla\/tournaments\/[^"'?/]+[^"']*)["']([^>]*)>([\s\S]*?)<\/a>/gi)) {
+    const sourceUrl = normalizeTournamentUrl(match[2], CHALLENGERMODE_BRAWLHALLA_URL);
+    const nearby = htmlText(raw.slice(Math.max(0, match.index - 300), match.index + match[0].length + 300));
+    const name = htmlText(match[4]).trim() || nearby.match(/(?:Winter|Spring|Summer|Autumn) Championship[^|\n]{3,140}/i)?.[0]?.trim() || '';
+    if (!sourceUrl || !/(championship|tournament|cup|invitational|open)/i.test(`${name} ${nearby}`)) continue;
+    const displayName = name.length >= 5 && name.length <= 170 ? name : nearby.slice(0, 150);
+    const date = isoDateFromEnglish(nearby);
+    events.push({
+      id: crypto.createHash('sha1').update(sourceUrl).digest('hex').slice(0, 14),
+      name: displayName,
+      category: 'official',
+      regions: inferTournamentRegions(`${displayName} ${nearby}`),
+      modes: inferTournamentModes(`${displayName} ${nearby}`),
+      date,
+      status: date && new Date(date).getTime() >= Date.now() - 24 * 60 * 60_000 ? 'upcoming' : 'announced',
+      note: 'Official Brawlhalla Esports tournament.',
+      source_url: sourceUrl,
+      source: 'Challengermode'
+    });
+  }
+  return [...new Map(events.map((event) => [event.source_url, event])).values()];
+}
+
 function inferTournamentRegions(value = '') {
   const text = ` ${String(value).toUpperCase()} `;
   const regions = [];
@@ -5269,7 +5487,10 @@ function localTournamentDirectory(data = {}) {
 }
 
 async function getLiveTournamentDirectory(refresh = false) {
-  if (refresh) cache.delete(`html:${OFFICIAL_ESPORTS_NEWS_URL}`);
+  if (refresh) {
+    cache.delete(`html:${OFFICIAL_ESPORTS_NEWS_URL}`);
+    cache.delete(`html:${CHALLENGERMODE_BRAWLHALLA_URL}`);
+  }
 
   let newsHtml = '';
   let posts = [];
@@ -5278,6 +5499,14 @@ async function getLiveTournamentDirectory(refresh = false) {
     posts = parseOfficialEsportsPosts(newsHtml);
   } catch (error) {
     console.warn('Could not refresh Brawlhalla esports news:', error.message);
+  }
+
+  let hostedOfficial = [];
+  try {
+    const hostedHtml = await htmlFetch(CHALLENGERMODE_BRAWLHALLA_URL, 10 * 60_000);
+    hostedOfficial = parseChallengermodeTournamentDirectory(hostedHtml);
+  } catch (error) {
+    console.warn('Could not refresh hosted Brawlhalla tournaments:', error.message);
   }
 
   // Always follow the newest Community Tournaments announcement instead of
@@ -5296,11 +5525,12 @@ async function getLiveTournamentDirectory(refresh = false) {
     console.warn('Could not refresh community tournaments:', error.message);
   }
 
+  const official = [...CURRENT_OFFICIAL_TOURNAMENTS, ...hostedOfficial, ...posts.filter((event) => event.category === 'official')];
   return {
-    official: posts.filter((event) => event.category === 'official'),
+    official: [...new Map(official.map((event) => [event.source_url || `${event.name}:${(event.modes || []).join(',')}`, event])).values()],
     community,
     community_source_url: communityUrl,
-    live: Boolean(newsHtml || community.length)
+    live: Boolean(newsHtml || hostedOfficial.length || community.length)
   };
 }
 
@@ -5317,19 +5547,37 @@ app.get('/api/esports/tournaments', async (req, res) => {
 
   const selected = type === 'community' ? live.community : live.official;
   const merged = [...selected, ...local.filter((event) => event.category === type)];
-  const unique = [...new Map(merged.map((event) => [event.source_url || `${event.category}:${event.name}`, event])).values()]
+  const hasRegionalSummer2026 = merged.some((event) =>
+    /summer championship/i.test(String(event.name || '')) &&
+    /2026/.test(String(event.name || '')) &&
+    (event.regions || []).some((item) => item && item !== 'GLOBAL')
+  );
+  const now = Date.now();
+  const unique = [...new Map(merged.map((event) => [event.source_url || `${event.category}:${event.name}:${(event.modes || []).join(',')}`, event])).values()]
     .filter((event) => {
       const regions = Array.isArray(event.regions) && event.regions.length ? event.regions : ['GLOBAL'];
       const modes = Array.isArray(event.modes) && event.modes.length ? event.modes : inferTournamentModes(`${event.name || ''} ${event.note || ''}`);
-      const regionMatches = region === 'ALL' ? true : regions.includes(region);
+      if (String(event.status || '').toLowerCase() === 'completed') return false;
+      if (hasRegionalSummer2026 && regions.includes('GLOBAL') && /^summer championship 2026$/i.test(String(event.name || '').trim())) return false;
+      const regionMatches = region === 'ALL' ? true : regions.includes(region) || regions.includes('GLOBAL');
       const modeMatches = mode === 'ALL' ? true : modes.includes(mode);
       return regionMatches && modeMatches;
     })
+    .map((event) => ({
+      ...event,
+      regions: Array.isArray(event.regions) && event.regions.length ? event.regions : ['GLOBAL'],
+      modes: Array.isArray(event.modes) && event.modes.length ? event.modes : inferTournamentModes(`${event.name || ''} ${event.note || ''}`)
+    }))
     .sort((left, right) => {
-      const dateDiff = new Date(right.date || 0).getTime() - new Date(left.date || 0).getTime();
-      return dateDiff || String(left.name).localeCompare(String(right.name));
+      const leftTime = new Date(left.date || 0).getTime();
+      const rightTime = new Date(right.date || 0).getTime();
+      const leftUpcoming = leftTime >= now - 24 * 60 * 60_000 ? 1 : 0;
+      const rightUpcoming = rightTime >= now - 24 * 60 * 60_000 ? 1 : 0;
+      if (leftUpcoming !== rightUpcoming) return rightUpcoming - leftUpcoming;
+      if (leftUpcoming && rightUpcoming) return leftTime - rightTime || String(left.name).localeCompare(String(right.name));
+      return rightTime - leftTime || String(left.name).localeCompare(String(right.name));
     })
-    .slice(0, 60);
+    .slice(0, 80);
 
   res.json({
     type,
@@ -5339,7 +5587,7 @@ app.get('/api/esports/tournaments', async (req, res) => {
     live: live.live,
     auto_refresh_seconds: 300,
     events: unique,
-    sources: [OFFICIAL_ESPORTS_NEWS_URL, live.community_source_url || COMMUNITY_TOURNAMENTS_URL]
+    sources: [OFFICIAL_ESPORTS_NEWS_URL, CHALLENGERMODE_BRAWLHALLA_URL, live.community_source_url || COMMUNITY_TOURNAMENTS_URL]
   });
 });
 
@@ -5847,12 +6095,26 @@ app.get('/api/players/portraits', async (req, res, next) => {
       .filter((id) => Number.isSafeInteger(id) && id > 0))]
       .slice(0, 80);
     if (!ids.length) return res.json({ portraits: {} });
+
     const legendById = await getCachedMainLegendMap(ids);
+    let missing = ids.filter((id) => !legendById.has(id));
+    const resolveMissing = String(req.query.resolve || '0') === '1';
+    if (resolveMissing && missing.length) {
+      const priority = missing.slice(0, 8);
+      const resolved = await mapWithConcurrency(priority, 4, async (id) => ({
+        id,
+        legend: await settleWithin(getMainLegendSummary(id), 2800, null)
+      }));
+      for (const item of resolved) {
+        if (item?.legend) legendById.set(item.id, item.legend);
+      }
+      missing = ids.filter((id) => !legendById.has(id));
+    }
+
     const portraits = Object.fromEntries(ids.map((id) => [String(id), legendById.get(id) || null]));
-    const missing = ids.filter((id) => !legendById.has(id));
-    if (String(req.query.warm || '1') !== '0') warmMissingMainLegends(missing, 12);
-    res.setHeader('Cache-Control', 'private, max-age=30, stale-while-revalidate=300');
-    res.json({ portraits, missing });
+    if (String(req.query.warm || '1') !== '0') warmMissingMainLegends(missing, 20);
+    res.setHeader('Cache-Control', 'private, max-age=45, stale-while-revalidate=600');
+    res.json({ portraits, missing, resolved: ids.length - missing.length });
   } catch (error) {
     next(error);
   }
