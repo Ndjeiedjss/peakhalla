@@ -2234,6 +2234,7 @@ function setArenaAuthMode(mode) {
 
 function renderArenaAccount() {
   const loggedIn = Boolean(state.arenaUser);
+  document.body.classList.toggle('arena-account-active', loggedIn);
   if (els.arenaAuthPanel) els.arenaAuthPanel.hidden = loggedIn;
   if (els.arenaComposer) els.arenaComposer.hidden = !loggedIn;
   if (loggedIn) {

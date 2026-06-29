@@ -3612,3 +3612,215 @@ html.theme-changing *, html.theme-changing *::before, html.theme-changing *::aft
 .player-clan-copy em,
 .arena-post-caption,
 .arena-comment-body p { color: var(--copy-text); }
+
+
+/* PeakHalla v7.62 — crawlable Brawlhalla tracker landing content */
+.seo-tracker-section { display: grid; gap: 18px; }
+.seo-tracker-panel { padding: clamp(24px, 4vw, 42px); overflow: hidden; position: relative; }
+.seo-tracker-panel::after {
+  content: '';
+  position: absolute;
+  width: 340px;
+  height: 340px;
+  inset-inline-end: -170px;
+  top: -190px;
+  border: 1px solid rgba(var(--accent-2-rgb), .10);
+  border-radius: 50%;
+  box-shadow: 0 0 0 52px rgba(var(--accent-rgb), .025), 0 0 0 104px rgba(var(--accent-rgb), .016);
+  pointer-events: none;
+}
+.seo-tracker-heading { position: relative; z-index: 1; max-width: 920px; }
+.seo-tracker-heading h2,
+.seo-faq-heading h2 { margin: 8px 0 12px; font: 800 clamp(25px, 4vw, 44px)/1.02 var(--display); letter-spacing: -.04em; }
+.seo-tracker-heading p { margin: 0; max-width: 900px; color: var(--copy-text); font-size: 12px; line-height: 1.75; }
+.seo-feature-grid { margin-top: 28px; position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.seo-feature-grid article { min-height: 170px; padding: 20px; border: 1px solid var(--line); border-radius: 17px; background: linear-gradient(145deg, rgba(var(--accent-rgb), .075), rgba(255,255,255,.018)); }
+.seo-feature-grid article > span { color: var(--accent-2); font: 800 10px/1 var(--display); letter-spacing: .12em; }
+.seo-feature-grid h3 { margin: 18px 0 9px; font: 800 18px/1.12 var(--display); }
+.seo-feature-grid p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.7; }
+.seo-links { margin-top: 18px; position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px; }
+.seo-links a { padding: 9px 12px; color: var(--accent-soft); border: 1px solid rgba(var(--accent-rgb), .22); border-radius: 999px; background: rgba(var(--accent-rgb), .065); font-size: 9px; font-weight: 800; transition: transform .2s ease, border-color .2s ease, background .2s ease; }
+.seo-links a:hover { transform: translateY(-2px); border-color: rgba(var(--accent-2-rgb), .44); background: rgba(var(--accent-rgb), .12); }
+.seo-faq { padding: clamp(22px, 3vw, 34px); border: 1px solid var(--line); border-radius: 22px; background: rgba(var(--panel-rgb), .72); }
+.seo-faq-heading { margin-bottom: 16px; }
+.seo-faq-heading h2 { font-size: clamp(22px, 3vw, 34px); }
+.seo-faq-list { display: grid; gap: 8px; }
+.seo-faq-list details { border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.018); }
+.seo-faq-list summary { padding: 15px 17px; color: var(--text); font: 800 12px/1.35 var(--display); cursor: pointer; }
+.seo-faq-list p { margin: 0; padding: 0 17px 17px; color: var(--muted); font-size: 10px; line-height: 1.7; }
+@media (max-width: 820px) {
+  .seo-feature-grid { grid-template-columns: 1fr; }
+  .seo-feature-grid article { min-height: 0; }
+}
+
+/* PeakHalla v7.65 — polished signed-in Arena layout and route-safe tracker guide */
+body.arena-page-mode #brawlhalla-tracker {
+  display: none !important;
+}
+
+.site-header,
+.site-header .header-inner {
+  max-width: 100%;
+}
+.site-header .header-inner > * {
+  min-width: 0;
+}
+
+/* Once the Arena account is active, the composer becomes the main full-width card. */
+body.arena-page-mode.arena-account-active .arena-account-grid,
+body.arena-page-mode .arena-account-grid:has(#arena-auth-panel[hidden]) {
+  grid-template-columns: minmax(0, 1fr);
+}
+body.arena-page-mode #arena-auth-panel[hidden] + #arena-composer,
+body.arena-page-mode.arena-account-active #arena-composer {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+body.arena-page-mode.arena-account-active .arena-composer {
+  padding: clamp(20px, 2.4vw, 32px);
+  border-color: rgba(var(--accent-2-rgb), .24);
+  background:
+    radial-gradient(circle at 88% 0%, rgba(var(--accent-rgb), .13), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,.022), transparent),
+    var(--panel);
+}
+body.arena-page-mode.arena-account-active .arena-composer-header {
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line);
+}
+body.arena-page-mode.arena-account-active #arena-post-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(285px, .62fr);
+  grid-template-areas:
+    "arena-upload arena-caption"
+    "arena-upload arena-submit";
+  align-items: start;
+  gap: 14px;
+}
+body.arena-page-mode.arena-account-active .arena-upload-zone {
+  grid-area: arena-upload;
+  min-height: 360px;
+}
+body.arena-page-mode.arena-account-active .arena-caption-field {
+  grid-area: arena-caption;
+  margin-top: 0;
+}
+body.arena-page-mode.arena-account-active #arena-post-submit {
+  grid-area: arena-submit;
+  width: 100%;
+  margin-top: 0;
+  min-height: 48px;
+}
+body.arena-page-mode.arena-account-active .arena-caption-field textarea {
+  min-height: 190px;
+}
+
+/* Keep the signed-in header compact instead of forcing horizontal scrolling. */
+body.arena-account-active .site-header .header-inner {
+  gap: 8px;
+}
+body.arena-account-active .site-header nav {
+  flex: 1 1 520px;
+  overflow: visible;
+}
+body.arena-account-active .site-header .header-actions {
+  min-width: 0;
+  gap: 6px;
+}
+body.arena-account-active .arena-global-user {
+  gap: 6px;
+}
+body.arena-account-active .arena-global-profile strong {
+  max-width: 78px;
+}
+
+@media (max-width: 1660px) {
+  body.arena-account-active .site-header .brand-wordmark small {
+    display: none;
+  }
+  body.arena-account-active .site-header .brand-wordmark strong {
+    font-size: 17px;
+  }
+  body.arena-account-active .site-header nav > a,
+  body.arena-account-active .site-header .nav-dropdown-toggle {
+    padding-inline: 8px;
+    font-size: 11px;
+  }
+  body.arena-account-active .site-header .discord-text,
+  body.arena-account-active .site-header .donation-link > span:not(.donation-heart),
+  body.arena-account-active .site-header .live-pill > span {
+    display: none;
+  }
+  body.arena-account-active .site-header .discord-link,
+  body.arena-account-active .site-header .donation-link,
+  body.arena-account-active .site-header .live-pill {
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    justify-content: center;
+  }
+  body.arena-account-active .site-header .discord-arrow,
+  body.arena-account-active .site-header .donation-link > i {
+    display: none;
+  }
+}
+
+@media (max-width: 1380px) and (min-width: 1001px) {
+  body.arena-account-active .site-header .brand-wordmark {
+    display: none;
+  }
+  body.arena-account-active .site-header .brand-mark-wrap,
+  body.arena-account-active .site-header .brand-logo {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+  body.arena-account-active .arena-global-profile strong {
+    display: none;
+  }
+  body.arena-account-active .arena-global-profile {
+    width: 44px;
+    padding: 5px;
+    justify-content: center;
+  }
+  body.arena-account-active .language-toggle span,
+  body.arena-account-active .language-toggle b {
+    min-width: 27px;
+    padding-inline: 5px;
+  }
+}
+
+@media (max-width: 900px) {
+  body.arena-page-mode.arena-account-active #arena-post-form {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "arena-upload"
+      "arena-caption"
+      "arena-submit";
+  }
+  body.arena-page-mode.arena-account-active .arena-upload-zone {
+    min-height: 260px;
+  }
+  body.arena-page-mode.arena-account-active .arena-caption-field textarea {
+    min-height: 112px;
+  }
+}
+
+@media (max-width: 680px) {
+  body.arena-page-mode.arena-account-active .arena-composer {
+    padding: 16px;
+  }
+  body.arena-page-mode.arena-account-active .arena-composer-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  body.arena-page-mode.arena-account-active .arena-account-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  body.arena-page-mode.arena-account-active .arena-account-actions button {
+    flex: 1;
+  }
+}
+
