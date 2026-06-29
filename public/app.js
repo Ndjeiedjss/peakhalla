@@ -66,7 +66,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRequestSequence: 0, playerRetryCount: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
 
 
 const PEAKHALLA_THEME_KEY = 'peakhalla-theme';
@@ -450,11 +450,15 @@ function playerPayloadSignature(data = {}) {
     player.rating, player.peak_rating, player.tier, player.region, player.global_rank,
     player.ranked_games, player.ranked_wins, player.ranked_win_rate, regionRanks,
     player.guild?.guild_id || null, mainLegend, topLegends, mainWeapons,
-    names, legends, rankedLegends, player.updated_at
+    names, legends, rankedLegends, player.updated_at,
+    Boolean(data.partial || player.data_quality?.partial),
+    Boolean(player.data_quality?.official_lifetime_ok),
+    Boolean(player.data_quality?.official_ranked_ok),
+    Boolean(player.data_quality?.official_guild_ok)
   ]);
 }
 
-const PLAYER_BROWSER_CACHE_KEY = 'peakhalla-player-cache-v4';
+const PLAYER_BROWSER_CACHE_KEY = 'peakhalla-player-cache-v5';
 const PLAYER_BROWSER_CACHE_MAX_AGE_MS = 60 * 60_000;
 function readPlayerBrowserCache(id) {
   try {
@@ -568,7 +572,12 @@ function prefetchPlayerProfile(id) {
   })
     .then((response) => response.ok ? response.json() : null)
     .then((data) => {
-      if (data?.player) writePlayerBrowserCache(numericId, data);
+      const complete = data?.player
+        && !playerResponseIsPartial(data)
+        && data.player.data_quality?.official_lifetime_ok
+        && data.player.data_quality?.official_ranked_ok
+        && data.player.data_quality?.official_guild_ok;
+      if (complete) writePlayerBrowserCache(numericId, data);
       return data;
     })
     .catch(() => null)
@@ -1136,15 +1145,24 @@ function renderProfileAliases(names = [], currentName = '') {
 function renderPlayer(data, shouldScroll = true, renderOptions = {}) {
   state.currentPlayer = data;
   const { player, history, known_names: knownNames = [] } = data;
+  const partial = playerResponseIsPartial(data);
+  const rankedVerified = Boolean(player.data_quality?.official_ranked_ok);
+  const lifetimeVerified = Boolean(player.data_quality?.official_lifetime_ok || player.data_quality?.corehalla_enriched);
+  const hasLifetimePreview = lifetimeVerified || (player.account_xp !== null && player.account_xp !== undefined) || Boolean(player.main_legend) || Number(player.lifetime_games || 0) > 0;
+  const updatingLabel = state.language === 'ar' ? 'جارٍ التحديث…' : 'UPDATING…';
   els.profile.hidden = false;
+  els.profile.dataset.liveState = partial ? 'refreshing' : 'current';
   const avatar = $('#player-avatar');
   avatar.innerHTML = player.main_legend ? legendImageMarkup(player.main_legend, { lazy: false, fallbackName: player.name }) : `<span>${escapeHtml(initials(player.name))}</span>`;
-  $('#main-legend-label').textContent = player.main_legend ? `${t('main')}: ${player.main_legend.name}` : t('unknownLegend');
-  $('#player-title').textContent = player.name; $('#player-id').textContent = player.brawlhalla_id; $('#player-region').textContent = player.region; $('#player-tier').textContent = player.tier; $('#player-rating').textContent = number(player.rating); $('#updated-at').textContent = dateTime(player.updated_at); renderProfileAliases(knownNames, player.name);
-  if (els.statsSourceNote) { els.statsSourceNote.title = `${player.data_quality?.source || 'Brawlhalla Developer API v1'} · ${dateTime(player.data_quality?.fetched_at || player.updated_at)}`; const label = els.statsSourceNote.querySelector('span'); if (label) label.textContent = player.data_quality?.corehalla_enriched ? t('corehallaStats') : t('liveOfficialData'); }
+  $('#main-legend-label').textContent = player.main_legend ? `${t('main')}: ${player.main_legend.name}` : (partial ? t('refreshingLiveStats') : t('unknownLegend'));
+  const hasCurrentElo = player.rating !== null && player.rating !== undefined && player.rating !== '' && Number.isFinite(Number(player.rating));
+  const hasPeakElo = player.peak_rating !== null && player.peak_rating !== undefined && player.peak_rating !== '' && Number.isFinite(Number(player.peak_rating));
+  const tierText = partial && !rankedVerified && !hasCurrentElo ? updatingLabel : (player.tier || 'Unranked');
+  $('#player-title').textContent = player.name; $('#player-id').textContent = player.brawlhalla_id; $('#player-region').textContent = player.region || '—'; $('#player-tier').textContent = tierText; $('#player-rating').textContent = number(player.rating); $('#updated-at').textContent = dateTime(player.updated_at); renderProfileAliases(knownNames, player.name);
+  if (els.statsSourceNote) { els.statsSourceNote.title = `${player.data_quality?.source || 'Brawlhalla Developer API v1'} · ${dateTime(player.data_quality?.fetched_at || player.updated_at)}`; const label = els.statsSourceNote.querySelector('span'); if (label) label.textContent = partial ? t('refreshingLiveStats') : (player.data_quality?.corehalla_enriched ? t('corehallaStats') : t('liveOfficialData')); }
   if (els.statsAccuracyNote) els.statsAccuracyNote.textContent = t('statsAccuracyNote');
-  const currentElo = Number(player.rating);
-  const peakElo = Number(player.peak_rating);
+  const currentElo = hasCurrentElo ? Number(player.rating) : NaN;
+  const peakElo = hasPeakElo ? Number(player.peak_rating) : NaN;
   if (els.playerPeakRating) els.playerPeakRating.textContent = Number.isFinite(peakElo) ? number(peakElo) : '—';
   const eloGap = Number.isFinite(currentElo) && Number.isFinite(peakElo) ? Math.max(0, peakElo - currentElo) : null;
   if (els.eloGap) els.eloGap.textContent = eloGap === null ? '—' : (eloGap === 0 ? t('atPeak') : `${number(eloGap)} ${t('offPeak')}`);
@@ -1152,15 +1170,21 @@ function renderPlayer(data, shouldScroll = true, renderOptions = {}) {
   if (els.rankProgressFill) requestAnimationFrame(() => { els.rankProgressFill.style.width = `${progress}%`; });
   renderPlayerClan(player.guild);
   renderAccountShowcase(player);
-  renderLifetimeSummary(player.lifetime_totals || {});
+  if (partial && !hasLifetimePreview) els.lifetimeSummary.innerHTML = `<p class="empty-copy">${escapeHtml(t('refreshingLiveStats'))}</p>`;
+  else renderLifetimeSummary(player.lifetime_totals || {});
+  const rankedFallback = partial && !rankedVerified;
   $('#stats-grid').innerHTML = [
-    statCard(t('globalRank'), player.global_rank ? `#${number(player.global_rank)}` : '—', 'WORLD POSITION'), statCard(t('rankedGames'), number(player.ranked_games), 'CURRENT SEASON'), statCard(t('rankedWins'), number(player.ranked_wins), 'CURRENT SEASON'), statCard(t('winRate'), `${number(player.ranked_win_rate)}%`, 'CURRENT SEASON')
+    statCard(t('globalRank'), player.global_rank ? `#${number(player.global_rank)}` : '—', 'WORLD POSITION'),
+    statCard(t('rankedGames'), rankedFallback ? '—' : number(player.ranked_games), 'CURRENT SEASON'),
+    statCard(t('rankedWins'), rankedFallback ? '—' : number(player.ranked_wins), 'CURRENT SEASON'),
+    statCard(t('winRate'), rankedFallback ? '—' : `${number(player.ranked_win_rate)}%`, 'CURRENT SEASON')
   ].join('');
   const regionalRank = player.region_ranks?.find((rank) => rank.region === player.region)?.rank;
-  $('#player-summary').innerHTML = `<div><dt>${escapeHtml(t('accountLevel'))}</dt><dd>${number(player.level)}</dd></div><div><dt>${escapeHtml(t('regionRank'))}</dt><dd>${regionalRank ? `#${number(regionalRank)}` : '—'}</dd></div><div><dt>${escapeHtml(t('totalGames'))}</dt><dd>${number(player.lifetime_games)}</dd></div><div><dt>${escapeHtml(t('totalWins'))}</dt><dd>${number(player.lifetime_wins)}</dd></div><div><dt>${escapeHtml(t('overallWinRate'))}</dt><dd>${number(player.lifetime_win_rate)}%</dd></div>`;
+  const lifetimePlaceholder = partial && !hasLifetimePreview;
+  $('#player-summary').innerHTML = `<div><dt>${escapeHtml(t('accountLevel'))}</dt><dd>${lifetimePlaceholder ? '—' : number(player.level)}</dd></div><div><dt>${escapeHtml(t('regionRank'))}</dt><dd>${regionalRank ? `#${number(regionalRank)}` : '—'}</dd></div><div><dt>${escapeHtml(t('totalGames'))}</dt><dd>${lifetimePlaceholder ? '—' : number(player.lifetime_games)}</dd></div><div><dt>${escapeHtml(t('totalWins'))}</dt><dd>${lifetimePlaceholder ? '—' : number(player.lifetime_wins)}</dd></div><div><dt>${escapeHtml(t('overallWinRate'))}</dt><dd>${lifetimePlaceholder ? '—' : `${number(player.lifetime_win_rate)}%`}</dd></div>`;
   const legends = player.legends || [];
-  $('#legends-count').textContent = `${number(legends.length)} ${legends.length === 1 ? t('legendUsed') : t('legendsUsed')}`;
-  $('#legends-body').innerHTML = legends.length ? legends.map((legend) => `<tr><td><span class="legend-name">${portraitMarkup(legend, 'legend-icon')}<span>${escapeHtml(legend.name)}</span></span></td><td>${escapeHtml(canonicalWeaponName(legend.weapon_one))} + ${escapeHtml(canonicalWeaponName(legend.weapon_two))}</td><td>${number(legend.games)}</td><td>${number(legend.wins)}</td><td class="rate">${number(legend.win_rate)}%</td><td>${number(legend.rating)}</td><td>${number(legend.peak_rating)}</td></tr>`).join('') : `<tr><td colspan="7" class="empty-copy">${escapeHtml(t('noRankedLegends'))}</td></tr>`;
+  $('#legends-count').textContent = partial && !rankedVerified ? t('refreshingLiveStats') : `${number(legends.length)} ${legends.length === 1 ? t('legendUsed') : t('legendsUsed')}`;
+  $('#legends-body').innerHTML = legends.length ? legends.map((legend) => `<tr><td><span class="legend-name">${portraitMarkup(legend, 'legend-icon')}<span>${escapeHtml(legend.name)}</span></span></td><td>${escapeHtml(canonicalWeaponName(legend.weapon_one))} + ${escapeHtml(canonicalWeaponName(legend.weapon_two))}</td><td>${number(legend.games)}</td><td>${number(legend.wins)}</td><td class="rate">${number(legend.win_rate)}%</td><td>${number(legend.rating)}</td><td>${number(legend.peak_rating)}</td></tr>`).join('') : `<tr><td colspan="7" class="empty-copy">${escapeHtml(partial && !rankedVerified ? t('refreshingLiveStats') : t('noRankedLegends'))}</td></tr>`;
   renderHistory(history);
   renderLifetimeLegends();
   stabilizeLegendImages(els.profile);
@@ -1199,15 +1223,46 @@ function mergeRankedPreview(data, preview) {
   return data;
 }
 
+function playerResponseIsPartial(data) {
+  return Boolean(data?.partial || data?.player?.data_quality?.partial);
+}
+
+function currentRenderedPlayerId() {
+  return Number(state.currentPlayer?.player?.brawlhalla_id || 0);
+}
+
+function schedulePlayerLiveRefresh(id, delayMs = 250) {
+  window.clearTimeout(state.playerAutoRefreshTimer);
+  state.playerAutoRefreshTimer = window.setTimeout(() => {
+    if (currentRenderedPlayerId() && currentRenderedPlayerId() !== Number(id)) return;
+    loadPlayer(id, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
+  }, Math.max(50, Number(delayMs) || 250));
+}
+
+function schedulePlayerLivePoll(id) {
+  window.clearTimeout(state.playerLivePollTimer);
+  state.playerLivePollTimer = window.setTimeout(() => {
+    if (document.visibilityState !== 'visible' || currentRenderedPlayerId() !== Number(id)) return;
+    loadPlayer(id, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
+  }, 90_000);
+}
+
 async function loadPlayer(id, options = {}) {
+  const playerId = Number(id);
+  if (!Number.isSafeInteger(playerId) || playerId <= 0) return null;
   const silent = Boolean(options.silent);
   const manualRefresh = Boolean(options.refresh);
   const backgroundRefresh = Boolean(options.background);
+  const requestSequence = ++state.playerRequestSequence;
   let renderedInstantData = false;
   let renderedSeedOnly = false;
+
   try {
     if (!silent && !manualRefresh && !backgroundRefresh) {
-      const cached = readPlayerNavigationSeed(id) || readPlayerBrowserCache(id);
+      state.playerRetryCount = 0;
+      window.clearTimeout(state.playerAutoRefreshTimer);
+      window.clearTimeout(state.playerLivePollTimer);
+      const cached = readPlayerNavigationSeed(playerId) || readPlayerBrowserCache(playerId);
       if (cached) {
         renderedSeedOnly = Boolean(cached.seed_only);
         renderPlayer(cached, options.shouldScroll !== false, { refreshSecondary: !renderedSeedOnly });
@@ -1216,41 +1271,93 @@ async function loadPlayer(id, options = {}) {
         hideStatus();
       }
     }
-    if (!silent && !renderedInstantData) showStatus(manualRefresh ? t('refreshingLiveStats') : t('loadingPlayer'));
+
+    if (!silent && !renderedInstantData) {
+      showStatus(manualRefresh ? t('refreshingLiveStats') : t('loadingPlayer'));
+    }
+
     const params = new URLSearchParams({
-      [manualRefresh ? 'refresh' : (backgroundRefresh ? 'live' : 'instant')]: '1',
+      [manualRefresh ? 'refresh' : (backgroundRefresh ? 'live' : 'fast')]: '1',
       _: String(Date.now())
     });
+
     if (manualRefresh) {
       state.playerRefreshController?.abort();
       state.playerRefreshController = new AbortController();
     }
-    let data = await getJson(`/api/player/${encodeURIComponent(id)}?${params}`, { signal: manualRefresh ? state.playerRefreshController.signal : undefined });
-    data = mergeRankedPreview(data, renderedInstantData ? state.currentPlayer : null);
-    if (data?.player) writePlayerBrowserCache(id, data);
+
+    const timeoutMs = manualRefresh ? 70_000 : (backgroundRefresh ? 60_000 : 24_000);
+    let data = await getJson(`/api/player/${encodeURIComponent(playerId)}?${params}`, {
+      signal: manualRefresh ? state.playerRefreshController.signal : undefined,
+      timeoutMs
+    });
+
+    // Ignore a slow response from a profile the user has already left.
+    if (requestSequence !== state.playerRequestSequence) return data;
+
+    const currentPreview = currentRenderedPlayerId() === playerId ? state.currentPlayer : null;
+    data = mergeRankedPreview(data, currentPreview);
+    const partial = playerResponseIsPartial(data);
+
+    // Only save a profile locally after all current official sources answered.
+    // This prevents a temporary API timeout from being remembered as
+    // "Unranked", "Main unknown", or an empty account until the next refresh.
+    if (data?.player && !partial
+      && data.player.data_quality?.official_lifetime_ok
+      && data.player.data_quality?.official_ranked_ok
+      && data.player.data_quality?.official_guild_ok) {
+      writePlayerBrowserCache(playerId, data);
+    }
+
     if (!silent) hideStatus();
     const signature = playerPayloadSignature(data);
     const changed = signature !== state.playerSignature;
     const shouldRender = silent ? changed : (!renderedInstantData || changed || manualRefresh);
     if (shouldRender) {
-      renderPlayer(data, renderedInstantData ? false : options.shouldScroll !== false, { refreshSecondary: !silent && (!renderedInstantData || renderedSeedOnly) });
+      renderPlayer(data, renderedInstantData ? false : options.shouldScroll !== false, {
+        refreshSecondary: !silent && (!renderedInstantData || renderedSeedOnly)
+      });
       state.playerSignature = signature;
     } else {
       state.currentPlayer = data;
     }
-    history.replaceState(null, '', `/player/${encodeURIComponent(id)}`);
+    history.replaceState(null, '', `/player/${encodeURIComponent(playerId)}`);
 
+    if (partial) {
+      state.playerRetryCount += 1;
+      if (state.playerRetryCount <= 4) {
+        const serverDelay = Number(data?.retry_after_ms || 0);
+        const retryDelays = [350, 1_500, 4_000, 10_000];
+        const delay = Math.max(serverDelay, retryDelays[Math.min(state.playerRetryCount - 1, retryDelays.length - 1)]);
+        schedulePlayerLiveRefresh(playerId, delay);
+      }
+    } else {
+      state.playerRetryCount = 0;
+      schedulePlayerLivePoll(playerId);
+    }
+
+    // The first response is optimized for speed. Always follow it with one
+    // longer live verification so the page updates without a browser refresh.
     if (options.autoVerify !== false && !manualRefresh && !backgroundRefresh) {
-      window.clearTimeout(state.playerAutoRefreshTimer);
-      const refreshInBackground = () => loadPlayer(id, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
-      state.playerAutoRefreshTimer = window.setTimeout(refreshInBackground, 40);
+      schedulePlayerLiveRefresh(playerId, Number(data?.retry_after_ms || 220));
     }
     return data;
   } catch (error) {
     if (error.name === 'AbortError') return null;
-    if (silent) throw error;
+    if (requestSequence !== state.playerRequestSequence) return null;
+
+    if (silent || backgroundRefresh) {
+      state.playerRetryCount += 1;
+      if (state.playerRetryCount <= 4 && currentRenderedPlayerId() === playerId) {
+        const retryDelays = [1_000, 3_000, 8_000, 15_000];
+        schedulePlayerLiveRefresh(playerId, retryDelays[Math.min(state.playerRetryCount - 1, retryDelays.length - 1)]);
+      }
+      return state.currentPlayer;
+    }
+
     if (renderedInstantData) {
       hideStatus();
+      schedulePlayerLiveRefresh(playerId, 1_200);
       return state.currentPlayer;
     }
     els.profile.hidden = true;
