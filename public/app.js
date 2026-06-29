@@ -18,7 +18,7 @@ const translations = {
     accountLevel: 'Account level', accountXP: 'Account XP', xpProgress: 'XP progress', gameTime: 'Online match time', mainWeapons: 'Main weapons', topLegends: 'Main legends', regionRank: 'Region rank', totalGames: 'Total games', totalWins: 'Total wins', overallWinRate: 'Overall win rate', liveOfficialData: 'Live player data', corehallaStats: 'Corehalla-compatible stats', currentAlias: 'Current name', previousAliases: 'Previous names', refreshLiveStats: 'Refresh live stats', refreshingLiveStats: 'Refreshing official stats…', notReported: 'Not reported by API', statsAccuracyNote: 'Account XP and legend levels are checked against fresh Brawlhalla and Corehalla data. PeakHalla keeps the highest reported progression value so older data cannot replace newer levels.', legendLevelLimit: 'Some legend XP and levels may be unavailable if that legend has not been played since Patch 9.07.',
     fullPlayerStats: 'Full player stats', officialLifetimeData: 'Official lifetime data', allLegendStats: 'Every legend · lifetime stats', searchLegends: 'Search legends', legendSearchPlaceholder: 'Legend or weapon', show: 'Show', playedOnly: 'Played only', allLegends: 'All legends', sortBy: 'Sort by', level: 'Level', xp: 'XP', losses: 'Losses', damageDealt: 'Damage dealt', damageTaken: 'Damage taken', kos: 'KOs', falls: 'Falls', kdRatio: 'K/D ratio', damageRatio: 'Damage ratio', suicides: 'Suicides', teamKOs: 'Team KOs', unarmedDamage: 'Unarmed damage', thrownDamage: 'Thrown-item damage', gadgetDamage: 'Gadget damage', gadgetKOs: 'Gadget KOs', unarmedKOs: 'Unarmed KOs', bombDamage: 'Bomb damage', mineDamage: 'Mine damage', spikeballDamage: 'Spikeball damage', sidekickDamage: 'Sidekick damage', snowballHits: 'Snowball hits', bombKOs: 'Bomb KOs', mineKOs: 'Mine KOs', sidekickKOs: 'Sidekick KOs', snowballKOs: 'Snowball KOs', spikeballKOs: 'Spikeball KOs', matchTime: 'Match time', seasonRanked: 'Current season ranked', lifetimeCombat: 'Lifetime combat', weaponBreakdown: 'Weapon breakdown', noLifetimeStats: 'No legends matched these filters.', legendsTotal: 'legends', playedLegends: 'played',
     legendUsed: 'legend used', legendsUsed: 'legends used', noRankedLegends: 'No ranked legend games found.', nameSeen: 'name recorded', namesSeen: 'names recorded', currentName: 'Current', previousName: 'Previous',
-    firstSeen: 'First seen', lastSeen: 'Last seen', formerly: 'Formerly', aliasMatch: 'Old-name match', main: 'Main', unknownLegend: 'Main unknown',
+    firstSeen: 'First seen', lastSeen: 'Last seen', formerly: 'Formerly', aliasMatch: 'Old-name match', main: 'Main', unknownLegend: 'Main unknown', portraitLoading: 'Loading main legend…', recordSyncing: 'Record not reported by the source', prizePool: 'Prize pool',
     leaderboardPrefix: 'Top players ·', leaderboardSearch: 'Find a rank', leaderboardSearchPlaceholder: 'Search a player', leaderboardSearchTitle: 'Ranking search', emptyData: 'No data available right now.', allRegions: 'All regions', loadMorePlayers: 'Load next 20 players', loadingMorePlayers: 'Loading 20 more…', playersShown: 'players shown',
     clansTitle: 'Top clans by lifetime XP', clansText: 'Browse the highest-XP Brawlhalla clans, then open a dedicated roster page for every clan.', clanSearch: 'Find a clan', clanSearchPlaceholder: 'Clan name or guild ID', clanRank: 'XP rank', clanTier: 'Tier', clanMembers: 'Members', clanPoints: 'Weekly points', clanXp: 'Lifetime XP', clanRecruiting: 'Recruiting', clanClosed: 'Closed', clanOpen: 'Open clan', clanDetails: 'Clan profile', clanRoster: 'Clan roster', clanRole: 'Role', clanJoined: 'Joined', clanMemberXp: 'Member XP', clanNoData: 'No clan data is available right now. Refresh in a moment.', clanLoading: 'Loading top clans by XP…', clanUpdated: 'Updated', clanDiscoveryNote: 'Top clans are ordered by lifetime XP.', clanView: 'View clan', clanBack: 'Back to clans', clanRoleOrder: 'Role hierarchy', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'Members are ordered from Recruit to Leader.', playerClan: 'PLAYER CLAN', viewClanProfile: 'Open clan profile', noClan: 'No clan',
     MiddleEast: 'Middle East', Europe: 'Europe', USEast: 'US East', USWest: 'US West', SouthernAfrica: 'Southern Africa', SoutheastAsia: 'Southeast Asia', Brazil: 'Brazil', Australia: 'Australia', Japan: 'Japan',
@@ -49,7 +49,7 @@ const translations = {
     accountLevel: 'لفل الحساب', accountXP: 'إكس بي الحساب', xpProgress: 'تقدم اللفل', gameTime: 'وقت المباريات الأونلاين', mainWeapons: 'الأسلحة الأساسية', topLegends: 'الشخصيات الأساسية', regionRank: 'ترتيب المنطقة', totalGames: 'كل المباريات', totalWins: 'كل الفوز', overallWinRate: 'نسبة الفوز العامة', liveOfficialData: 'بيانات اللاعب مباشرة', corehallaStats: 'إحصائيات متوافقة مع Corehalla', currentAlias: 'الاسم الحالي', previousAliases: 'الأسماء السابقة', refreshLiveStats: 'حدّث البيانات مباشرة', refreshingLiveStats: 'نحدّث البيانات الرسمية…', notReported: 'غير متوفر من الـAPI', statsAccuracyNote: 'يتم فحص إكس بي الحساب ولفلات الشخصيات من Brawlhalla وCorehalla مباشرة، ويعتمد PeakHalla أعلى قيمة تقدم حتى لا تستبدل البيانات القديمة اللفلات الأحدث.', legendLevelLimit: 'بعض لفلات وإكس بي الشخصيات قد لا تظهر إذا لم تُلعب الشخصية منذ تحديث 9.07.',
     fullPlayerStats: 'إحصائيات اللاعب كاملة', officialLifetimeData: 'بيانات رسمية طوال عمر الحساب', allLegendStats: 'كل الشخصيات · إحصائيات العمر الكامل', searchLegends: 'ابحث في الشخصيات', legendSearchPlaceholder: 'اسم شخصية أو سلاح', show: 'العرض', playedOnly: 'اللي لعب بها فقط', allLegends: 'كل الشخصيات', sortBy: 'الترتيب حسب', level: 'اللفل', xp: 'الإكس بي', losses: 'الخسائر', damageDealt: 'الضرر المسبب', damageTaken: 'الضرر المستلم', kos: 'الإقصاءات', falls: 'مرات السقوط', kdRatio: 'نسبة K/D', damageRatio: 'نسبة الضرر', suicides: 'سقوط ذاتي', teamKOs: 'إقصاء الزملاء', unarmedDamage: 'ضرر بدون سلاح', thrownDamage: 'ضرر الأدوات المرميّة', gadgetDamage: 'ضرر الأدوات', gadgetKOs: 'إقصاءات الأدوات', unarmedKOs: 'إقصاءات بدون سلاح', bombDamage: 'ضرر القنابل', mineDamage: 'ضرر الألغام', spikeballDamage: 'ضرر الكرة الشائكة', sidekickDamage: 'ضرر المساعد', snowballHits: 'إصابات كرة الثلج', bombKOs: 'إقصاءات القنابل', mineKOs: 'إقصاءات الألغام', sidekickKOs: 'إقصاءات المساعد', snowballKOs: 'إقصاءات كرة الثلج', spikeballKOs: 'إقصاءات الكرة الشائكة', matchTime: 'وقت المباريات', seasonRanked: 'رانك الموسم الحالي', lifetimeCombat: 'قتال العمر الكامل', weaponBreakdown: 'تفاصيل الأسلحة', noLifetimeStats: 'ما فيه شخصيات مطابقة للفلاتر.', legendsTotal: 'شخصية', playedLegends: 'مستخدمة',
     legendUsed: 'شخصية مستخدمة', legendsUsed: 'شخصيات مستخدمة', noRankedLegends: 'ما لقينا مباريات رانك على الشخصيات.', nameSeen: 'اسم مسجل', namesSeen: 'أسماء مسجلة', currentName: 'الحالي', previousName: 'قديم',
-    firstSeen: 'أول ظهور', lastSeen: 'آخر ظهور', formerly: 'كان اسمه', aliasMatch: 'تطابق اسم قديم', main: 'الأساسية', unknownLegend: 'الشخصية غير معروفة',
+    firstSeen: 'أول ظهور', lastSeen: 'آخر ظهور', formerly: 'كان اسمه', aliasMatch: 'تطابق اسم قديم', main: 'الأساسية', unknownLegend: 'الشخصية غير معروفة', portraitLoading: 'نحمّل الشخصية الأساسية…', recordSyncing: 'السجل غير متوفر من المصدر', prizePool: 'مجموع الجوائز',
     leaderboardPrefix: 'المتصدرين ·', leaderboardSearch: 'ابحث في الترتيب', leaderboardSearchPlaceholder: 'اكتب اسم اللاعب', leaderboardSearchTitle: 'نتيجة الترتيب', emptyData: 'ما فيه بيانات الحين.', allRegions: 'كل المناطق', loadMorePlayers: 'اعرض 20 لاعب إضافي', loadingMorePlayers: 'نحمّل 20 لاعب إضافي…', playersShown: 'لاعب معروض',
     clansTitle: 'أفضل الكلانات حسب الخبرة', clansText: 'تصفح كلانات براولهالا الأعلى في Lifetime XP وافتح صفحة مستقلة ومنظمة لكل كلان.', clanSearch: 'ابحث عن كلان', clanSearchPlaceholder: 'اسم الكلان أو رقم Guild ID', clanRank: 'ترتيب الخبرة', clanTier: 'المستوى', clanMembers: 'الأعضاء', clanPoints: 'نقاط الأسبوع', clanXp: 'Lifetime XP', clanRecruiting: 'يقبل أعضاء', clanClosed: 'مغلق', clanOpen: 'كلان مفتوح', clanDetails: 'صفحة الكلان', clanRoster: 'أعضاء الكلان', clanRole: 'الرتبة', clanJoined: 'تاريخ الانضمام', clanMemberXp: 'خبرة العضو', clanNoData: 'بيانات الكلانات غير متاحة الآن، جرّب التحديث بعد قليل.', clanLoading: 'نحمّل أفضل الكلانات حسب الخبرة…', clanUpdated: 'آخر تحديث', clanDiscoveryNote: 'الكلانات مرتبة حسب Lifetime XP.', clanView: 'افتح الكلان', clanBack: 'الرجوع للكلانات', clanRoleOrder: 'تسلسل الرتب', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'الأعضاء مرتبون من Recruit إلى Leader.', playerClan: 'كلان اللاعب', viewClanProfile: 'افتح صفحة الكلان', noClan: 'بدون كلان',
     MiddleEast: 'الشرق الأوسط', Europe: 'أوروبا', USEast: 'شرق أمريكا', USWest: 'غرب أمريكا', SouthernAfrica: 'جنوب أفريقيا', SoutheastAsia: 'جنوب شرق آسيا', Brazil: 'البرازيل', Australia: 'أستراليا', Japan: 'اليابان',
@@ -68,7 +68,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRequestSequence: 0, playerRetryCount: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, leaderboardRequestId: 0, leaderboardRetryCount: 0, leaderboardRetryTimer: null, leaderboardWatchdogTimer: null, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRequestSequence: 0, playerRetryCount: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, leaderboardRequestId: 0, leaderboardRetryCount: 0, leaderboardStaleRetryCount: 0, leaderboardRetryTimer: null, leaderboardWatchdogTimer: null, leaderboardSignature: '', leaderboardActiveKey: '', leaderboardLastFetchAt: 0, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
 
 
 const PEAKHALLA_THEME_KEY = 'peakhalla-theme';
@@ -254,7 +254,7 @@ function applyLanguage() {
   if (state.esportsCareer && !els.careerModal.hidden) renderCareer(state.esportsCareer);
 }
 
-const LEGEND_ASSET_VERSION = '7.68.0';
+const LEGEND_ASSET_VERSION = '7.69.0';
 
 function legendAssetSlug(name = '') {
   return String(name || '')
@@ -642,7 +642,7 @@ function writePlayerPortraitCache(id, legend) {
 }
 
 async function fetchPlayerPortraitBatch(ids = [], options = {}) {
-  const uniqueIds = [...new Set(ids.map(Number).filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, 80);
+  const uniqueIds = [...new Set(ids.map(Number).filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, 40);
   if (!uniqueIds.length) return new Map();
   const result = readPlayerPortraitCache(uniqueIds);
   const missing = uniqueIds.filter((id) => !result.has(id));
@@ -653,7 +653,7 @@ async function fetchPlayerPortraitBatch(ids = [], options = {}) {
       warm: '1',
       resolve: options.resolve === false ? '0' : '1'
     });
-    const data = await getJson(`/api/players/portraits?${params}`, { timeoutMs: Number(options.timeoutMs || 7200) });
+    const data = await getJson(`/api/players/portraits?${params}`, { timeoutMs: Number(options.timeoutMs || 11000) });
     for (const [rawId, legend] of Object.entries(data?.portraits || {})) {
       const id = Number(rawId);
       if (!legend) continue;
@@ -695,7 +695,7 @@ function enrichRenderedPortraits(container, buttonSelector, portraitSelector, co
   container.dataset.portraitEnrichmentKey = enrichmentKey;
   container.dataset.portraitEnriching = '1';
 
-  const retryDelays = [0, 1800, 4800, 9800, 18000];
+  const retryDelays = [0, 2400, 6500, 14000, 30000, 60000];
   const attempt = async (attemptIndex = 0) => {
     if (!container.isConnected) return;
     const targets = [...container.querySelectorAll(buttonSelector)]
@@ -705,11 +705,16 @@ function enrichRenderedPortraits(container, buttonSelector, portraitSelector, co
       return;
     }
 
+    // Rotate portrait batches between attempts so one slow player cannot
+    // block the rest of the visible leaderboard from receiving an image.
+    const chunkSize = 20;
+    const offset = targets.length ? (attemptIndex * chunkSize) % targets.length : 0;
+    const attemptTargets = [...targets.slice(offset), ...targets.slice(0, offset)].slice(0, chunkSize);
     const batch = await fetchPlayerPortraitBatch(
-      targets.map((button) => Number(button.dataset.playerId)),
-      { resolve: true, timeoutMs: 7600 }
+      attemptTargets.map((button) => Number(button.dataset.playerId)),
+      { resolve: true, timeoutMs: 11000 }
     );
-    for (const button of targets) {
+    for (const button of attemptTargets) {
       const legend = batch.get(Number(button.dataset.playerId));
       if (legend && button.isConnected) patchPlayerPortrait(button, legend, portraitSelector);
     }
@@ -1463,7 +1468,14 @@ function leaderboardPerson(player, region) {
   const readableRegion = regionLabel(region);
   const regionCode = String(region || '—').toUpperCase();
   const regionTitle = readableRegion && readableRegion !== regionCode ? `${readableRegion} · ${regionCode}` : regionCode;
-  return `<div class="leader-person" data-player-id="${Number(player.id)}" data-needs-portrait="${main ? '0' : '1'}">${main ? portraitMarkup(main, 'row-portrait') : portraitMarkup(null, 'row-portrait', { fallbackName: player.username, localCandidates: false })}<button data-leader-id="${Number(player.id)}"><span class="leader-name-line"><strong>${escapeHtml(player.username || 'Unknown')}</strong></span><span class="leader-meta-line"><small class="leader-legend-meta">${escapeHtml(main ? main.name : 'Brawlhalla')}</small><span class="leader-region-chip" title="${escapeHtml(regionTitle)}">${escapeHtml(regionCode)}</span></span></button></div>`;
+  return `<div class="leader-person" data-player-id="${Number(player.id)}" data-needs-portrait="${main ? '0' : '1'}">${main ? portraitMarkup(main, 'row-portrait') : portraitMarkup(null, 'row-portrait', { fallbackName: player.username, localCandidates: false })}<button data-leader-id="${Number(player.id)}"><span class="leader-name-line"><strong>${escapeHtml(player.username || 'Unknown')}</strong></span><span class="leader-meta-line"><small class="leader-legend-meta">${escapeHtml(main ? main.name : t('portraitLoading'))}</small><span class="leader-region-chip" title="${escapeHtml(regionTitle)}">${escapeHtml(regionCode)}</span></span></button></div>`;
+}
+
+function leaderboardRowsSignature(rankings = [], context = '') {
+  return `${context}|${rankings.map((item) => {
+    const players = (item.players || []).map((player) => `${Number(player.id) || 0}:${player.main_legend?.legend_id || player.main_legend?.name || ''}`).join(',');
+    return [item.rank, item.rating, item.best_rating, item.games, item.wins, item.losses, item.tier, item.record_available, players].join(':');
+  }).join('|')}`;
 }
 
 function renderLeaderboardRows(rankings = [], options = {}) {
@@ -1471,24 +1483,28 @@ function renderLeaderboardRows(rankings = [], options = {}) {
   const activeRegion = els.leaderboardRegion?.value || 'ALL';
   const rankScope = activeRegion === 'ALL' ? '' : activeRegion;
   const markup = rankings.map((item) => {
-    const wins = Math.max(0, Number(item.wins) || 0);
-    const reportedLosses = Number(item.losses);
-    const reportedGames = Number(item.games);
-    const losses = Number.isFinite(reportedLosses)
-      ? Math.max(0, reportedLosses)
-      : Math.max(0, (Number.isFinite(reportedGames) ? reportedGames : wins) - wins);
-    const games = Number.isFinite(reportedGames) ? Math.max(0, reportedGames) : wins + losses;
+    const rawWins = Number(item.wins);
+    const rawLosses = Number(item.losses);
+    const rawGames = Number(item.games);
+    const wins = Number.isFinite(rawWins) ? Math.max(0, rawWins) : 0;
+    const losses = Number.isFinite(rawLosses)
+      ? Math.max(0, rawLosses)
+      : Math.max(0, (Number.isFinite(rawGames) ? rawGames : wins) - wins);
+    const games = Number.isFinite(rawGames) ? Math.max(0, rawGames) : wins + losses;
     const safeGames = Math.max(games, wins + losses);
-    const winRate = safeGames ? ((wins / safeGames) * 100).toFixed(1) : '0.0';
-    const winWidth = safeGames ? ((wins / safeGames) * 100).toFixed(2) : '0';
-    const lossWidth = safeGames ? ((losses / safeGames) * 100).toFixed(2) : '0';
-    const recordTitle = `${number(safeGames)} ${t('games')} · ${number(wins)}W · ${number(losses)}L`;
+    const recordAvailable = item.record_available === true || (item.record_available !== false && safeGames > 0);
+    const winRate = recordAvailable && safeGames ? ((wins / safeGames) * 100).toFixed(1) : null;
+    const winWidth = recordAvailable && safeGames ? ((wins / safeGames) * 100).toFixed(2) : '0';
+    const lossWidth = recordAvailable && safeGames ? ((losses / safeGames) * 100).toFixed(2) : '0';
+    const recordTitle = recordAvailable
+      ? `${number(safeGames)} ${t('games')} · ${number(wins)}W · ${number(losses)}L`
+      : t('recordSyncing');
     const playersMarkup = (item.players || []).map((player) => {
       state.playerSeeds.set(Number(player.id), makePlayerSeedPayload(item, player));
       return leaderboardPerson(player, item.region || '—');
     }).join('');
     const rankTitle = activeRegion === 'ALL' ? t('globalRank') : `${t('regionRank')} · ${regionLabel(activeRegion)}`;
-    return `<div class="leader-row"><span class="leader-rank" title="${escapeHtml(rankTitle)}">${rankScope ? `<small>${escapeHtml(rankScope)}</small>` : ''}<b>#${number(item.rank)}</b></span><div class="leader-players">${playersMarkup}</div><div class="leader-metric leader-elo-metric"><span>ELO</span><b>${number(item.rating)}</b></div><div class="leader-metric leader-peak-metric"><span>${escapeHtml(t('peak'))}</span><b>${number(item.best_rating)}</b></div><div class="leader-metric leader-games-metric" title="${escapeHtml(recordTitle)}" aria-label="${escapeHtml(recordTitle)}"><span>${escapeHtml(t('games'))}</span><b>${number(safeGames)}</b><div class="leader-record-stack"><div class="leader-record-bar"><i class="leader-record-fill leader-record-fill-win" style="width:${winWidth}%"></i><i class="leader-record-fill leader-record-fill-loss" style="width:${lossWidth}%"></i></div><div class="leader-record-labels"><small class="leader-win-label"><strong>${number(wins)}</strong>W</small><small class="leader-loss-label"><strong>${number(losses)}</strong>L</small></div></div></div><div class="leader-metric leader-winrate-metric"><span>${escapeHtml(t('winRate'))}</span><b>${winRate}%</b></div><span class="tier-chip">${escapeHtml(item.tier || 'Unranked')}</span></div>`;
+    return `<div class="leader-row"><span class="leader-rank" title="${escapeHtml(rankTitle)}">${rankScope ? `<small>${escapeHtml(rankScope)}</small>` : ''}<b>#${number(item.rank)}</b></span><div class="leader-players">${playersMarkup}</div><div class="leader-metric leader-elo-metric"><span>ELO</span><b>${number(item.rating)}</b></div><div class="leader-metric leader-peak-metric"><span>${escapeHtml(t('peak'))}</span><b>${number(item.best_rating)}</b></div><div class="leader-metric leader-games-metric${recordAvailable ? '' : ' record-pending'}" title="${escapeHtml(recordTitle)}" aria-label="${escapeHtml(recordTitle)}"><span>${escapeHtml(t('games'))}</span><b>${recordAvailable ? number(safeGames) : '—'}</b>${recordAvailable ? `<div class="leader-record-stack"><div class="leader-record-bar"><i class="leader-record-fill leader-record-fill-win" style="width:${winWidth}%"></i><i class="leader-record-fill leader-record-fill-loss" style="width:${lossWidth}%"></i></div><div class="leader-record-labels"><small class="leader-win-label"><strong>${number(wins)}</strong>W</small><small class="leader-loss-label"><strong>${number(losses)}</strong>L</small></div></div>` : `<small class="leader-record-syncing">${escapeHtml(t('recordSyncing'))}</small>`}</div><div class="leader-metric leader-winrate-metric${recordAvailable ? '' : ' record-pending'}"><span>${escapeHtml(t('winRate'))}</span><b>${recordAvailable ? `${winRate}%` : '—'}</b></div><span class="tier-chip">${escapeHtml(item.tier || 'Unranked')}</span></div>`;
   }).join('');
 
   if (append) {
@@ -1507,7 +1523,7 @@ function renderLeaderboardRows(rankings = [], options = {}) {
   setupPlayerPrefetch(els.leaderboard, '[data-leader-id]', 'leaderId');
   activateImageFallbacks();
   enrichRenderedPortraits(els.leaderboard, '.leader-person[data-player-id]', '.row-portrait', 5);
-  if (!append) {
+  if (!append && options.animate !== false) {
     els.leaderboard.classList.remove('leaderboard-mode-enter');
     requestAnimationFrame(() => els.leaderboard.classList.add('leaderboard-mode-enter'));
   }
@@ -1530,7 +1546,7 @@ function updateLeaderboardPagination({ query = '', page = 1, totalPages = 1, rec
   }
 }
 
-const LEADERBOARD_BROWSER_CACHE_VERSION = 'v2';
+const LEADERBOARD_BROWSER_CACHE_VERSION = 'v3';
 const LEADERBOARD_BROWSER_CACHE_MAX_AGE_MS = 30 * 60_000;
 
 function leaderboardBrowserCacheKey(region, mode, page = 1) {
@@ -1560,11 +1576,16 @@ function writeLeaderboardBrowserCache(region, mode, page, data) {
 
 function scheduleLeaderboardRecovery(options = {}) {
   window.clearTimeout(state.leaderboardRetryTimer);
-  const attempt = Math.max(0, Number(state.leaderboardRetryCount || 0));
-  const delay = Number(options.delay || Math.min(8000, 900 + attempt * 1300));
+  const failedAttempt = Math.max(0, Number(state.leaderboardRetryCount || 0));
+  const staleAttempt = Math.max(0, Number(state.leaderboardStaleRetryCount || 0));
+  if (options.stale && staleAttempt >= 2) return;
+  if (!options.stale && failedAttempt >= 5) return;
+  const delay = Number(options.delay || (options.stale
+    ? [8000, 22000][Math.min(staleAttempt, 1)]
+    : Math.min(12000, 1200 + failedAttempt * 2200)));
   state.leaderboardRetryTimer = window.setTimeout(() => {
     if (document.visibilityState !== 'visible' || isLiveQueuePage || isClanPage || isArenaPage || isEsportsPage || isStandalonePlayerPage) return;
-    loadLeaderboard({ silent: true, recovery: true }).catch(() => null);
+    loadLeaderboard({ silent: true, recovery: true, staleRecovery: Boolean(options.stale) }).catch(() => null);
   }, delay);
 }
 
@@ -1576,6 +1597,14 @@ async function loadLeaderboard(options = {}) {
   const mode = els.leaderboardMode.value || '1v1';
   const query = els.leaderboardSearch?.value.trim() || '';
   const page = append ? state.leaderboardPage + 1 : 1;
+  const activeKey = `${region}:${mode}:${query.toLowerCase()}`;
+  if (activeKey !== state.leaderboardActiveKey) {
+    state.leaderboardActiveKey = activeKey;
+    state.leaderboardSignature = '';
+    state.leaderboardRetryCount = 0;
+    state.leaderboardStaleRetryCount = 0;
+    window.clearTimeout(state.leaderboardRetryTimer);
+  }
   if (append && (state.leaderboardLoadingMore || query.length >= 2)) return;
 
   const requestId = ++state.leaderboardRequestId;
@@ -1587,7 +1616,9 @@ async function loadLeaderboard(options = {}) {
   if (!append && query.length < 2) {
     cachedBoard = readLeaderboardBrowserCache(region, mode, page);
     if (cachedBoard) {
-      renderLeaderboardRows(cachedBoard.rankings || [], { append: false });
+      const cachedSignature = leaderboardRowsSignature(cachedBoard.rankings || [], activeKey);
+      renderLeaderboardRows(cachedBoard.rankings || [], { append: false, animate: state.leaderboardSignature !== cachedSignature });
+      state.leaderboardSignature = cachedSignature;
       updateLeaderboardPagination({ query, page, totalPages: cachedBoard.total_pages || 0, received: (cachedBoard.rankings || []).length });
     }
   }
@@ -1618,7 +1649,7 @@ async function loadLeaderboard(options = {}) {
       controller.abort();
       state.leaderboardRetryCount = Math.min(5, Number(state.leaderboardRetryCount || 0) + 1);
       scheduleLeaderboardRecovery({ delay: 250 });
-    }, 6500);
+    }, 12000);
   }
 
   try {
@@ -1627,24 +1658,33 @@ async function loadLeaderboard(options = {}) {
       : { region, mode, page: String(page) });
     if (options.refresh) params.set('refresh', '1');
     const endpoint = query.length >= 2 ? '/api/search' : '/api/leaderboard';
-    const data = await getJson(`${endpoint}?${params}`, { signal: controller.signal, timeoutMs: 8000 });
+    const data = await getJson(`${endpoint}?${params}`, { signal: controller.signal, timeoutMs: 14000 });
     if (requestId !== state.leaderboardRequestId) return;
     const rankings = data.rankings || [];
-    renderLeaderboardRows(rankings, { append });
+    const nextSignature = leaderboardRowsSignature(rankings, `${activeKey}:${append ? page : 1}`);
+    const shouldRender = append || nextSignature !== state.leaderboardSignature;
+    if (shouldRender) {
+      renderLeaderboardRows(rankings, { append, animate: !cachedBoard && !options.recovery });
+      state.leaderboardSignature = nextSignature;
+    } else {
+      enrichRenderedPortraits(els.leaderboard, '.leader-person[data-player-id]', '.row-portrait', 5);
+    }
     updateLeaderboardPagination({ query, page, totalPages: Number(data.total_pages) || 0, received: rankings.length });
     if (query.length < 2 && rankings.length) writeLeaderboardBrowserCache(region, mode, page, data);
+    state.leaderboardLastFetchAt = Date.now();
     state.leaderboardRetryCount = 0;
     window.clearTimeout(state.leaderboardRetryTimer);
-    if (!append && (data.stale || data.refreshing || data.source === 'database-fallback')) {
-      scheduleLeaderboardRecovery({ delay: 2200 });
-    }
+    // Keep the current rows stable. A stale response is still useful and is
+    // replaced on the next deliberate visit/refresh rather than repainting the
+    // entire leaderboard every few seconds.
+    state.leaderboardStaleRetryCount = 0;
   } catch (error) {
     if (error.name === 'AbortError' || requestId !== state.leaderboardRequestId) return;
     state.leaderboardRetryCount = Math.min(5, Number(state.leaderboardRetryCount || 0) + 1);
     if (!append && !cachedBoard && !hasVisibleRows() && state.leaderboardRetryCount >= 4) {
       els.leaderboard.innerHTML = `<p class="empty-copy">${escapeHtml(t('friendlyProblem'))}</p>`;
     }
-    if (!append && state.leaderboardRetryCount < 5) scheduleLeaderboardRecovery();
+    if (!append && !hasVisibleRows() && state.leaderboardRetryCount < 5) scheduleLeaderboardRecovery({ stale: false });
   } finally {
     if (requestId === state.leaderboardRequestId) window.clearTimeout(state.leaderboardWatchdogTimer);
     state.leaderboardLoadingMore = false;
@@ -1980,16 +2020,20 @@ function tournamentCard(event, index) {
   const regions = Array.isArray(event.regions) && event.regions.length ? event.regions : ['GLOBAL'];
   const modes = Array.isArray(event.modes) && event.modes.length ? event.modes : ['1v1', '2v2'];
   const primaryRegion = regions[0] || 'GLOBAL';
+  const primaryMode = modes[0] || '1v1';
   const date = event.date ? shortDate(event.date) : '';
   const category = event.category === 'community' ? t('communityTournaments') : t('officialTournaments');
+  const prize = String(event.prize_pool || event.prize || '').trim();
   const sourceHost = (() => { try { return new URL(event.source_url).hostname.replace(/^www\./, ''); } catch { return ''; } })();
   const linkStart = event.source_url ? `<a href="${escapeHtml(event.source_url)}" target="_blank" rel="noopener noreferrer" class="tournament-directory-card">` : '<article class="tournament-directory-card">';
   const linkEnd = event.source_url ? '</a>' : '</article>';
-  return `${linkStart}<span class="tournament-card-number">${String(index + 1).padStart(2, '0')}</span><div class="tournament-card-copy"><div class="tournament-card-badges"><b class="event-region">${escapeHtml(tournamentRegionName(primaryRegion))}</b>${modes.map((mode) => `<em class="tournament-mode-badge">${escapeHtml(mode)}</em>`).join('')}<em>${escapeHtml(category)}</em></div><h4>${escapeHtml(event.name || 'Brawlhalla Tournament')}</h4><p>${escapeHtml(event.note || event.description || '')}</p><div class="tournament-card-meta">${date ? `<span>${escapeHtml(t('announced'))}: ${escapeHtml(date)}</span>` : ''}${sourceHost ? `<span>${escapeHtml(sourceHost)}</span>` : ''}</div></div><span class="tournament-card-arrow">↗</span>${linkEnd}`;
+  const posterStyle = event.image_url ? ` style="--tournament-image:url('${escapeHtml(event.image_url)}')"` : '';
+  const posterClass = event.image_url ? ' has-image' : '';
+  return `${linkStart}<div class="tournament-card-art${posterClass}" data-region="${escapeHtml(primaryRegion)}"${posterStyle}><span>BRAWLHALLA</span><strong>${escapeHtml((event.series || event.name || 'TOURNAMENT').replace(/\s+20\d{2}.*/i, '').slice(0, 28))}</strong><b>${escapeHtml(primaryMode)}</b><small>${escapeHtml(primaryRegion)}</small></div><div class="tournament-card-copy"><div class="tournament-card-badges"><b class="event-region">${escapeHtml(tournamentRegionName(primaryRegion))}</b>${modes.map((mode) => `<em class="tournament-mode-badge">${escapeHtml(mode)}</em>`).join('')}<em>${escapeHtml(category)}</em></div><h4>${escapeHtml(event.name || 'Brawlhalla Tournament')}</h4><p>${escapeHtml(event.note || event.description || '')}</p>${prize ? `<div class="tournament-prize"><span>${escapeHtml(t('prizePool'))}</span><strong>${escapeHtml(prize)}</strong></div>` : ''}<div class="tournament-card-meta">${date ? `<span>${escapeHtml(t('announced'))}: ${escapeHtml(date)}</span>` : ''}${sourceHost ? `<span>${escapeHtml(sourceHost)}</span>` : ''}</div></div><span class="tournament-card-arrow">↗</span>${linkEnd}`;
 }
 
 function tournamentDirectoryCacheKey(type, region, mode) {
-  return `peakhalla-tournaments-v2:${type}:${region}:${mode}`;
+  return `peakhalla-tournaments-v3:${type}:${region}:${mode}`;
 }
 
 function readTournamentDirectoryCache(type, region, mode) {
@@ -2011,8 +2055,14 @@ function tournamentModeSection(mode, events = []) {
   return `<section class="tournament-mode-section" data-tournament-group="${escapeHtml(mode)}"><header><span>${escapeHtml(mode)}</span><h4>${escapeHtml(heading)}</h4><small>${number(events.length, '0')} ${escapeHtml(t('tournamentEvents'))}</small></header><div class="tournament-mode-grid">${events.map(tournamentCard).join('')}</div></section>`;
 }
 
+function tournamentDirectorySignature(data = {}) {
+  return JSON.stringify((data.events || []).map((event) => [event.id, event.name, event.date, event.prize_pool, event.image_url, event.source_url]));
+}
+
 function renderTournamentDirectory(data = {}) {
-  state.tournamentData = data;
+  const signature = tournamentDirectorySignature(data);
+  if (state.tournamentData && state.tournamentData.__signature === signature) return;
+  state.tournamentData = { ...data, __signature: signature };
   const events = Array.isArray(data.events) ? data.events : [];
   if (els.tournamentDirectoryUpdated) els.tournamentDirectoryUpdated.textContent = data.updated_at ? `${t('rankingsUpdated')}: ${dateTime(data.updated_at)}` : '';
   if (els.tournamentDirectoryCount) els.tournamentDirectoryCount.textContent = `${number(events.length, '0')} ${t('tournamentEvents')}`;
@@ -2065,7 +2115,7 @@ async function loadTournamentDirectory(options = {}) {
   window.clearTimeout(state.tournamentRefreshTimer);
   state.tournamentRefreshTimer = window.setTimeout(() => {
     if (document.visibilityState === 'visible' && state.esportsView === 'tournaments') loadTournamentDirectory({ silent: true });
-  }, 5 * 60_000);
+  }, 15 * 60_000);
 }
 
 
@@ -3120,11 +3170,6 @@ if (isArenaPage) setupArenaPage();
 if (isClanPage) loadStandaloneClan();
 setupThemePicker();
 applyLanguage();
-if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage) {
-  window.setTimeout(() => {
-    if (!els.leaderboard?.querySelector('.leader-row')) loadLeaderboard({ silent: true, recovery: true }).catch(() => null);
-  }, 1400);
-}
 requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('page-entering')));
 function resetBrowserNavigationState() {
   const body = document.body;
@@ -3151,8 +3196,8 @@ window.addEventListener('pageshow', (event) => {
   if (event.persisted && standalonePlayerId && state.currentPlayer) {
     loadPlayer(standalonePlayerId, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
   }
-  if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage) {
-    window.setTimeout(() => loadLeaderboard({ silent: true }).catch(() => null), event.persisted ? 80 : 350);
+  if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage && (event.persisted || !els.leaderboard?.querySelector('.leader-row'))) {
+    window.setTimeout(() => loadLeaderboard({ silent: true }).catch(() => null), event.persisted ? 120 : 450);
   }
 });
 window.addEventListener('popstate', resetBrowserNavigationState);
@@ -3163,7 +3208,7 @@ window.addEventListener('visibilitychange', () => {
   activateImageFallbacks();
   if (isLiveQueuePage) loadLiveQueue({ silent: true }).catch(() => null);
   if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage) {
-    loadLeaderboard({ silent: true }).catch(() => null);
+    if (!state.leaderboardLastFetchAt || Date.now() - state.leaderboardLastFetchAt > 5 * 60_000) loadLeaderboard({ silent: true }).catch(() => null);
     enrichRenderedPortraits(els.leaderboard, '.leader-person[data-player-id]', '.row-portrait', 4);
   }
   const playerId = state.currentPlayer?.player?.brawlhalla_id;
