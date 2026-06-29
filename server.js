@@ -963,7 +963,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await fetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.49'
+          'User-Agent': 'PeakHalla/7.61'
         },
         signal: controller.signal
       });
@@ -1005,7 +1005,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.49'
+        'User-Agent': 'PeakHalla/7.61'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -1087,7 +1087,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             ...(attempt.body ? { 'Content-Type': 'application/json' } : {}),
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.49'
+            'User-Agent': 'PeakHalla/7.61'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -1812,7 +1812,7 @@ async function fetchLegendArtwork(name) {
       const response = await fetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.49',
+          'User-Agent': 'PeakHalla/7.61',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -1848,7 +1848,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await fetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.49'
+        'User-Agent': 'PeakHalla/7.61'
       },
       signal: controller.signal
     });
@@ -2075,10 +2075,35 @@ function mergeCurrentGuildRoster(currentMembers = [], officialMembers = []) {
   }));
 }
 
-async function getPlayerGuild(playerId, ttlMs = 10 * 60_000, forceFresh = false) {
+async function getPlayerGuildResult(playerId, ttlMs = 10 * 60_000, forceFresh = false) {
   const endpoint = `/player/guild?brawlhalla_id=${encodeURIComponent(playerId)}`;
-  const payload = await (forceFresh ? apiFetchFresh(endpoint) : apiFetch(endpoint, ttlMs)).catch(() => null);
-  return normalizeGuildPlayer(payload);
+  try {
+    const payload = await (forceFresh ? apiFetchFresh(endpoint) : apiFetch(endpoint, ttlMs));
+    return { ok: true, guild: normalizeGuildPlayer(payload) };
+  } catch (error) {
+    // Some upstream deployments use 404 to mean that the player currently
+    // has no clan. That is a valid fresh answer, not a failed verification.
+    if (Number(error?.status) === 404) return { ok: true, guild: null };
+    return { ok: false, guild: null, error };
+  }
+}
+
+async function getPlayerGuild(playerId, ttlMs = 10 * 60_000, forceFresh = false) {
+  const result = await getPlayerGuildResult(playerId, ttlMs, forceFresh);
+  return result.guild;
+}
+
+async function verifyPlayerGuildMembership(playerId, guild, forceFresh = false) {
+  if (!guild?.guild_id) return { checked: true, guild: null };
+  const endpoint = `/guild/members?guild_id=${encodeURIComponent(guild.guild_id)}`;
+  try {
+    const payload = await (forceFresh ? apiFetchFresh(endpoint) : apiFetch(endpoint, 60_000));
+    const members = normalizeGuildMembers(payload);
+    const isCurrentMember = members.some((member) => Number(member.brawlhalla_id) === Number(playerId));
+    return { checked: true, guild: isCurrentMember ? guild : null };
+  } catch (error) {
+    return { checked: false, guild, error };
+  }
 }
 
 async function getGuildStats(guildId, ttlMs = GUILD_CACHE_TTL_MS) {
@@ -5493,46 +5518,109 @@ app.get('/api/player/:id', async (req, res, next) => {
     const freshOfficial = forceFresh || live;
     const cachedProfile = fast ? (getCachedProfileResponse(id) || await getDatabaseCachedProfileResponse(id) || await getDiskCachedProfileResponse(id)) : null;
     if (cachedProfile) {
-      res.setHeader('X-Profile-Cache', 'hit');
-      return res.json({ ...cachedProfile, background_refresh_recommended: true });
+      const preview = typeof structuredClone === 'function'
+        ? structuredClone(cachedProfile)
+        : JSON.parse(JSON.stringify(cachedProfile));
+      if (preview?.player) {
+        // A preview may show cached stats immediately, but clan membership is
+        // always withheld until the live /player/guild verification completes.
+        preview.player.guild = null;
+        preview.player.data_quality = {
+          ...(preview.player.data_quality || {}),
+          source: 'Cached profile preview · live verification pending',
+          live_fetch: false,
+          partial: true
+        };
+      }
+      const previewPartial = true;
+      res.setHeader('X-Profile-Cache', 'hit-preview');
+      return res.json({
+        ...preview,
+        partial: previewPartial,
+        retry_after_ms: 180,
+        background_refresh_recommended: true
+      });
     }
 
+    // Keep a useful previous profile only as a visual fallback while the live
+    // official calls are being verified. Clan membership is never restored
+    // from this fallback because it can change at any moment.
+    const previousProfilePromise = (async () => {
+      const previous = getCachedProfileResponse(id)
+        || await getDatabaseCachedProfileResponse(id).catch(() => null)
+        || await getDiskCachedProfileResponse(id).catch(() => null);
+      return previous?.player ? previous : null;
+    })();
+
     const localNamesSeedPromise = (fast || instant) ? peekKnownNames(id).catch(() => []) : readKnownNames(id).catch(() => []);
+    const lifetimeEndpoint = `/player/stats?brawlhalla_id=${id}&mode=all`;
+    const rankedEndpoint = `/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`;
+    const coreStatsPromise = instant || fast
+      ? Promise.resolve(null)
+      : settleWithin(getCorehallaPlayerStats(id, forceFresh), forceFresh ? 11_000 : 5_500, null);
+    const coreAliasesPromise = instant || fast
+      ? Promise.resolve([])
+      : settleWithin(getCorehallaPlayerAliases(id, forceFresh), forceFresh ? 9_000 : 4_500, []);
+
     const fetches = instant
       ? [
-          settleWithin(apiFetchFresh(`/player/stats?brawlhalla_id=${id}&mode=all`), 3_800, null),
-          settleWithin(apiFetchFresh(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`), 3_800, null),
-          settleWithin(getLegendMap(), 1_800, new Map()),
-          Promise.resolve(null),
-          Promise.resolve([]),
+          // The instant response is only a preview. Use the shared short cache
+          // rather than starting duplicate long fresh requests; the live pass
+          // below verifies everything immediately afterwards.
+          settleWithin(apiFetch(lifetimeEndpoint, 30_000), 5_800, null),
+          settleWithin(apiFetch(rankedEndpoint, 30_000), 5_800, null),
+          settleWithin(getLegendMap(), 2_500, new Map()),
+          coreStatsPromise,
+          coreAliasesPromise,
           localNamesSeedPromise,
-          settleWithin(getPlayerGuild(id, 20_000, true), 1_800, null)
+          settleWithin(getPlayerGuildResult(id, 20_000, true), 5_800, { ok: false, guild: null })
         ]
       : fast
       ? [
-          settleWithin(apiFetch(`/player/stats?brawlhalla_id=${id}&mode=all`, 5 * 60_000), 1600, null),
-          settleWithin(apiFetch(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`, 5 * 60_000), 1600, null),
-          settleWithin(getLegendMap(), 1600, new Map()),
-          Promise.resolve(null),
-          Promise.resolve([]),
+          settleWithin(apiFetch(lifetimeEndpoint, 5 * 60_000), 2_500, null),
+          settleWithin(apiFetch(rankedEndpoint, 5 * 60_000), 2_500, null),
+          settleWithin(getLegendMap(), 2_500, new Map()),
+          coreStatsPromise,
+          coreAliasesPromise,
           localNamesSeedPromise,
-          settleWithin(getPlayerGuild(id, 10 * 60_000), 1200, null)
+          settleWithin(getPlayerGuildResult(id, 10 * 60_000), 2_200, { ok: false, guild: null })
         ]
       : [
-          (freshOfficial ? apiFetchFresh(`/player/stats?brawlhalla_id=${id}&mode=all`) : apiFetch(`/player/stats?brawlhalla_id=${id}&mode=all`, 60_000)).catch(() => null),
-          (freshOfficial ? apiFetchFresh(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`) : apiFetch(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`, 60_000)).catch(() => null),
+          (freshOfficial ? apiFetchFresh(lifetimeEndpoint) : apiFetch(lifetimeEndpoint, 60_000)).catch(() => null),
+          (freshOfficial ? apiFetchFresh(rankedEndpoint) : apiFetch(rankedEndpoint, 60_000)).catch(() => null),
           getLegendMap().catch(() => new Map()),
-          getCorehallaPlayerStats(id, forceFresh).catch(() => null),
-          getCorehallaPlayerAliases(id, forceFresh).catch(() => []),
+          coreStatsPromise,
+          coreAliasesPromise,
           localNamesSeedPromise,
-          getPlayerGuild(id, 10 * 60_000, freshOfficial).catch(() => null)
+          getPlayerGuildResult(id, 10 * 60_000, freshOfficial)
         ];
-    const [v1Lifetime, rankedResponse, legendMap, coreStats, coreAliases, localNamesSeed, playerGuild] = await Promise.all(fetches);
-    const ranked = await settleWithin(
+    const [v1Lifetime, rankedResponse, legendMap, coreStats, coreAliases, localNamesSeed, guildResult] = await Promise.all(fetches);
+    const previousProfile = await previousProfilePromise;
+    const officialLifetimeOk = v1Lifetime !== null && v1Lifetime !== undefined;
+    const officialRankedOk = rankedResponse !== null && rankedResponse !== undefined;
+    const guildFetchOk = Boolean(guildResult?.ok);
+    let playerGuild = guildResult?.guild || null;
+    // Fast/instant responses are previews only. Do not flash an unverified old
+    // clan while the current roster verification is still running.
+    if (fast || instant) playerGuild = null;
+
+    // Verify the current clan roster and global rank in parallel so a slow
+    // secondary endpoint cannot hold the whole profile page for another round.
+    const rosterVerification = freshOfficial && playerGuild?.guild_id
+      ? settleWithin(
+          verifyPlayerGuildMembership(id, playerGuild, true),
+          6_000,
+          { checked: false, guild: playerGuild }
+        )
+      : Promise.resolve({ checked: false, guild: playerGuild });
+    const rankVerification = settleWithin(
       verifyOfficialGlobalRank(id, rankedResponse, forceFresh || live),
-      instant ? 2_200 : 4_500,
+      instant ? 3_200 : 5_800,
       rankedResponse
     );
+    const [rosterResult, ranked] = await Promise.all([rosterVerification, rankVerification]);
+    const guildRosterChecked = Boolean(rosterResult?.checked);
+    playerGuild = rosterResult?.guild || null;
 
     const lifetime = mergeLifetimeStats(v1Lifetime || {}, coreStats);
     const lifetimeByLegend = new Map((lifetime?.legends || []).map((legend) => [Number(legend.legend_id), legend]));
@@ -5564,7 +5652,10 @@ app.get('/api/player/:id', async (req, res, next) => {
 
     const lifetimeTotals = buildLifetimeTotals(lifetime);
     const lifetimeLegends = buildLifetimeLegendStats(lifetime?.legends || [], ranked?.legends || [], legendMap);
-    const playerName = sanitizePlayerName(ranked?.name || lifetime?.name || coreStats?.name || localNamesSeed?.[0]?.name || `Player ${id}`);
+    const playerName = sanitizePlayerName(ranked?.name || lifetime?.name || coreStats?.name || localNamesSeed?.[0]?.name || previousProfile?.player?.name || `Player ${id}`);
+    const lifetimeSourceOk = officialLifetimeOk || Boolean(coreStats);
+    const rankedSourceOk = officialRankedOk;
+    const profilePartial = fast || instant || !lifetimeSourceOk || !rankedSourceOk || !guildFetchOk;
 
     const player = {
       brawlhalla_id: id,
@@ -5595,9 +5686,16 @@ app.get('/api/player/:id', async (req, res, next) => {
       legends: rankedLegends,
       guild: playerGuild,
       data_quality: {
-        source: coreStats ? 'Fresh Brawlhalla + fresh Corehalla progression (highest XP/level wins)' : (instant ? 'Instant fresh Brawlhalla profile · deep enrichment pending' : (fast ? 'Fast Brawlhalla profile · background refresh pending' : 'Live Brawlhalla stats')),
+        source: profilePartial
+          ? 'Fast preview shown while PeakHalla verifies the current official profile'
+          : (coreStats ? 'Fresh Brawlhalla + fresh Corehalla progression (highest XP/level wins)' : 'Fresh Brawlhalla profile'),
         corehalla_enriched: Boolean(coreStats),
-        live_fetch: !fast,
+        live_fetch: Boolean(freshOfficial && officialLifetimeOk && officialRankedOk),
+        partial: profilePartial,
+        official_lifetime_ok: officialLifetimeOk,
+        official_ranked_ok: officialRankedOk,
+        official_guild_ok: guildFetchOk,
+        guild_roster_checked: guildRosterChecked,
         fetched_at: new Date().toISOString(),
         account_xp_reported: numberOrNull(lifetime?.xp) !== null,
         account_level_reported: numberOrNull(lifetime?.level) !== null,
@@ -5610,6 +5708,32 @@ app.get('/api/player/:id', async (req, res, next) => {
       updated_at: new Date().toISOString()
     };
 
+    // Never replace a previously useful profile with an empty timeout result.
+    // The old values are shown only as a temporary preview and a live retry is
+    // requested immediately. Guild membership intentionally has no fallback.
+    const previousPlayer = previousProfile?.player || null;
+    if (previousPlayer && !lifetimeSourceOk) {
+      for (const field of [
+        'level', 'xp_percentage', 'account_xp', 'game_time_seconds', 'game_time_display',
+        'game_time_estimated', 'lifetime_games', 'lifetime_wins', 'lifetime_win_rate',
+        'main_legend', 'top_legends', 'main_weapons', 'lifetime_totals', 'lifetime_legends'
+      ]) {
+        if (previousPlayer[field] !== undefined && previousPlayer[field] !== null) player[field] = previousPlayer[field];
+      }
+    }
+    if (previousPlayer && !rankedSourceOk) {
+      for (const field of [
+        'rating', 'peak_rating', 'tier', 'region', 'global_rank', 'region_ranks',
+        'ranked_games', 'ranked_wins', 'ranked_win_rate', 'legends'
+      ]) {
+        if (previousPlayer[field] !== undefined && previousPlayer[field] !== null) player[field] = previousPlayer[field];
+      }
+    }
+    if (previousPlayer && isGeneratedPlayerName(player.name) && !isGeneratedPlayerName(previousPlayer.name)) {
+      player.name = previousPlayer.name;
+    }
+    player.guild = playerGuild;
+
     if (playerGuild?.guild_id) {
       // Clan enrichment must never delay the player profile response.
       getGuildStats(playerGuild.guild_id, GUILD_CACHE_TTL_MS)
@@ -5618,30 +5742,38 @@ app.get('/api/player/:id', async (req, res, next) => {
     }
     if (fast || instant) storeObservedNamesBatch([{ id, name: player.name }], instant ? 'profile-instant' : 'profile-fast').catch(() => null);
     else await storeObservedNamesBatch([{ id, name: player.name }], 'profile');
-    const history = (fast || instant) ? await readSnapshotHistory(id) : await storeSnapshot(player);
+
+    const completeOfficialProfile = officialLifetimeOk && officialRankedOk && guildFetchOk;
+    const history = completeOfficialProfile && !fast && !instant
+      ? await storeSnapshot(player)
+      : await readSnapshotHistory(id);
     const localNames = localNamesSeed;
     const knownNames = mergeKnownNameEntries(player.name, coreAliases, localNames);
-    const payload = { player, history, known_names: knownNames, background_refresh_recommended: fast || instant };
-    const hasMeaningfulProfileData = Boolean(
-      v1Lifetime || ranked || coreStats ||
-      !isGeneratedPlayerName(player.name) ||
-      numberOrZero(player.account_xp) > 0 ||
-      numberOrZero(player.lifetime_games) > 0 ||
-      numberOrZero(player.rating) > 0
-    );
-    if (hasMeaningfulProfileData) {
+    const payload = {
+      player,
+      history,
+      known_names: knownNames,
+      partial: profilePartial,
+      retry_after_ms: profilePartial ? ((fast || instant) ? 220 : 1800) : null,
+      background_refresh_recommended: profilePartial || fast || instant
+    };
+
+    // Empty/partial timeout payloads must never replace the last complete
+    // profile in memory, PostgreSQL, disk, or the browser cache.
+    if (completeOfficialProfile && !fast && !instant) {
       setCachedProfileResponse(id, payload);
-      // Await one database write so an unranked profile becomes searchable
-      // immediately after the first successful profile view.
       await saveProfileToDatabase(id, payload).catch((error) => {
         console.warn(`Could not synchronously index player ${id}:`, error.message);
       });
       invalidateProfileSearchCacheForNames([player.name, ...knownNames.map((item) => item?.name)]);
     }
 
-    res.setHeader('X-Stats-Source', coreStats ? 'Brawlhalla-plus-fresh-Corehalla-highest-progression' : (instant ? 'Brawlhalla-instant-fresh' : (fast ? 'Brawlhalla-fast' : 'Brawlhalla-live')));
+    res.setHeader('X-Stats-Source', completeOfficialProfile
+      ? (coreStats ? 'Brawlhalla-plus-fresh-Corehalla-highest-progression' : 'Brawlhalla-live-complete')
+      : 'Brawlhalla-live-partial-retrying');
     res.setHeader('X-Stats-Fetched-At', player.updated_at);
-    res.setHeader('X-Alias-Refresh', (fast || instant) ? 'background-pending' : 'automatic-fresh');
+    res.setHeader('X-Profile-Partial', profilePartial ? '1' : '0');
+    res.setHeader('X-Alias-Refresh', (fast || instant || profilePartial) ? 'background-pending' : 'automatic-fresh');
     res.json(payload);
   } catch (error) {
     next(error);
