@@ -2923,21 +2923,29 @@ async function getMainLegendSummary(playerId) {
   if (cached) return cached.value;
 
   try {
-    const [officialLifetime, coreStats, legendMap] = await Promise.all([
+    const [officialLifetime, legendMap] = await Promise.all([
       apiFetch(`/player/stats?brawlhalla_id=${playerId}&mode=all`, 10 * 60_000).catch(() => null),
-      getCorehallaPlayerStats(playerId, false).catch(() => null),
       getLegendMap().catch(() => new Map())
     ]);
-    const lifetime = mergeLifetimeStats(officialLifetime || {}, coreStats);
-    const mainStats = [...(lifetime?.legends || [])]
-      .filter((legend) => Number(legend.games) > 0 || Number(legend.xp) > 0 || Number(legend.level) > 1)
-      .sort((a, b) =>
-        Number(b.games || 0) - Number(a.games || 0) ||
-        Number(b.xp || 0) - Number(a.xp || 0) ||
-        Number(b.level || 0) - Number(a.level || 0)
-      )[0];
-    const summary = makeLegendSummary(mainStats, legendMap.get(Number(mainStats?.legend_id)));
-    setGeneralCache(cacheKey, { value: summary || null, expiresAt: now + (summary ? 10 * 60_000 : 60_000) });
+
+    const pickMainLegend = (lifetime = {}) => {
+      const mainStats = [...(lifetime?.legends || [])]
+        .filter((legend) => Number(legend.games) > 0 || Number(legend.xp) > 0 || Number(legend.level) > 1)
+        .sort((a, b) =>
+          Number(b.games || 0) - Number(a.games || 0) ||
+          Number(b.xp || 0) - Number(a.xp || 0) ||
+          Number(b.level || 0) - Number(a.level || 0)
+        )[0];
+      return makeLegendSummary(mainStats, legendMap.get(Number(mainStats?.legend_id)));
+    };
+
+    let summary = pickMainLegend(officialLifetime || {});
+    if (!summary) {
+      const coreStats = await settleWithin(getCorehallaPlayerStats(playerId, false), 2200, null);
+      summary = pickMainLegend(mergeLifetimeStats(officialLifetime || {}, coreStats));
+    }
+
+    setGeneralCache(cacheKey, { value: summary || null, expiresAt: now + (summary ? 30 * 60_000 : 90_000) });
     if (summary && dbReady) {
       dbQuery(`UPDATE players SET main_legend = $2::jsonb, last_seen = NOW() WHERE brawlhalla_id = $1`, [
         Number(playerId), JSON.stringify(summary)
@@ -4647,15 +4655,18 @@ async function databaseLeaderboardFallback({ region, mode, page }) {
       const profile = row.profile_payload?.player || {};
       const wins = numberOrZero(profile.ranked_wins);
       const games = Math.max(wins, numberOrZero(profile.ranked_games));
+      const losses = Math.max(0, games - wins);
+      const recordAvailable = games > 0 || wins > 0 || losses > 0;
       return {
         rank: numberOrNull(row.global_rank) || offset + index + 1,
         rating: numberOrNull(row.rating),
         best_rating: maxPositiveNumber(row.peak_rating, profile.peak_rating, row.rating),
         tier: row.tier || profile.tier || 'Unranked',
         region: row.region || region,
-        games,
-        wins,
-        losses: Math.max(0, games - wins),
+        games: recordAvailable ? games : null,
+        wins: recordAvailable ? wins : null,
+        losses: recordAvailable ? losses : null,
+        record_available: recordAvailable,
         players: [{
           id: Number(row.brawlhalla_id),
           username: row.current_name || profile.name || `Player ${row.brawlhalla_id}`,
@@ -4685,20 +4696,27 @@ async function databaseLeaderboardFallback({ region, mode, page }) {
     if (!rows.length) return null;
     const playerIds = [...new Set(rows.flatMap((row) => [Number(row.player_one_id), Number(row.player_two_id)]).filter(Boolean))];
     const legendById = await getCachedMainLegendMap(playerIds);
-    const rankings = rows.map((row, index) => ({
+    const rankings = rows.map((row, index) => {
+      const games = numberOrZero(row.games);
+      const wins = numberOrZero(row.wins);
+      const losses = Number.isFinite(Number(row.losses)) ? numberOrZero(row.losses) : Math.max(0, games - wins);
+      const recordAvailable = games > 0 || wins > 0 || losses > 0;
+      return {
       rank: numberOrNull(row.global_rank) || offset + index + 1,
       rating: numberOrNull(row.rating),
       best_rating: maxPositiveNumber(row.peak_rating, row.rating),
       tier: row.tier || 'Unranked',
       region: row.region || region,
-      games: numberOrZero(row.games),
-      wins: numberOrZero(row.wins),
-      losses: Number.isFinite(Number(row.losses)) ? numberOrZero(row.losses) : Math.max(0, numberOrZero(row.games) - numberOrZero(row.wins)),
+      games: recordAvailable ? games : null,
+      wins: recordAvailable ? wins : null,
+      losses: recordAvailable ? losses : null,
+      record_available: recordAvailable,
       players: [
         { id: Number(row.player_one_id), username: row.player_one_name || `Player ${row.player_one_id}`, main_legend: legendById.get(Number(row.player_one_id)) || null },
         { id: Number(row.player_two_id), username: row.player_two_name || `Player ${row.player_two_id}`, main_legend: legendById.get(Number(row.player_two_id)) || null }
       ]
-    }));
+    };
+    });
     return { rankings, total_pages: rows.length >= limit ? page + 1 : page, source: 'database-fallback' };
   }
   return null;
@@ -4716,7 +4734,14 @@ async function refreshLeaderboardPayload(context) {
       order_by: context.orderBy
     });
     const data = await apiFetch(`/leaderboard/ranked?${params}`, 30_000);
-    const rankings = await hydrateRankingPlayers(data?.rankings || [], 'leaderboard', { warmMissingLegends: true });
+    const hydratedRankings = await hydrateRankingPlayers(data?.rankings || [], 'leaderboard', { warmMissingLegends: true });
+    const rankings = hydratedRankings.map((ranking) => {
+      const games = Number(ranking.games);
+      const wins = Number(ranking.wins);
+      const losses = Number(ranking.losses);
+      const recordAvailable = (Number.isFinite(games) && games > 0) || (Number.isFinite(wins) && wins > 0) || (Number.isFinite(losses) && losses > 0);
+      return { ...ranking, games: recordAvailable ? ranking.games : null, wins: recordAvailable ? ranking.wins : null, losses: recordAvailable ? ranking.losses : null, record_available: recordAvailable };
+    });
     const payload = { ...data, rankings, source: 'official', updated_at: new Date().toISOString() };
     await persistLeaderboardPayload(key, payload, Date.now());
     return payload;
@@ -5337,6 +5362,23 @@ function normalizeTournamentUrl(href, base = 'https://www.brawlhalla.com') {
 }
 
 
+const SUMMER_2026_PRIZE_BY_REGION = Object.freeze({
+  MENA: '$2,000',
+  SEA: '$2,000',
+  SA: '$5,500',
+  EU: '$8,000',
+  NA: '$8,000'
+});
+
+function tournamentPrizePool(event = {}) {
+  if (event.prize_pool || event.prize) return String(event.prize_pool || event.prize);
+  const primaryRegion = Array.isArray(event.regions) ? event.regions[0] : null;
+  if (/summer championship/i.test(String(event.name || '')) && /2026/.test(String(event.name || ''))) {
+    return SUMMER_2026_PRIZE_BY_REGION[primaryRegion] || '';
+  }
+  return '';
+}
+
 const CURRENT_OFFICIAL_TOURNAMENTS = Object.freeze([
   { name: 'Summer Championship — Middle East 2026 — 1v1', regions: ['MENA'], modes: ['1v1'], date: '2026-07-17T11:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/d57d1465-41d8-4d62-e242-08deac38d3d7' },
   { name: 'Summer Championship — Southeast Asia 2026 — 1v1', regions: ['SEA'], modes: ['1v1'], date: '2026-07-17T09:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/9db3cc52-8c73-4152-6d13-08dea8b61f65' },
@@ -5355,8 +5397,17 @@ const CURRENT_OFFICIAL_TOURNAMENTS = Object.freeze([
   series: 'Summer Championship 2026',
   note: 'Official regional Summer Championship registration.',
   source: 'Brawlhalla Esports',
-  ...event
+  art_key: 'summer-2026',
+  ...event,
+  prize_pool: tournamentPrizePool(event)
 })));
+
+function prizePoolFromText(value = '') {
+  const text = String(value || '');
+  const match = text.match(/(?:Prizes?|Prize Pool)\s*:?\s*(\$\s?[\d,.]+)/i)
+    || text.match(/(\$\s?[\d,.]+)\s*(?:prize pool|in prizes)/i);
+  return match ? match[1].replace(/\s+/g, '') : '';
+}
 
 function parseChallengermodeTournamentDirectory(html = '') {
   const events = [];
@@ -5377,6 +5428,7 @@ function parseChallengermodeTournamentDirectory(html = '') {
       date,
       status: date && new Date(date).getTime() >= Date.now() - 24 * 60 * 60_000 ? 'upcoming' : 'announced',
       note: 'Official Brawlhalla Esports tournament.',
+      prize_pool: prizePoolFromText(nearby),
       source_url: sourceUrl,
       source: 'Challengermode'
     });
@@ -5438,6 +5490,7 @@ function parseOfficialEsportsPosts(html = '') {
       modes: inferTournamentModes(name),
       date,
       note: community ? 'Officially featured community tournament announcement.' : 'Official Brawlhalla esports announcement.',
+      prize_pool: prizePoolFromText(`${combined} ${nearby}`),
       source_url: url,
       source: 'Brawlhalla Esports'
     });
@@ -5465,6 +5518,7 @@ function parseCommunityTournamentArticle(html = '') {
       modes: inferTournamentModes(`${before} ${name}`),
       date: articleDate,
       note: /sponsored/i.test(before.slice(-100)) ? 'Sponsored community event.' : 'Community tournament featured by Brawlhalla.',
+      prize_pool: prizePoolFromText(`${before} ${name}`),
       source_url: url,
       source: /start\.gg/i.test(url) ? 'start.gg' : 'Challengermode'
     });
@@ -5481,6 +5535,10 @@ function localTournamentDirectory(data = {}) {
     modes: Array.isArray(event.modes) && event.modes.length ? event.modes : inferTournamentModes(`${event.name || ''} ${event.type || ''} ${event.note || ''}`),
     date: event.date || null,
     note: event.note || event.type || '',
+    prize_pool: tournamentPrizePool(event),
+    image_url: event.image_url || '',
+    art_key: event.art_key || (/summer championship/i.test(String(event.name || '')) ? 'summer-2026' : ''),
+    series: event.series || '',
     source_url: event.source_url || '',
     source: event.source || 'PeakHalla tournament directory'
   }));
@@ -5566,7 +5624,9 @@ app.get('/api/esports/tournaments', async (req, res) => {
     .map((event) => ({
       ...event,
       regions: Array.isArray(event.regions) && event.regions.length ? event.regions : ['GLOBAL'],
-      modes: Array.isArray(event.modes) && event.modes.length ? event.modes : inferTournamentModes(`${event.name || ''} ${event.note || ''}`)
+      modes: Array.isArray(event.modes) && event.modes.length ? event.modes : inferTournamentModes(`${event.name || ''} ${event.note || ''}`),
+      prize_pool: tournamentPrizePool(event),
+      art_key: event.art_key || (/summer championship/i.test(String(event.name || '')) ? 'summer-2026' : '')
     }))
     .sort((left, right) => {
       const leftTime = new Date(left.date || 0).getTime();
@@ -5585,7 +5645,7 @@ app.get('/api/esports/tournaments', async (req, res) => {
     mode,
     updated_at: new Date().toISOString(),
     live: live.live,
-    auto_refresh_seconds: 300,
+    auto_refresh_seconds: 900,
     events: unique,
     sources: [OFFICIAL_ESPORTS_NEWS_URL, CHALLENGERMODE_BRAWLHALLA_URL, live.community_source_url || COMMUNITY_TOURNAMENTS_URL]
   });
@@ -6100,10 +6160,10 @@ app.get('/api/players/portraits', async (req, res, next) => {
     let missing = ids.filter((id) => !legendById.has(id));
     const resolveMissing = String(req.query.resolve || '0') === '1';
     if (resolveMissing && missing.length) {
-      const priority = missing.slice(0, 8);
-      const resolved = await mapWithConcurrency(priority, 4, async (id) => ({
+      const priority = missing.slice(0, 20);
+      const resolved = await mapWithConcurrency(priority, 5, async (id) => ({
         id,
-        legend: await settleWithin(getMainLegendSummary(id), 2800, null)
+        legend: await settleWithin(getMainLegendSummary(id), 4200, null)
       }));
       for (const item of resolved) {
         if (item?.legend) legendById.set(item.id, item.legend);
@@ -6112,7 +6172,7 @@ app.get('/api/players/portraits', async (req, res, next) => {
     }
 
     const portraits = Object.fromEntries(ids.map((id) => [String(id), legendById.get(id) || null]));
-    if (String(req.query.warm || '1') !== '0') warmMissingMainLegends(missing, 20);
+    if (String(req.query.warm || '1') !== '0') warmMissingMainLegends(missing, 32);
     res.setHeader('Cache-Control', 'private, max-age=45, stale-while-revalidate=600');
     res.json({ portraits, missing, resolved: ids.length - missing.length });
   } catch (error) {
@@ -6125,7 +6185,7 @@ app.get('/api/player/:id/portrait', async (req, res, next) => {
     const id = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
     if (!id) return res.status(400).json({ error: 'Invalid player ID.' });
     const cachedLegend = (await getCachedMainLegendMap([id])).get(id) || null;
-    const mainLegend = cachedLegend || await settleWithin(getMainLegendSummary(id), 2_200, null);
+    const mainLegend = cachedLegend || await settleWithin(getMainLegendSummary(id), 4_200, null);
     res.setHeader('Cache-Control', mainLegend ? 'private, max-age=600, stale-while-revalidate=3600' : 'private, max-age=15');
     res.json({ player_id: id, main_legend: mainLegend || null });
   } catch (error) {
