@@ -1,2 +1,10 @@
-Upload app.js, index.html, and styles.css inside the repository public/ folder and replace the old files.
-Do NOT upload these files to the repository root.
+PeakHalla v7.57 — Theme Switcher
+
+Upload and replace these files inside the GitHub public folder:
+- app.js
+- index.html
+- styles.css
+
+Do not upload them to the project root.
+No server.js or database changes are needed.
+After Railway deploys successfully, refresh with Ctrl + Shift + R.

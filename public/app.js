@@ -67,6 +67,90 @@ const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
 const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerRefreshController: null, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
+
+
+const PEAKHALLA_THEME_KEY = 'peakhalla-theme';
+const PEAKHALLA_THEMES = {
+  purple: { meta: '#0c0714', en: ['Royal Purple', 'Original PeakHalla'], ar: ['بنفسجي ملكي', 'ستايل PeakHalla الأصلي'] },
+  crimson: { meta: '#100609', en: ['Dark Crimson', 'Deep red glow'], ar: ['أحمر غامق', 'توهج أحمر عميق'] },
+  graphite: { meta: '#0b0d10', en: ['Dark Gray', 'Clean graphite'], ar: ['رمادي داكن', 'جرافيت هادئ'] },
+  ice: { meta: '#061017', en: ['Ice Blue', 'Cool light blue'], ar: ['أزرق فاتح', 'أزرق جليدي هادئ'] }
+};
+let themeTransitionTimer = null;
+function currentTheme() {
+  const value = document.documentElement.dataset.theme || 'purple';
+  return PEAKHALLA_THEMES[value] ? value : 'purple';
+}
+function syncThemePickerLanguage() {
+  const picker = document.getElementById('theme-picker');
+  if (!picker) return;
+  const isArabic = state?.language === 'ar';
+  const title = document.getElementById('theme-picker-title');
+  const subtitle = document.getElementById('theme-picker-subtitle');
+  if (title) title.textContent = isArabic ? 'ثيم الموقع' : 'Website theme';
+  if (subtitle) subtitle.textContent = isArabic ? 'غيّره في أي وقت' : 'Change it anytime';
+  picker.querySelectorAll('[data-theme-option]').forEach((button) => {
+    const info = PEAKHALLA_THEMES[button.dataset.themeOption];
+    if (!info) return;
+    const [name, description] = isArabic ? info.ar : info.en;
+    const nameNode = button.querySelector('[data-theme-name]');
+    const descriptionNode = button.querySelector('[data-theme-description]');
+    if (nameNode) nameNode.textContent = name;
+    if (descriptionNode) descriptionNode.textContent = description;
+  });
+  const toggle = document.getElementById('theme-picker-toggle');
+  if (toggle) toggle.setAttribute('aria-label', isArabic ? 'اختيار ثيم الموقع' : 'Choose website theme');
+}
+function applySiteTheme(theme, { persist = true, animate = true } = {}) {
+  const next = PEAKHALLA_THEMES[theme] ? theme : 'purple';
+  if (animate && next !== currentTheme()) {
+    document.documentElement.classList.add('theme-changing');
+    clearTimeout(themeTransitionTimer);
+    themeTransitionTimer = window.setTimeout(() => document.documentElement.classList.remove('theme-changing'), 430);
+  }
+  document.documentElement.dataset.theme = next;
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+  if (themeMeta) themeMeta.content = PEAKHALLA_THEMES[next].meta;
+  document.querySelectorAll('[data-theme-option]').forEach((button) => {
+    const selected = button.dataset.themeOption === next;
+    button.classList.toggle('selected', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+  if (persist) {
+    try { localStorage.setItem(PEAKHALLA_THEME_KEY, next); } catch (_) {}
+  }
+  window.dispatchEvent(new CustomEvent('peakhalla-theme-changed', { detail: { theme: next } }));
+}
+function setupThemePicker() {
+  const picker = document.getElementById('theme-picker');
+  const toggle = document.getElementById('theme-picker-toggle');
+  const menu = document.getElementById('theme-picker-menu');
+  if (!picker || !toggle || !menu) return;
+  const close = () => {
+    picker.classList.remove('open');
+    toggle.setAttribute('aria-expanded', 'false');
+    menu.setAttribute('aria-hidden', 'true');
+  };
+  const open = () => {
+    picker.classList.add('open');
+    toggle.setAttribute('aria-expanded', 'true');
+    menu.setAttribute('aria-hidden', 'false');
+  };
+  toggle.addEventListener('click', (event) => {
+    event.stopPropagation();
+    picker.classList.contains('open') ? close() : open();
+  });
+  menu.addEventListener('click', (event) => {
+    const option = event.target.closest('[data-theme-option]');
+    if (!option) return;
+    applySiteTheme(option.dataset.themeOption);
+    close();
+  });
+  document.addEventListener('click', (event) => { if (!picker.contains(event.target)) close(); });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
+  applySiteTheme(currentTheme(), { persist: false, animate: false });
+  syncThemePickerLanguage();
+}
 const playerPathMatch = location.pathname.match(/^\/player\/(\d+)\/?$/);
 const clanPathMatch = location.pathname.match(/^\/clan\/(\d+)\/?$/);
 const standalonePlayerId = playerPathMatch ? playerPathMatch[1] : null;
@@ -128,6 +212,7 @@ function applyLanguage() {
   els.languageToggle.innerHTML = isArabic ? '<span>EN</span><b>AR</b>' : '<b>EN</b><span>AR</span>';
   [els.region, els.mode, els.leaderboardRegion, els.leaderboardMode, els.esportsRegion, els.esportsMode, els.tournamentDirectoryRegion, els.tournamentDirectoryMode, els.queueRegion].forEach((select) => select?._motionSync?.());
   localStorage.setItem('nad-bh-language', state.language);
+  syncThemePickerLanguage();
   if (state.currentPlayer) renderPlayer(state.currentPlayer, false);
   if (isLiveQueuePage) {
     if (state.queueData) renderLiveQueue(state.queueData);
@@ -143,7 +228,7 @@ function applyLanguage() {
   if (state.esportsCareer && !els.careerModal.hidden) renderCareer(state.esportsCareer);
 }
 
-const LEGEND_ASSET_VERSION = '7.56.0';
+const LEGEND_ASSET_VERSION = '7.57.0';
 
 function legendAssetSlug(name = '') {
   return String(name || '')
@@ -2635,6 +2720,7 @@ els.esportsMenu?.querySelectorAll('[data-esports-view]').forEach((button) => but
 if (isLiveQueuePage) setupLiveQueuePage();
 if (isArenaPage) setupArenaPage();
 if (isClanPage) loadStandaloneClan();
+setupThemePicker();
 applyLanguage();
 requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('page-entering')));
 function resetBrowserNavigationState() {
