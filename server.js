@@ -631,7 +631,7 @@ async function importLegacyJsonIntoDatabase() {
   console.log('Existing PeakHalla cache imported into PostgreSQL.');
 }
 
-const DISCOVERY_REGIONS = ['ALL', 'EU', 'US-E', 'US-W', 'BRZ', 'SEA', 'AUS', 'JPS', 'SA', 'ME'];
+const DISCOVERY_REGIONS = ['ALL', 'EU', 'US-E', 'US-W', 'BRZ', 'SEA', 'AUS', 'JPN', 'SA', 'ME'];
 const DISCOVERY_MODES = ['1v1', '2v2'];
 
 function normalizeDiscoveryCursor(value = {}) {
@@ -673,11 +673,15 @@ async function databasePlayerCount() {
 }
 
 async function fetchDiscoveryPage(region, mode, page) {
+  const requestedRegion = String(region || 'ALL').trim().toUpperCase();
+  const normalizedRegion = requestedRegion === 'JPS' ? 'JPN' : requestedRegion;
+  const safeRegion = DISCOVERY_REGIONS.includes(normalizedRegion) ? normalizedRegion : 'ALL';
+  const safeMode = DISCOVERY_MODES.includes(mode) ? mode : '1v1';
   const params = new URLSearchParams({
     page: String(page),
     max_results: String(DATABASE_DISCOVERY_PAGE_SIZE),
-    game_mode: mode,
-    region,
+    game_mode: safeMode,
+    region: safeRegion,
     order_by: 'rating'
   });
   return apiFetch(`/leaderboard/ranked?${params}`, 30_000);
@@ -742,8 +746,16 @@ async function runDatabaseDiscoveryCycle() {
   } catch (error) {
     console.warn('PeakHalla background player discovery failed:', error.message);
     const previous = normalizeDiscoveryCursor(await getDatabaseState('official_discovery_cursor_v2', {}));
+    const isRegionValidationError = /region must be one of/i.test(String(error?.message || ''));
+    const recovered = isRegionValidationError
+      ? {
+          ...previous,
+          region_index: (previous.region_index + 1) % DISCOVERY_REGIONS.length,
+          page: 1
+        }
+      : previous;
     await setDatabaseState('official_discovery_cursor_v2', {
-      ...previous,
+      ...recovered,
       last_error: error.message,
       last_error_at: new Date().toISOString(),
       duration_ms: Date.now() - startedAt
@@ -799,33 +811,99 @@ app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders(res, filePath) {
     if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      return;
+    }
+    if (filePath.endsWith('robots.txt') || filePath.endsWith('sitemap.xml')) {
+      res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
     }
   }
 }));
 app.use('/uploads/arena', express.static(WALL_UPLOADS_DIR, { etag: true, maxAge: '30d', immutable: true }));
 
-app.get('/player/:id', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+const SEO_INDEX_PATH = path.join(__dirname, 'public', 'index.html');
+let seoIndexTemplatePromise = null;
+function seoIndexTemplate() {
+  if (!seoIndexTemplatePromise) seoIndexTemplatePromise = fs.readFile(SEO_INDEX_PATH, 'utf8');
+  return seoIndexTemplatePromise;
+}
+function escapeSeoText(value) {
+  return String(value || '').replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[character]);
+}
+function applySeoMeta(html, { title, description, canonical, robots = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' }) {
+  const safeTitle = escapeSeoText(title);
+  const safeDescription = escapeSeoText(description);
+  const safeCanonical = escapeSeoText(canonical);
+  const safeRobots = escapeSeoText(robots);
+  return html
+    .replace(/<title>[^<]*<\/title>/i, `<title>${safeTitle}</title>`)
+    .replace(/<meta name="description" content="[^"]*">/i, `<meta name="description" content="${safeDescription}">`)
+    .replace(/<meta name="robots" content="[^"]*">/i, `<meta name="robots" content="${safeRobots}">`)
+    .replace(/<link rel="canonical" href="[^"]*">/i, `<link rel="canonical" href="${safeCanonical}">`)
+    .replace(/<meta property="og:title" content="[^"]*">/i, `<meta property="og:title" content="${safeTitle}">`)
+    .replace(/<meta property="og:description" content="[^"]*">/i, `<meta property="og:description" content="${safeDescription}">`)
+    .replace(/<meta property="og:url" content="[^"]*">/i, `<meta property="og:url" content="${safeCanonical}">`)
+    .replace(/<meta name="twitter:title" content="[^"]*">/i, `<meta name="twitter:title" content="${safeTitle}">`)
+    .replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${safeDescription}">`);
+}
+async function sendSeoIndex(res, next, seo) {
+  try {
+    const html = await seoIndexTemplate();
+    res.type('html').send(applySeoMeta(html, seo));
+  } catch (error) {
+    next(error);
+  }
+}
+
+app.get('/player/:id', (req, res, next) => {
+  const id = String(req.params.id || '').replace(/[^0-9]/g, '').slice(0, 20) || 'Profile';
+  return sendSeoIndex(res, next, {
+    title: `Brawlhalla Player ${id} Stats, ELO & Legends | PeakHalla`,
+    description: `View live Brawlhalla stats for player ${id}, including current and peak ELO, ranked tier, legends, account XP, clans, aliases, and 2v2 teams.`,
+    canonical: `https://${PRIMARY_HOST}/player/${encodeURIComponent(id)}`
+  });
 });
 
-app.get('/clan/:id', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/clan/:id', (req, res, next) => {
+  const id = String(req.params.id || '').replace(/[^0-9]/g, '').slice(0, 20) || 'Profile';
+  return sendSeoIndex(res, next, {
+    title: `Brawlhalla Clan ${id} Stats, Roster & Lifetime XP | PeakHalla`,
+    description: `View the Brawlhalla clan profile for guild ${id}, including its roster, member roles, weekly points, and lifetime clan XP.`,
+    canonical: `https://${PRIMARY_HOST}/clan/${encodeURIComponent(id)}`
+  });
 });
 
-app.get('/queue', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+app.get('/queue', (_req, res, next) => sendSeoIndex(res, next, {
+  title: 'Brawlhalla Ranked Queue Activity – Live 1v1, 2v2 & 3v3 | PeakHalla',
+  description: 'Track recent Brawlhalla ranked activity across 1v1, 2v2, and 3v3 leaderboards, including games detected and ELO changes.',
+  canonical: `https://${PRIMARY_HOST}/queue`
+}));
+
+app.get('/arena', (_req, res, next) => sendSeoIndex(res, next, {
+  title: 'Brawlhalla Arena Wall – Community Screenshots & Profiles | PeakHalla',
+  description: 'Share Brawlhalla screenshots, ranked moments, comments, replies, and community profiles on the PeakHalla Arena Wall.',
+  canonical: `https://${PRIMARY_HOST}/arena`
+}));
+app.get('/arena/profile/:username', (req, res, next) => {
+  const username = String(req.params.username || 'Player').slice(0, 40);
+  return sendSeoIndex(res, next, {
+    title: `${username} – Brawlhalla Arena Profile | PeakHalla`,
+    description: `View ${username}'s PeakHalla Arena profile, community posts, screenshots, and activity.`,
+    canonical: `https://${PRIMARY_HOST}/arena/profile/${encodeURIComponent(username)}`
+  });
 });
 
-app.get('/arena', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-app.get('/arena/profile/:username', (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get(['/esports/power', '/esports/tournaments'], (_req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+app.get('/esports/power', (_req, res, next) => sendSeoIndex(res, next, {
+  title: 'Brawlhalla Esports Power Rankings, Earnings & Results | PeakHalla',
+  description: 'Browse Brawlhalla esports power rankings by region and mode, with player earnings, medals, top-eight finishes, and tournament careers.',
+  canonical: `https://${PRIMARY_HOST}/esports/power`
+}));
+app.get('/esports/tournaments', (_req, res, next) => sendSeoIndex(res, next, {
+  title: 'Brawlhalla Tournaments – Official & Community Events | PeakHalla',
+  description: 'Find current Brawlhalla tournaments, including official and community events by region and game mode.',
+  canonical: `https://${PRIMARY_HOST}/esports/tournaments`
+}));
 
 
 function asInt(value, fallback, min, max) {
@@ -835,7 +913,8 @@ function asInt(value, fallback, min, max) {
 }
 
 function allowed(value, values, fallback) {
-  return values.includes(value) ? value : fallback;
+  const normalizedValue = value === 'JPS' && values.includes('JPN') ? 'JPN' : value;
+  return values.includes(normalizedValue) ? normalizedValue : fallback;
 }
 
 function normalizeName(value) {
@@ -2918,7 +2997,7 @@ async function buildProfileSearchRanking(candidate, query, options = {}) {
       .filter(Boolean))];
     const quick = Boolean(options.quick);
     const requestedRegion = allowed(String(options.region || 'ALL').toUpperCase(),
-      ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'], 'ALL');
+      ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPN', 'SA', 'ME'], 'ALL');
     const databasePayload = await getDatabaseCachedProfileResponse(id, 0).catch(() => null);
     const cachedPlayer = getCachedProfileResponse(id)?.player || databasePayload?.player || candidate?.profile?.player || null;
     let lifetime = null;
@@ -3626,7 +3705,7 @@ async function wallRequireUser(req, res) {
 }
 
 
-const QUEUE_REGIONS = ['US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'];
+const QUEUE_REGIONS = ['US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPN', 'SA', 'ME'];
 const QUEUE_MODES = ['1v1', '2v2', '3v3'];
 const QUEUE_TOP_LIMIT = 500;
 const QUEUE_ACTIVITY_WINDOW_MS = 10 * 60_000;
@@ -3850,7 +3929,7 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.56.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.63.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
@@ -3858,7 +3937,7 @@ app.get('/api/suggestions', async (req, res, next) => {
     const query = String(req.query.q || '').trim().slice(0, 40);
     if (query.length < 2) return res.status(400).json({ error: 'Type at least 2 letters.' });
     const region = allowed(String(req.query.region || 'ALL').toUpperCase(),
-      ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'], 'ALL');
+      ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPN', 'SA', 'ME'], 'ALL');
     const mode = allowed(String(req.query.mode || '1v1'), ['1v1', '2v2', '3v3'], '1v1');
     const cached = getCachedProfileSearch('suggestions', query, region, mode);
     if (cached) return res.json({ ...cached, cached: true });
@@ -3940,7 +4019,7 @@ app.get('/api/search', async (req, res, next) => {
     if (query.length < 2) return res.status(400).json({ error: 'Type at least 2 letters.' });
 
     const region = allowed(String(req.query.region || 'ALL').toUpperCase(),
-      ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'], 'ALL');
+      ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPN', 'SA', 'ME'], 'ALL');
     const mode = allowed(String(req.query.mode || '1v1'), ['1v1', '2v2', '3v3'], '1v1');
     const cached = getCachedProfileSearch('search', query, region, mode);
     if (cached) return res.json({ ...cached, cached: true });
@@ -4168,7 +4247,7 @@ app.get('/api/leaderboard', async (req, res, next) => {
   try {
     const page = asInt(req.query.page, 1, 1, 1000);
     const region = allowed(String(req.query.region || 'ALL').toUpperCase(),
-      ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPS', 'SA', 'ME'], 'ALL');
+      ['ALL', 'US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPN', 'SA', 'ME'], 'ALL');
     const mode = allowed(String(req.query.mode || '1v1'), ['1v1', '2v2', '3v3'], '1v1');
     const orderBy = allowed(String(req.query.order_by || 'rating'),
       ['rating', 'best_rating', 'wl_ratio', 'wins', 'games'], 'rating');
