@@ -253,7 +253,7 @@ function applyLanguage() {
   if (state.esportsCareer && !els.careerModal.hidden) renderCareer(state.esportsCareer);
 }
 
-const LEGEND_ASSET_VERSION = '7.58.0';
+const LEGEND_ASSET_VERSION = '7.67.0';
 
 function legendAssetSlug(name = '') {
   return String(name || '')
@@ -358,7 +358,7 @@ function legendImageMarkup(legend, options = {}) {
     ? legend.image_candidates.filter(Boolean)
     : (legend?.image_url ? [legend.image_url] : []);
   const candidates = [...new Set([
-    ...localLegendImageCandidates(name),
+    ...(options.localCandidates === false ? [] : localLegendImageCandidates(name)),
     ...suppliedCandidates
   ].filter(Boolean))];
   if (!candidates.length) return `<span class="legend-image-shell is-fallback"><span class="legend-fallback">${fallback}</span></span>`;
@@ -603,11 +603,60 @@ async function fetchPlayerPortrait(id) {
   const numericId = Number(id);
   if (!Number.isSafeInteger(numericId) || numericId <= 0) return null;
   try {
-    const data = await getJson(`/api/player/${encodeURIComponent(numericId)}/portrait?_=${Date.now()}`, { timeoutMs: 7000 });
+    const data = await getJson(`/api/player/${encodeURIComponent(numericId)}/portrait`, { timeoutMs: 4200 });
     return data?.main_legend || null;
   } catch {
     return null;
   }
+}
+
+const PLAYER_PORTRAIT_CACHE_KEY = 'peakhalla-portrait-cache-v1';
+const PLAYER_PORTRAIT_CACHE_AGE_MS = 24 * 60 * 60_000;
+
+function readPlayerPortraitCache(ids = []) {
+  const result = new Map();
+  try {
+    const all = JSON.parse(localStorage.getItem(PLAYER_PORTRAIT_CACHE_KEY) || '{}');
+    const now = Date.now();
+    for (const id of ids) {
+      const entry = all[String(id)];
+      if (entry?.legend && now - Number(entry.savedAt || 0) <= PLAYER_PORTRAIT_CACHE_AGE_MS) {
+        result.set(Number(id), entry.legend);
+      }
+    }
+  } catch {}
+  return result;
+}
+
+function writePlayerPortraitCache(id, legend) {
+  if (!legend || !Number(id)) return;
+  try {
+    const all = JSON.parse(localStorage.getItem(PLAYER_PORTRAIT_CACHE_KEY) || '{}');
+    all[String(id)] = { savedAt: Date.now(), legend };
+    const trimmed = Object.entries(all)
+      .sort((a, b) => Number(b[1]?.savedAt || 0) - Number(a[1]?.savedAt || 0))
+      .slice(0, 220);
+    localStorage.setItem(PLAYER_PORTRAIT_CACHE_KEY, JSON.stringify(Object.fromEntries(trimmed)));
+  } catch {}
+}
+
+async function fetchPlayerPortraitBatch(ids = []) {
+  const uniqueIds = [...new Set(ids.map(Number).filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, 80);
+  if (!uniqueIds.length) return new Map();
+  const result = readPlayerPortraitCache(uniqueIds);
+  const missing = uniqueIds.filter((id) => !result.has(id));
+  if (!missing.length) return result;
+  try {
+    const params = new URLSearchParams({ ids: missing.join(','), warm: '1' });
+    const data = await getJson(`/api/players/portraits?${params}`, { timeoutMs: 3200 });
+    for (const [rawId, legend] of Object.entries(data?.portraits || {})) {
+      const id = Number(rawId);
+      if (!legend) continue;
+      result.set(id, legend);
+      writePlayerPortraitCache(id, legend);
+    }
+  } catch {}
+  return result;
 }
 
 function patchPlayerPortrait(button, legend, portraitSelector) {
@@ -616,6 +665,7 @@ function patchPlayerPortrait(button, legend, portraitSelector) {
   if (!portrait || button.dataset.needsPortrait !== '1') return;
   portrait.innerHTML = legendImageMarkup(legend, { lazy: false, fallbackName: legend.name });
   button.dataset.needsPortrait = '0';
+  writePlayerPortraitCache(Number(button.dataset.playerId || button.dataset.leaderId || button.dataset.queuePlayerId), legend);
   const label = button.querySelector('.suggestion-copy small');
   if (label && !label.textContent.includes(':')) {
     const region = button.dataset.playerRegion || '—';
@@ -623,44 +673,55 @@ function patchPlayerPortrait(button, legend, portraitSelector) {
   }
   const fighterMain = button.querySelector('.fighter-main');
   if (fighterMain) fighterMain.textContent = `${t('main')}: ${legend.name || t('unknownLegend')}`;
-  activateImageFallbacks();
+  const leaderMeta = button.querySelector('.leader-legend-meta');
+  if (leaderMeta) leaderMeta.textContent = legend.name || t('unknownLegend');
+  if (button.matches?.('.queue-live-player')) {
+    const queueMeta = button.querySelector(':scope > span:last-child small');
+    if (queueMeta) queueMeta.textContent = legend.name || t('unknownLegend');
+  }
+  activateImageFallbacks(button);
 }
 
 function enrichRenderedPortraits(container, buttonSelector, portraitSelector, concurrency = 3) {
   if (!container) return;
-  const queue = [...container.querySelectorAll(buttonSelector)]
+  const targets = [...container.querySelectorAll(buttonSelector)]
     .filter((button) => button.dataset.needsPortrait === '1' && Number(button.dataset.playerId) > 0);
-  let cursor = 0;
-  const worker = async () => {
-    while (cursor < queue.length) {
-      const button = queue[cursor++];
-      const id = Number(button.dataset.playerId);
-      let legend = await fetchPlayerPortrait(id);
-      if (!legend) {
-        const data = await prefetchPlayerProfile(id).catch(() => null);
-        legend = data?.player?.main_legend || null;
-      }
-      if (!button.isConnected) continue;
-      if (legend) {
-        patchPlayerPortrait(button, legend, portraitSelector);
-      } else {
+  if (!targets.length) return;
+
+  (async () => {
+    const batch = await fetchPlayerPortraitBatch(targets.map((button) => Number(button.dataset.playerId)));
+    for (const button of targets) {
+      const legend = batch.get(Number(button.dataset.playerId));
+      if (legend && button.isConnected) patchPlayerPortrait(button, legend, portraitSelector);
+    }
+
+    const queue = targets.filter((button) => button.isConnected && button.dataset.needsPortrait === '1').slice(0, 12);
+    let cursor = 0;
+    const worker = async () => {
+      while (cursor < queue.length) {
+        const button = queue[cursor++];
+        const id = Number(button.dataset.playerId);
+        const legend = await fetchPlayerPortrait(id);
+        if (!button.isConnected) continue;
+        if (legend) {
+          patchPlayerPortrait(button, legend, portraitSelector);
+          continue;
+        }
         const attempts = Number(button.dataset.portraitAttempts || 0) + 1;
         button.dataset.portraitAttempts = String(attempts);
-        if (attempts < 4) {
+        if (attempts < 3) {
           window.setTimeout(() => {
             if (button.isConnected && button.dataset.needsPortrait === '1') {
               enrichRenderedPortraits(container, buttonSelector, portraitSelector, 1);
             }
-          }, 900 + (attempts * 850));
+          }, 1200 + attempts * 900);
         } else {
-          // Keep the initials fallback visible. A later search/render can retry
-          // instead of permanently marking a temporarily slow image as missing.
           button.dataset.needsPortrait = '0';
         }
       }
-    }
-  };
-  Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, worker)).catch(() => null);
+    };
+    await Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, worker));
+  })().catch(() => null);
 }
 
 function playerCard(item, player) {
@@ -674,7 +735,7 @@ function playerCard(item, player) {
     ? `<span class="fighter-alias-match"><span>${escapeHtml(t('knownNames'))}</span><b>${allAliases.slice(0, 10).map(escapeHtml).join(' · ')}</b></span>`
     : '';
   return `<button class="fighter-card" data-player-id="${Number(player.id)}" data-needs-portrait="${mainLegend ? '0' : '1'}">
-    ${portraitMarkup(mainLegend || { name: player.username }, 'fighter-portrait')}
+    ${mainLegend ? portraitMarkup(mainLegend, 'fighter-portrait') : portraitMarkup(null, 'fighter-portrait', { fallbackName: player.username, localCandidates: false })}
     <span class="fighter-data">
       <span class="fighter-top"><span>${escapeHtml(item.region || '—')}</span><span>BH ${Number(player.id)}</span></span>
       <h3>${escapeHtml(player.username || 'Unknown')}</h3>
@@ -1399,7 +1460,7 @@ function leaderboardPerson(player, region) {
   const readableRegion = regionLabel(region);
   const regionCode = String(region || '—').toUpperCase();
   const regionTitle = readableRegion && readableRegion !== regionCode ? `${readableRegion} · ${regionCode}` : regionCode;
-  return `<div class="leader-person">${portraitMarkup(main || { name: player.username }, 'row-portrait')}<button data-leader-id="${Number(player.id)}"><span class="leader-name-line"><strong>${escapeHtml(player.username || 'Unknown')}</strong></span><span class="leader-meta-line"><small class="leader-legend-meta">${escapeHtml(main ? main.name : 'Brawlhalla')}</small><span class="leader-region-chip" title="${escapeHtml(regionTitle)}">${escapeHtml(regionCode)}</span></span></button></div>`;
+  return `<div class="leader-person" data-player-id="${Number(player.id)}" data-needs-portrait="${main ? '0' : '1'}">${main ? portraitMarkup(main, 'row-portrait') : portraitMarkup(null, 'row-portrait', { fallbackName: player.username, localCandidates: false })}<button data-leader-id="${Number(player.id)}"><span class="leader-name-line"><strong>${escapeHtml(player.username || 'Unknown')}</strong></span><span class="leader-meta-line"><small class="leader-legend-meta">${escapeHtml(main ? main.name : 'Brawlhalla')}</small><span class="leader-region-chip" title="${escapeHtml(regionTitle)}">${escapeHtml(regionCode)}</span></span></button></div>`;
 }
 
 function renderLeaderboardRows(rankings = [], options = {}) {
@@ -1442,6 +1503,7 @@ function renderLeaderboardRows(rankings = [], options = {}) {
   });
   setupPlayerPrefetch(els.leaderboard, '[data-leader-id]', 'leaderId');
   activateImageFallbacks();
+  enrichRenderedPortraits(els.leaderboard, '.leader-person[data-player-id]', '.row-portrait', 5);
   if (!append) {
     els.leaderboard.classList.remove('leaderboard-mode-enter');
     requestAnimationFrame(() => els.leaderboard.classList.add('leaderboard-mode-enter'));
@@ -1465,6 +1527,30 @@ function updateLeaderboardPagination({ query = '', page = 1, totalPages = 1, rec
   }
 }
 
+function leaderboardBrowserCacheKey(region, mode, page = 1) {
+  return `peakhalla-leaderboard:${region}:${mode}:${page}`;
+}
+
+function readLeaderboardBrowserCache(region, mode, page = 1) {
+  try {
+    const cached = JSON.parse(sessionStorage.getItem(leaderboardBrowserCacheKey(region, mode, page)) || 'null');
+    if (!cached?.rankings || Date.now() - Number(cached.savedAt || 0) > 5 * 60_000) return null;
+    return cached;
+  } catch {
+    return null;
+  }
+}
+
+function writeLeaderboardBrowserCache(region, mode, page, data) {
+  try {
+    sessionStorage.setItem(leaderboardBrowserCacheKey(region, mode, page), JSON.stringify({
+      savedAt: Date.now(),
+      rankings: data.rankings || [],
+      total_pages: Number(data.total_pages) || 0
+    }));
+  } catch {}
+}
+
 async function loadLeaderboard(options = {}) {
   const append = Boolean(options.append);
   const region = els.leaderboardRegion?.value || 'ALL';
@@ -1477,10 +1563,19 @@ async function loadLeaderboard(options = {}) {
     ? `${t('leaderboardSearchTitle')} · ${query} · ${regionLabel(region)}`
     : `${t('leaderboardPrefix')} ${regionLabel(region)}`;
 
+  let cachedBoard = null;
+  if (!append && query.length < 2) {
+    cachedBoard = readLeaderboardBrowserCache(region, mode, page);
+    if (cachedBoard) {
+      renderLeaderboardRows(cachedBoard.rankings || [], { append: false });
+      updateLeaderboardPagination({ query, page, totalPages: cachedBoard.total_pages || 0, received: (cachedBoard.rankings || []).length });
+    }
+  }
+
   if (!append) {
-    els.leaderboard.innerHTML = '<div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div>';
-    if (els.leaderboardLoadMore) els.leaderboardLoadMore.hidden = true;
-    if (els.leaderboardPageStatus) els.leaderboardPageStatus.textContent = '';
+    if (!cachedBoard) els.leaderboard.innerHTML = '<div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div>';
+    if (els.leaderboardLoadMore && !cachedBoard) els.leaderboardLoadMore.hidden = true;
+    if (els.leaderboardPageStatus && !cachedBoard) els.leaderboardPageStatus.textContent = '';
   } else {
     state.leaderboardLoadingMore = true;
     if (els.leaderboardLoadMore) {
@@ -1503,6 +1598,7 @@ async function loadLeaderboard(options = {}) {
     const rankings = data.rankings || [];
     renderLeaderboardRows(rankings, { append });
     updateLeaderboardPagination({ query, page, totalPages: Number(data.total_pages) || 0, received: rankings.length });
+    if (query.length < 2) writeLeaderboardBrowserCache(region, mode, page, data);
   } catch (error) {
     if (error.name === 'AbortError') return;
     if (!append) els.leaderboard.innerHTML = `<p class="empty-copy">${escapeHtml(t('friendlyProblem'))}</p>`;
@@ -2074,14 +2170,23 @@ function queueScanTime(timestamp) {
   return new Date(timestamp).toLocaleTimeString(state.language === 'ar' ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' });
 }
 
+function queueNextTime(timestamp) {
+  if (!timestamp) return '—';
+  const seconds = Math.max(0, Math.ceil((Number(timestamp) - Date.now()) / 1000));
+  if (seconds <= 1) return state.language === 'ar' ? 'الآن' : 'now';
+  if (seconds < 60) return state.language === 'ar' ? `خلال ${seconds} ث` : `in ${seconds}s`;
+  const minutes = Math.ceil(seconds / 60);
+  return state.language === 'ar' ? `خلال ${minutes} د` : `in ${minutes}m`;
+}
+
 function queueActivityChip(label, value, className = '') {
   return `<span class="queue-activity-chip ${className}"><small>${escapeHtml(label)}</small><b>${escapeHtml(value)}</b></span>`;
 }
 
 function queuePlayerLine(player) {
   const main = player.main_legend;
-  return `<button type="button" class="queue-live-player" data-queue-player-id="${Number(player.id) || ''}">
-    ${portraitMarkup(main || { name: player.username }, 'queue-live-portrait')}
+  return `<button type="button" class="queue-live-player" data-queue-player-id="${Number(player.id) || ''}" data-player-id="${Number(player.id) || ''}" data-needs-portrait="${main ? '0' : '1'}">
+    ${main ? portraitMarkup(main, 'queue-live-portrait') : portraitMarkup(null, 'queue-live-portrait', { fallbackName: player.username, localCandidates: false })}
     <span><strong>${escapeHtml(player.username || 'Unknown')}</strong><small>${escapeHtml(main?.name || t('unknownLegend'))}</small></span>
   </button>`;
 }
@@ -2111,6 +2216,34 @@ function queueEntryCard(entry, index) {
   </article>`;
 }
 
+function queueBrowserCacheKey(region = state.queueRegion, mode = state.queueMode) {
+  return `peakhalla-queue:${region}:${mode}`;
+}
+
+function readQueueBrowserCache(region = state.queueRegion, mode = state.queueMode) {
+  try {
+    const cached = JSON.parse(localStorage.getItem(queueBrowserCacheKey(region, mode)) || 'null');
+    if (!cached?.data || Date.now() - Number(cached.savedAt || 0) > 15 * 60_000) return null;
+    return cached.data;
+  } catch {
+    return null;
+  }
+}
+
+function writeQueueBrowserCache(data) {
+  try {
+    localStorage.setItem(queueBrowserCacheKey(data.region, data.mode), JSON.stringify({ savedAt: Date.now(), data }));
+  } catch {}
+}
+
+function scheduleQueuePoll(data = state.queueData) {
+  window.clearTimeout(state.queueTimer);
+  if (!isLiveQueuePage) return;
+  const fast = !data || data.scan_in_progress || data.status === 'warming' || data.status === 'scanning';
+  const delay = document.hidden ? 30_000 : (fast ? 4_000 : 15_000);
+  state.queueTimer = window.setTimeout(() => loadLiveQueue({ silent: true }), delay);
+}
+
 function renderLiveQueue(data) {
   state.queueData = data;
   state.queueMode = data.mode || state.queueMode;
@@ -2122,6 +2255,7 @@ function renderLiveQueue(data) {
   if (els.queueScanMeta) {
     const pieces = [`${number(data.tracked_count || 0)} ${t('queueTrackedTop')}`];
     if (data.last_scan_at) pieces.push(`${t('queueLastScan')}: ${queueScanTime(data.last_scan_at)}`);
+    if (data.next_scan_at) pieces.push(`${t('queueNextScan')}: ${queueNextTime(data.next_scan_at)}`);
     els.queueScanMeta.textContent = pieces.join(' · ');
   }
   if (els.queueStatus) {
@@ -2145,7 +2279,10 @@ function renderLiveQueue(data) {
       if (id) navigateToPlayer(id);
     }));
     activateImageFallbacks();
+    enrichRenderedPortraits(els.queueList, '.queue-live-player[data-player-id]', '.queue-live-portrait', 4);
   }
+  if (!data.__fromBrowserCache) writeQueueBrowserCache(data);
+  scheduleQueuePoll(data);
 }
 
 async function loadLiveQueue(options = {}) {
@@ -2153,8 +2290,8 @@ async function loadLiveQueue(options = {}) {
   const silent = Boolean(options.silent);
   state.queueController?.abort();
   state.queueController = new AbortController();
-  if (!silent) {
-    els.queueList.innerHTML = '<div class="queue-live-loading"><span></span><strong>Scanning top 500…</strong></div>';
+  if (!silent && !state.queueData) {
+    els.queueList.innerHTML = `<div class="queue-live-loading"><span></span><strong>${escapeHtml(t('queueWarming'))}</strong></div>`;
   }
   const params = new URLSearchParams({ region: state.queueRegion, mode: state.queueMode });
   try {
@@ -2167,6 +2304,7 @@ async function loadLiveQueue(options = {}) {
     if (!silent || !state.queueData) {
       els.queueList.innerHTML = `<div class="queue-live-empty"><span>!</span><strong>${escapeHtml(t('queueError'))}</strong></div>`;
     }
+    scheduleQueuePoll(state.queueData);
   }
 }
 
@@ -2195,9 +2333,9 @@ function setupLiveQueuePage() {
     els.queueRegion._motionSync?.();
   }
   setLiveQueueMode(state.queueMode, { skipLoad: true });
-  loadLiveQueue();
-  window.clearInterval(state.queueTimer);
-  state.queueTimer = window.setInterval(() => loadLiveQueue({ silent: true }), 30_000);
+  const cachedQueue = readQueueBrowserCache(state.queueRegion, state.queueMode);
+  if (cachedQueue) renderLiveQueue({ ...cachedQueue, status: cachedQueue.status || 'stale', __fromBrowserCache: true });
+  loadLiveQueue({ silent: Boolean(cachedQueue) });
 }
 
 
@@ -2480,7 +2618,7 @@ function renderSuggestions(rankings = [], query = '') {
     els.suggestions.innerHTML = `<div class="suggestion-empty">${escapeHtml(t('noSearchResults'))}</div>`;
   } else {
     els.suggestions.innerHTML = state.suggestionItems.map((item, index) => `<button type="button" class="search-suggestion" role="option" data-suggestion-index="${index}" data-player-id="${Number(item.id)}" data-player-region="${escapeHtml(item.region)}" data-needs-portrait="${item.main_legend ? '0' : '1'}">
-      ${portraitMarkup(item.main_legend || { name: item.name }, 'suggestion-portrait')}
+      ${item.main_legend ? portraitMarkup(item.main_legend, 'suggestion-portrait') : portraitMarkup(null, 'suggestion-portrait', { fallbackName: item.name, localCandidates: false })}
       <span class="suggestion-copy"><strong>${escapeHtml(item.name)}</strong><small>${item.matched_alias && normalize(item.matched_alias) !== normalize(item.name) ? `${escapeHtml(t('oldNameMatch'))}: ${escapeHtml(item.matched_alias)}` : `${escapeHtml(item.main_legend?.name || t('unknownLegend'))} · ${escapeHtml(item.region)}`}</small></span>
       <span class="suggestion-meta"><b>${number(item.elo)}</b><small>${Number.isFinite(Number(item.elo)) ? 'ELO' : 'PROFILE'}</small></span>
     </button>`).join('');
@@ -2922,6 +3060,7 @@ window.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
   resetBrowserNavigationState();
   activateImageFallbacks();
+  if (isLiveQueuePage) loadLiveQueue({ silent: true }).catch(() => null);
   const playerId = state.currentPlayer?.player?.brawlhalla_id;
   const fetchedAt = new Date(state.currentPlayer?.player?.updated_at || 0).getTime();
   if (playerId && (!Number.isFinite(fetchedAt) || Date.now() - fetchedAt > 60_000)) {

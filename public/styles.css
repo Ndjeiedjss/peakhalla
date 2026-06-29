@@ -3824,3 +3824,22 @@ body.arena-account-active .arena-global-profile strong {
   }
 }
 
+
+
+/* PeakHalla v7.67 — instant portrait fallbacks and faster queue feedback */
+.leader-person[data-needs-portrait="1"] .legend-image-shell,
+.queue-live-player[data-needs-portrait="1"] .legend-image-shell,
+.fighter-card[data-needs-portrait="1"] .legend-image-shell,
+.search-suggestion[data-needs-portrait="1"] .legend-image-shell {
+  background: radial-gradient(circle at 50% 24%, rgba(var(--accent-2-rgb), .22), rgba(var(--portrait-card-rgb), 1) 70%);
+}
+.legend-image-shell.is-fallback .legend-fallback {
+  color: var(--accent-2);
+  opacity: .95;
+}
+.queue-live-loading { min-height: 240px; }
+.queue-live-loading strong { animation: queueLoadingPulse 1.1s ease-in-out infinite alternate; }
+@keyframes queueLoadingPulse { from { opacity: .58; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .queue-live-loading strong { animation: none; }
+}
