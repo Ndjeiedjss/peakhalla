@@ -1288,7 +1288,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await limitedFetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.66'
+          'User-Agent': 'PeakHalla/7.67'
         },
         signal: controller.signal
       });
@@ -1330,7 +1330,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.66'
+        'User-Agent': 'PeakHalla/7.67'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -1412,7 +1412,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             ...(attempt.body ? { 'Content-Type': 'application/json' } : {}),
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.66'
+            'User-Agent': 'PeakHalla/7.67'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -2150,7 +2150,7 @@ async function fetchLegendArtwork(name) {
       const response = await limitedFetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.66',
+          'User-Agent': 'PeakHalla/7.67',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -2189,7 +2189,7 @@ async function fetchOfficialLegendImage(name) {
     const pageResponse = await limitedFetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.66'
+        'User-Agent': 'PeakHalla/7.67'
       },
       signal: pageController.signal
     });
@@ -2210,7 +2210,7 @@ async function fetchOfficialLegendImage(name) {
       headers: {
         Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
         Referer: 'https://www.brawlhalla.com/',
-        'User-Agent': 'PeakHalla/7.66'
+        'User-Agent': 'PeakHalla/7.67'
       },
       signal: imageController.signal
     });
@@ -2931,6 +2931,11 @@ async function getMainLegendSummary(playerId) {
       )[0];
     const summary = makeLegendSummary(mainStats, legendMap.get(Number(mainStats?.legend_id)));
     setGeneralCache(cacheKey, { value: summary || null, expiresAt: now + (summary ? 10 * 60_000 : 60_000) });
+    if (summary && dbReady) {
+      dbQuery(`UPDATE players SET main_legend = $2::jsonb, last_seen = NOW() WHERE brawlhalla_id = $1`, [
+        Number(playerId), JSON.stringify(summary)
+      ]).catch(() => null);
+    }
     return summary || null;
   } catch {
     return null;
@@ -3106,6 +3111,51 @@ async function findAliasMatches(query, limit = 8) {
     .slice(0, limit);
 }
 
+async function getCachedMainLegendMap(playerIds = []) {
+  const ids = [...new Set(playerIds.map(Number).filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, 100);
+  const result = new Map();
+
+  for (const id of ids) {
+    const memoryLegend = getGeneralCache(`main-legend:${id}`)?.value
+      || getCachedProfileResponse(id)?.player?.main_legend
+      || null;
+    if (memoryLegend) result.set(id, memoryLegend);
+  }
+
+  let missing = ids.filter((id) => !result.has(id));
+  if (dbReady && missing.length) {
+    const rows = await dbQuery(`
+      SELECT brawlhalla_id, main_legend
+      FROM players
+      WHERE brawlhalla_id = ANY($1::bigint[])
+        AND main_legend IS NOT NULL
+    `, [missing]).then((query) => query?.rows || []).catch(() => []);
+    for (const row of rows) {
+      const id = Number(row.brawlhalla_id);
+      if (id && row.main_legend) {
+        result.set(id, row.main_legend);
+        setGeneralCache(`main-legend:${id}`, { value: row.main_legend, expiresAt: Date.now() + 10 * 60_000 });
+      }
+    }
+  } else if (missing.length) {
+    const disk = await readJson(PROFILE_CACHE_FILE, {}).catch(() => ({}));
+    for (const id of missing) {
+      const legend = disk[String(id)]?.value?.player?.main_legend || null;
+      if (legend) result.set(id, legend);
+    }
+  }
+
+  return result;
+}
+
+function warmMissingMainLegends(playerIds = [], limit = 12) {
+  const ids = [...new Set(playerIds.map(Number).filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, limit);
+  if (!ids.length) return;
+  setImmediate(() => {
+    mapWithConcurrency(ids, 2, async (id) => getMainLegendSummary(id).catch(() => null)).catch(() => null);
+  });
+}
+
 async function hydrateRankingPlayers(rankings, source, options = {}) {
   const includeLegends = options.includeLegends !== false;
   const playerRefs = [];
@@ -3115,18 +3165,14 @@ async function hydrateRankingPlayers(rankings, source, options = {}) {
     }
   }
 
-  await storeObservedNamesBatch(playerRefs, source);
-  const namesDb = await readJson(NAMES_FILE, {});
-  const legendById = new Map();
-  if (includeLegends) {
-    const uniqueIds = [...new Set(playerRefs.map((player) => Number(player.id)).filter(Boolean))];
-    const timeoutMs = Number(options.legendTimeoutMs || 900);
-    const concurrency = Number(options.legendConcurrency || 8);
-    const legendPairs = await mapWithConcurrency(uniqueIds, concurrency, async (id) => [
-      id,
-      await settleWithin(getMainLegendSummary(id), timeoutMs, null)
-    ]);
-    for (const pair of legendPairs) legendById.set(pair[0], pair[1]);
+  const namesTask = storeObservedNamesBatch(playerRefs, source);
+  if (source === 'leaderboard' || source === 'suggestion') namesTask.catch(() => null);
+  else await namesTask;
+  const namesDb = source === 'leaderboard' ? {} : await readJson(NAMES_FILE, {});
+  const uniqueIds = [...new Set(playerRefs.map((player) => Number(player.id)).filter(Boolean))];
+  const legendById = includeLegends ? await getCachedMainLegendMap(uniqueIds) : new Map();
+  if (includeLegends && options.warmMissingLegends !== false) {
+    warmMissingMainLegends(uniqueIds.filter((id) => !legendById.has(id)), 8);
   }
 
   return rankings.map((ranking) => ({
@@ -3986,7 +4032,7 @@ const QUEUE_REGIONS = ['US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPN', 'SA', '
 const QUEUE_MODES = ['1v1', '2v2', '3v3'];
 const QUEUE_TOP_LIMIT = 500;
 const QUEUE_ACTIVITY_WINDOW_MS = 10 * 60_000;
-const QUEUE_SCAN_INTERVAL_MS = 90_000;
+const QUEUE_SCAN_INTERVAL_MS = 60_000;
 const QUEUE_TRACKER_IDLE_MS = 30 * 60_000;
 
 function queueComboKey(region, mode) {
@@ -4039,9 +4085,10 @@ async function fetchQueueLeaderboard(region, mode) {
   };
 
   const first = await apiFetchFresh(makeEndpoint(1));
-  const totalPages = Math.min(10, Math.max(1, Number(first?.total_pages || 1)));
+  const wantedPages = Math.ceil(QUEUE_TOP_LIMIT / 50);
+  const totalPages = Math.min(wantedPages, Math.max(1, Number(first?.total_pages || 1)));
   const pages = totalPages > 1
-    ? await mapWithConcurrency(Array.from({ length: totalPages - 1 }, (_, index) => index + 2), 3, async (page) => apiFetchFresh(makeEndpoint(page)))
+    ? await mapWithConcurrency(Array.from({ length: totalPages - 1 }, (_, index) => index + 2), 4, async (page) => apiFetchFresh(makeEndpoint(page)))
     : [];
   return [first, ...pages]
     .flatMap((page) => page?.rankings || [])
@@ -4051,8 +4098,15 @@ async function fetchQueueLeaderboard(region, mode) {
 }
 
 async function loadPersistedQueueTracker(region, mode) {
-  const data = await readJson(QUEUE_ACTIVITY_FILE, {});
-  const stored = data[queueComboKey(region, mode)] || {};
+  const key = queueComboKey(region, mode);
+  let stored = null;
+  if (dbReady) {
+    stored = await getDatabaseState(`queue-tracker:${key}`, null).catch(() => null);
+  }
+  if (!stored) {
+    const data = await readJson(QUEUE_ACTIVITY_FILE, {});
+    stored = data[key] || {};
+  }
   return {
     snapshot: new Map((stored.snapshot || []).map((entry) => [entry.key, entry])),
     activity: new Map((stored.activity || []).map((entry) => [entry.key, entry])),
@@ -4066,6 +4120,10 @@ async function persistQueueTracker(tracker) {
     activity: [...tracker.activity.values()],
     last_scan_at: tracker.last_scan_at
   };
+  if (dbReady) {
+    await setDatabaseState(`queue-tracker:${tracker.key}`, payload);
+    return;
+  }
   await updateJson(QUEUE_ACTIVITY_FILE, {}, (all) => {
     all[tracker.key] = payload;
     return payload;
@@ -4117,7 +4175,7 @@ async function scanQueueTracker(tracker) {
       }
       tracker.snapshot = currentSnapshot;
       tracker.last_scan_at = now;
-      tracker.refresh_delay_ms = hadBaseline ? QUEUE_SCAN_INTERVAL_MS : 30_000;
+      tracker.refresh_delay_ms = hadBaseline ? QUEUE_SCAN_INTERVAL_MS : 15_000;
       tracker.next_scan_at = now + tracker.refresh_delay_ms;
       tracker.status = 'ready';
       await persistQueueTracker(tracker);
@@ -4166,14 +4224,20 @@ async function ensureQueueTracker(region, mode) {
   const now = Date.now();
   const scanAge = tracker.last_scan_at ? now - tracker.last_scan_at : Infinity;
   const scanDue = !tracker.last_scan_at || (tracker.next_scan_at ? now >= tracker.next_scan_at : scanAge > QUEUE_SCAN_INTERVAL_MS);
-  if (!tracker.scanPromise && scanDue) await scanQueueTracker(tracker);
+  if (!tracker.scanPromise && scanDue) {
+    // Serve the last known snapshot immediately and refresh in the background.
+    // Waiting for several leaderboard pages here made the Queue page appear frozen.
+    scanQueueTracker(tracker).catch(() => null);
+  }
   return tracker;
 }
 
 async function hydrateQueueActivity(entries) {
   const playerIds = [...new Set(entries.flatMap((entry) => (entry.players || []).map((player) => Number(player.id)).filter(Boolean)))];
-  const legendPairs = await mapWithConcurrency(playerIds, 6, async (id) => [id, await getMainLegendSummary(id)]);
-  const legendById = new Map(legendPairs);
+  // Queue responses must stay instant. Use only already-cached portraits here;
+  // missing ones are hydrated by the browser through the portrait batch API.
+  const legendById = await getCachedMainLegendMap(playerIds);
+  warmMissingMainLegends(playerIds.filter((id) => !legendById.has(id)), 8);
   return entries.map((entry) => ({
     ...entry,
     players: (entry.players || []).map((player) => ({
@@ -4533,7 +4597,8 @@ app.get('/api/leaderboard', async (req, res, next) => {
     });
 
     const data = await apiFetch(`/leaderboard/ranked?${params}`);
-    const rankings = await hydrateRankingPlayers(data?.rankings || [], 'leaderboard');
+    const rankings = await hydrateRankingPlayers(data?.rankings || [], 'leaderboard', { warmMissingLegends: true });
+    res.setHeader('Cache-Control', 'private, max-age=15, stale-while-revalidate=60');
     res.json({ ...data, rankings });
   } catch (error) {
     next(error);
@@ -4554,6 +4619,7 @@ app.get('/api/queue/activity', async (req, res, next) => {
       .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0) || Number(a.rank || Infinity) - Number(b.rank || Infinity) || Number(b.last_activity_at || 0) - Number(a.last_activity_at || 0))
       .slice(0, 80);
     const players = await hydrateQueueActivity(rawPlayers);
+    res.setHeader('Cache-Control', 'no-store');
     res.json({
       region,
       mode,
@@ -4565,6 +4631,7 @@ app.get('/api/queue/activity', async (req, res, next) => {
       active_count: players.length,
       last_scan_at: tracker.last_scan_at,
       next_scan_at: tracker.next_scan_at,
+      scan_in_progress: Boolean(tracker.scanPromise),
       warming_up: tracker.snapshot.size > 0 && !tracker.last_scan_at ? true : (!tracker.last_scan_at || (tracker.snapshot.size > 0 && tracker.activity.size === 0 && tracker.status === 'warming')),
       players
     });
@@ -5772,13 +5839,32 @@ async function verifyOfficialGlobalRank(playerId, rankedPayload, forceFresh = fa
   return rankedPayload;
 }
 
+app.get('/api/players/portraits', async (req, res, next) => {
+  try {
+    const ids = [...new Set(String(req.query.ids || '')
+      .split(',')
+      .map((value) => Number(value))
+      .filter((id) => Number.isSafeInteger(id) && id > 0))]
+      .slice(0, 80);
+    if (!ids.length) return res.json({ portraits: {} });
+    const legendById = await getCachedMainLegendMap(ids);
+    const portraits = Object.fromEntries(ids.map((id) => [String(id), legendById.get(id) || null]));
+    const missing = ids.filter((id) => !legendById.has(id));
+    if (String(req.query.warm || '1') !== '0') warmMissingMainLegends(missing, 12);
+    res.setHeader('Cache-Control', 'private, max-age=30, stale-while-revalidate=300');
+    res.json({ portraits, missing });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get('/api/player/:id/portrait', async (req, res, next) => {
   try {
     const id = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
     if (!id) return res.status(400).json({ error: 'Invalid player ID.' });
-    const cachedPlayer = getCachedProfileResponse(id)?.player || await getDiskCachedProfileResponse(id).then((payload) => payload?.player || null).catch(() => null);
-    const mainLegend = cachedPlayer?.main_legend || await settleWithin(getMainLegendSummary(id), 5_500, null);
-    res.setHeader('Cache-Control', mainLegend ? 'private, max-age=600, stale-while-revalidate=3600' : 'no-store');
+    const cachedLegend = (await getCachedMainLegendMap([id])).get(id) || null;
+    const mainLegend = cachedLegend || await settleWithin(getMainLegendSummary(id), 2_200, null);
+    res.setHeader('Cache-Control', mainLegend ? 'private, max-age=600, stale-while-revalidate=3600' : 'private, max-age=15');
     res.json({ player_id: id, main_legend: mainLegend || null });
   } catch (error) {
     next(error);
