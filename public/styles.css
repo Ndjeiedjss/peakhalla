@@ -52,6 +52,12 @@ html[data-theme="purple"] {
   --logo-white: #ffffff;
   --logo-base-line: #2a223b;
   --theme-meta: #0c0714;
+  --leader-rank-base: #70657e;
+  --leader-rank-1: #efe8ff;
+  --leader-rank-2: #d8c5ff;
+  --leader-rank-3: #b78cff;
+  --clan-rank-color: #c8adff;
+  --clan-xp-value: #e4d6ff;
   --shadow: 0 18px 50px rgba(0, 0, 0, .28);
   --radius: 16px;
   --body: "Inter", sans-serif;
@@ -111,6 +117,12 @@ html[data-theme="crimson"] {
   --logo-white: #ffffff;
   --logo-base-line: #432129;
   --theme-meta: #100609;
+  --leader-rank-base: #8f6670;
+  --leader-rank-1: #ffd7de;
+  --leader-rank-2: #ffb6c1;
+  --leader-rank-3: #ff88a0;
+  --clan-rank-color: #ff9caf;
+  --clan-xp-value: #ffe5ea;
 }
 
 html[data-theme="graphite"] {
@@ -166,6 +178,12 @@ html[data-theme="graphite"] {
   --logo-white: #ffffff;
   --logo-base-line: #39424e;
   --theme-meta: #0b0d10;
+  --leader-rank-base: #7b8694;
+  --leader-rank-1: #f1f5f9;
+  --leader-rank-2: #d8e1ec;
+  --leader-rank-3: #b7c4d3;
+  --clan-rank-color: #d7e0ea;
+  --clan-xp-value: #eff5fb;
 }
 
 html[data-theme="ice"] {
@@ -221,6 +239,12 @@ html[data-theme="ice"] {
   --logo-white: #ffffff;
   --logo-base-line: #20485e;
   --theme-meta: #061017;
+  --leader-rank-base: #6f8f9d;
+  --leader-rank-1: #e0f7ff;
+  --leader-rank-2: #bae6fd;
+  --leader-rank-3: #7dd3fc;
+  --clan-rank-color: #9adfff;
+  --clan-xp-value: #def6ff;
 }
 
 * { box-sizing: border-box; }
@@ -509,12 +533,12 @@ tr:last-child td { border-bottom: 0; }
 .leaderboard-list { overflow: hidden; }
 .leader-row { min-height: 96px; display: grid; grid-template-columns: 58px minmax(220px,1fr) 95px 95px minmax(168px, 1.05fr) 90px 110px; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
 .leader-row:last-child { border-bottom: 0; }
-.leader-rank { color: #70657e; display: grid; gap: 5px; align-content: center; font: 700 22px/1 var(--display); }
-.leader-rank small { color: #786b88; font: 800 7px/1 var(--sans); letter-spacing: .09em; text-transform: uppercase; }
+.leader-rank { color: var(--leader-rank-base); display: grid; gap: 5px; align-content: center; font: 700 22px/1 var(--display); }
+.leader-rank small { color: color-mix(in srgb, var(--leader-rank-base) 86%, white 14%); font: 800 7px/1 var(--sans); letter-spacing: .09em; text-transform: uppercase; }
 .leader-rank b { color: inherit; font: inherit; }
-.leader-row:nth-child(1) .leader-rank { color: var(--accent-pale); }
-.leader-row:nth-child(2) .leader-rank { color: #b8a6ca; }
-.leader-row:nth-child(3) .leader-rank { color: #a87bd7; }
+.leader-row:nth-child(1) .leader-rank { color: var(--leader-rank-1); }
+.leader-row:nth-child(2) .leader-rank { color: var(--leader-rank-2); }
+.leader-row:nth-child(3) .leader-rank { color: var(--leader-rank-3); }
 .leader-players { display: grid; gap: 6px; min-width: 0; }
 .leader-person { min-width: 0; display: flex; align-items: center; gap: 10px; }
 .row-portrait { width: 56px; height: 56px; }
@@ -2051,7 +2075,7 @@ html:not(.is-navigating) body.page-leaving {
   outline: 0;
 }
 .clan-rank {
-  color: #b99fff;
+  color: var(--clan-rank-color);
   font: 800 19px/1 var(--display);
 }
 .clan-card-copy { min-width: 0; display: grid; gap: 7px; }
@@ -2561,7 +2585,7 @@ body.clan-page-mode .site-header nav a[href="/#clans"] {
   background: radial-gradient(circle at 85% 0, rgba(var(--accent-2-rgb),.18), transparent 48%), rgba(var(--accent-rgb),.055);
 }
 .clan-card-xp small { color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.clan-card-xp b { color: #d8c9ff; font: 800 clamp(17px,2vw,24px)/1 var(--display); }
+.clan-card-xp b { color: var(--clan-xp-value); font: 800 clamp(17px,2vw,24px)/1 var(--display); }
 .clan-page-stats { grid-template-columns: repeat(3, minmax(0,1fr)); }
 .clan-page-stats article:first-child { border-color: rgba(var(--accent-rgb),.48); background: linear-gradient(145deg, rgba(var(--accent-rgb),.18), rgba(255,255,255,.025)); }
 .clan-role-step.leader small::after { content: ' max'; margin-inline-start: 4px; color: #8f819e; font-size: 7px; font-weight: 700; text-transform: uppercase; }
