@@ -126,16 +126,13 @@ async function limitedFetch(url, options = {}) {
   };
   try {
     const response = await globalThis.fetch(url, options);
-    const safetyTimer = setTimeout(() => {
-      try { response.body?.cancel?.(); } catch {}
-      release();
-    }, 30_000);
-    safetyTimer.unref?.();
+    // Do not call ReadableStream.cancel() from a timer. On Node 18/Undici this
+    // can race with a completed response and crash the whole process with
+    // ERR_INVALID_STATE: Controller is already closed.
     const consume = (method) => async (...args) => {
       try {
         return await response[method](...args);
       } finally {
-        clearTimeout(safetyTimer);
         release();
       }
     };
@@ -154,7 +151,9 @@ async function limitedFetch(url, options = {}) {
 }
 
 async function discardLimitedResponse(response) {
-  try { await response?.body?.cancel?.(); } catch {}
+  // Releasing the PeakHalla concurrency slot is enough. Explicitly cancelling
+  // an Undici response body is intentionally avoided because Node 18 can throw
+  // an asynchronous ERR_INVALID_STATE outside the request's try/catch.
   try { response?.__releaseExternalSlot?.(); } catch {}
 }
 
@@ -1289,7 +1288,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
       const response = await limitedFetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.64'
+          'User-Agent': 'PeakHalla/7.66'
         },
         signal: controller.signal
       });
@@ -1331,7 +1330,7 @@ async function apiFetchFresh(endpoint) {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.64'
+        'User-Agent': 'PeakHalla/7.66'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -1413,7 +1412,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             ...(attempt.body ? { 'Content-Type': 'application/json' } : {}),
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.64'
+            'User-Agent': 'PeakHalla/7.66'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -2151,7 +2150,7 @@ async function fetchLegendArtwork(name) {
       const response = await limitedFetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.64',
+          'User-Agent': 'PeakHalla/7.66',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
@@ -2181,29 +2180,39 @@ async function fetchOfficialLegendImage(name) {
   const cached = getImageMemoryCache(slug);
   if (cached) return cached;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12_000);
+  // Each fetch gets its own AbortController. Reusing one signal for the HTML
+  // request and the image request can abort an already-closed Undici stream.
+  const pageController = new AbortController();
+  const pageTimeout = setTimeout(() => pageController.abort(), 7_000);
+  let splashUrl = null;
   try {
     const pageResponse = await limitedFetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.64'
+        'User-Agent': 'PeakHalla/7.66'
       },
-      signal: controller.signal
+      signal: pageController.signal
     });
     if (!pageResponse.ok) { await discardLimitedResponse(pageResponse); return null; }
     const html = await pageResponse.text();
     const candidates = [...html.matchAll(/https:\/\/cms\.brawlhalla\.com\/c\/uploads\/[^"'<>\s]+\.(?:png|webp|jpe?g)/gi)]
       .map((match) => match[0].replace(/&amp;/g, '&'));
-    const splashUrl = candidates.find((url) => /splash/i.test(url)) || candidates[0];
-    if (!splashUrl) return null;
+    splashUrl = candidates.find((url) => /splash/i.test(url)) || candidates[0] || null;
+  } finally {
+    clearTimeout(pageTimeout);
+  }
+  if (!splashUrl) return null;
 
+  const imageController = new AbortController();
+  const imageTimeout = setTimeout(() => imageController.abort(), 10_000);
+  try {
     const imageResponse = await limitedFetch(splashUrl, {
       headers: {
         Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-        Referer: 'https://www.brawlhalla.com/'
+        Referer: 'https://www.brawlhalla.com/',
+        'User-Agent': 'PeakHalla/7.66'
       },
-      signal: controller.signal
+      signal: imageController.signal
     });
     if (!imageResponse.ok) { await discardLimitedResponse(imageResponse); return null; }
     const contentType = imageResponse.headers.get('content-type') || 'image/png';
@@ -2214,7 +2223,7 @@ async function fetchOfficialLegendImage(name) {
   } catch {
     return null;
   } finally {
-    clearTimeout(timeout);
+    clearTimeout(imageTimeout);
   }
 }
 
@@ -6227,6 +6236,26 @@ async function startServer() {
     console.log(`PeakHalla running on http://localhost:${PORT}`);
   });
 }
+
+process.on('uncaughtException', (error) => {
+  const message = String(error?.message || '');
+  if (error?.code === 'ERR_INVALID_STATE' && /Controller is already closed/i.test(message)) {
+    console.warn('PeakHalla recovered from a Node 18 fetch stream race:', message);
+    return;
+  }
+  console.error('PeakHalla uncaught exception:', error);
+  process.exitCode = 1;
+  setTimeout(() => process.exit(1), 250).unref?.();
+});
+
+process.on('unhandledRejection', (error) => {
+  const message = String(error?.message || error || '');
+  if (error?.code === 'ERR_INVALID_STATE' && /Controller is already closed/i.test(message)) {
+    console.warn('PeakHalla recovered from a Node 18 fetch rejection:', message);
+    return;
+  }
+  console.error('PeakHalla unhandled rejection:', error);
+});
 
 async function shutdown() {
   if (discoveryTimer) clearTimeout(discoveryTimer);
