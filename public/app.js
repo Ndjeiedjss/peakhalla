@@ -70,6 +70,7 @@ const state = { language: localStorage.getItem('nad-bh-language') || 'en', curre
 
 
 const PEAKHALLA_THEME_KEY = 'peakhalla-theme';
+const PEAKHALLA_THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 const PEAKHALLA_THEMES = {
   purple: { meta: '#0c0714', en: ['Royal Purple', 'Original PeakHalla'], ar: ['بنفسجي ملكي', 'ستايل PeakHalla الأصلي'] },
   crimson: { meta: '#100609', en: ['Dark Crimson', 'Deep red glow'], ar: ['أحمر غامق', 'توهج أحمر عميق'] },
@@ -77,9 +78,30 @@ const PEAKHALLA_THEMES = {
   ice: { meta: '#061017', en: ['Ice Blue', 'Cool light blue'], ar: ['أزرق فاتح', 'أزرق جليدي هادئ'] }
 };
 let themeTransitionTimer = null;
-function currentTheme() {
-  const value = document.documentElement.dataset.theme || 'purple';
+function normalizedTheme(value) {
   return PEAKHALLA_THEMES[value] ? value : 'purple';
+}
+function readThemeCookie() {
+  const prefix = `${PEAKHALLA_THEME_KEY}=`;
+  const item = document.cookie.split(';').map((part) => part.trim()).find((part) => part.startsWith(prefix));
+  if (!item) return '';
+  try { return decodeURIComponent(item.slice(prefix.length)); } catch (_) { return item.slice(prefix.length); }
+}
+function readStoredTheme() {
+  let value = '';
+  try { value = localStorage.getItem(PEAKHALLA_THEME_KEY) || ''; } catch (_) {}
+  if (!PEAKHALLA_THEMES[value]) value = readThemeCookie();
+  return normalizedTheme(value);
+}
+function persistSiteTheme(theme) {
+  const value = normalizedTheme(theme);
+  try { localStorage.setItem(PEAKHALLA_THEME_KEY, value); } catch (_) {}
+  const secure = location.protocol === 'https:' ? '; Secure' : '';
+  const sharedDomain = /(^|\.)peakhalla\.com$/i.test(location.hostname) ? '; Domain=.peakhalla.com' : '';
+  document.cookie = `${PEAKHALLA_THEME_KEY}=${encodeURIComponent(value)}; Path=/; Max-Age=${PEAKHALLA_THEME_COOKIE_MAX_AGE}; SameSite=Lax${secure}${sharedDomain}`;
+}
+function currentTheme() {
+  return normalizedTheme(document.documentElement.dataset.theme || readStoredTheme());
 }
 function syncThemePickerLanguage() {
   const picker = document.getElementById('theme-picker');
@@ -116,9 +138,7 @@ function applySiteTheme(theme, { persist = true, animate = true } = {}) {
     button.classList.toggle('selected', selected);
     button.setAttribute('aria-pressed', String(selected));
   });
-  if (persist) {
-    try { localStorage.setItem(PEAKHALLA_THEME_KEY, next); } catch (_) {}
-  }
+  if (persist) persistSiteTheme(next);
   window.dispatchEvent(new CustomEvent('peakhalla-theme-changed', { detail: { theme: next } }));
 }
 function setupThemePicker() {
@@ -148,7 +168,10 @@ function setupThemePicker() {
   });
   document.addEventListener('click', (event) => { if (!picker.contains(event.target)) close(); });
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
-  applySiteTheme(currentTheme(), { persist: false, animate: false });
+  applySiteTheme(readStoredTheme(), { persist: false, animate: false });
+  window.addEventListener('storage', (event) => {
+    if (event.key === PEAKHALLA_THEME_KEY) applySiteTheme(normalizedTheme(event.newValue), { persist: false, animate: true });
+  });
   syncThemePickerLanguage();
 }
 const playerPathMatch = location.pathname.match(/^\/player\/(\d+)\/?$/);
@@ -228,7 +251,7 @@ function applyLanguage() {
   if (state.esportsCareer && !els.careerModal.hidden) renderCareer(state.esportsCareer);
 }
 
-const LEGEND_ASSET_VERSION = '7.57.0';
+const LEGEND_ASSET_VERSION = '7.58.0';
 
 function legendAssetSlug(name = '') {
   return String(name || '')

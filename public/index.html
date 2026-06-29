@@ -17,12 +17,23 @@
   <meta name="theme-color" content="#0c0714">
   <script>
     (() => {
+      const key = 'peakhalla-theme';
       const themes = new Set(['purple', 'crimson', 'graphite', 'ice']);
-      let selected = 'purple';
-      try { selected = localStorage.getItem('peakhalla-theme') || 'purple'; } catch (_) {}
+      let selected = '';
+      try { selected = localStorage.getItem(key) || ''; } catch (_) {}
+      if (!themes.has(selected)) {
+        const prefix = `${key}=`;
+        const cookie = document.cookie.split(';').map((part) => part.trim()).find((part) => part.startsWith(prefix));
+        if (cookie) {
+          try { selected = decodeURIComponent(cookie.slice(prefix.length)); } catch (_) { selected = cookie.slice(prefix.length); }
+        }
+      }
       if (!themes.has(selected)) selected = 'purple';
       document.documentElement.dataset.theme = selected;
       document.documentElement.style.colorScheme = 'dark';
+      const meta = document.querySelector('meta[name="theme-color"]');
+      const colors = { purple: '#0c0714', crimson: '#100609', graphite: '#0b0d10', ice: '#061017' };
+      if (meta) meta.content = colors[selected];
     })();
   </script>
   <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
@@ -80,8 +91,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="/styles.css?v=7.57.0" as="style">
-  <link rel="stylesheet" href="/styles.css?v=7.57.0">
+  <link rel="preload" href="/styles.css?v=7.58.0" as="style">
+  <link rel="stylesheet" href="/styles.css?v=7.58.0">
 </head>
 <body>
   <header class="site-header">
@@ -703,8 +714,8 @@
       </a>
     </div>
   </footer>
-  <script src="/app.js?v=7.57.0" defer></script>
-  <script src="/arena-v72.js?v=7.57.0" defer></script>
-  <script src="/arena-account.js?v=7.57.0" defer></script>
+  <script src="/app.js?v=7.58.0" defer></script>
+  <script src="/arena-v72.js?v=7.58.0" defer></script>
+  <script src="/arena-account.js?v=7.58.0" defer></script>
 </body>
 </html>
