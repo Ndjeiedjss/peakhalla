@@ -8,6 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const PRIMARY_HOST = 'peakhalla.com';
 const LEGACY_HOSTS = new Set([
+  'www.peakhalla.com',
   'peakhalla-tracker-production.up.railway.app'
 ]);
 const API_BASE = process.env.BRAWLHALLA_API_BASE || 'https://api.brawlhalla.com/v1';
@@ -386,7 +387,7 @@ async function saveProfileToDatabase(playerId, payload) {
       account_level = GREATEST(COALESCE(players.account_level, 0), COALESCE(EXCLUDED.account_level, 0)),
       account_xp = GREATEST(COALESCE(players.account_xp, 0), COALESCE(EXCLUDED.account_xp, 0)),
       main_legend = COALESCE(EXCLUDED.main_legend, players.main_legend),
-      guild = COALESCE(EXCLUDED.guild, players.guild),
+      guild = EXCLUDED.guild,
       profile_payload = EXCLUDED.profile_payload,
       last_seen = NOW(),
       last_fetched = EXCLUDED.last_fetched
@@ -1021,6 +1022,9 @@ async function apiFetchFresh(endpoint) {
       error.status = response.status;
       throw error;
     }
+    // Keep the normal cache synchronized with the verified response so a fast
+    // request that follows does not resurrect older player or clan data.
+    cache.set(endpoint, { value: body, expiresAt: Date.now() + 30_000 });
     return body;
   } finally {
     clearTimeout(timeout);
@@ -2071,8 +2075,9 @@ function mergeCurrentGuildRoster(currentMembers = [], officialMembers = []) {
   }));
 }
 
-async function getPlayerGuild(playerId, ttlMs = 10 * 60_000) {
-  const payload = await apiFetch(`/player/guild?brawlhalla_id=${encodeURIComponent(playerId)}`, ttlMs).catch(() => null);
+async function getPlayerGuild(playerId, ttlMs = 10 * 60_000, forceFresh = false) {
+  const endpoint = `/player/guild?brawlhalla_id=${encodeURIComponent(playerId)}`;
+  const payload = await (forceFresh ? apiFetchFresh(endpoint) : apiFetch(endpoint, ttlMs)).catch(() => null);
   return normalizeGuildPlayer(payload);
 }
 
@@ -4199,6 +4204,8 @@ app.get('/api/arena/media/:id', async (req, res) => {
 });
 
 app.get('/api/arena/me', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
   const user = await wallCurrentUser(req);
   let unread = 0;
   if (user && dbReady) {
@@ -4312,6 +4319,7 @@ app.get('/api/arena/posts', async (req, res) => {
 });
 
 app.get('/api/arena/profiles/:username', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   const username = wallUsername(req.params.username);
   const [user, posts] = await Promise.all([wallFindUserByUsername(username), readJson(WALL_POSTS_FILE, [])]);
   if (!user) return res.status(404).json({ error: 'Profile not found.' });
@@ -5482,6 +5490,7 @@ app.get('/api/player/:id', async (req, res, next) => {
     const instant = String(req.query.instant || '') === '1' && !forceFresh;
     const live = String(req.query.live || '') === '1' && !forceFresh && !instant;
     const fast = String(req.query.fast || '') === '1' && !forceFresh && !live && !instant;
+    const freshOfficial = forceFresh || live;
     const cachedProfile = fast ? (getCachedProfileResponse(id) || await getDatabaseCachedProfileResponse(id) || await getDiskCachedProfileResponse(id)) : null;
     if (cachedProfile) {
       res.setHeader('X-Profile-Cache', 'hit');
@@ -5497,7 +5506,7 @@ app.get('/api/player/:id', async (req, res, next) => {
           Promise.resolve(null),
           Promise.resolve([]),
           localNamesSeedPromise,
-          settleWithin(getPlayerGuild(id, 5 * 60_000), 900, null)
+          settleWithin(getPlayerGuild(id, 20_000, true), 1_800, null)
         ]
       : fast
       ? [
@@ -5510,13 +5519,13 @@ app.get('/api/player/:id', async (req, res, next) => {
           settleWithin(getPlayerGuild(id, 10 * 60_000), 1200, null)
         ]
       : [
-          (forceFresh ? apiFetchFresh(`/player/stats?brawlhalla_id=${id}&mode=all`) : apiFetch(`/player/stats?brawlhalla_id=${id}&mode=all`, 60_000)).catch(() => null),
-          (forceFresh ? apiFetchFresh(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`) : apiFetch(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`, 60_000)).catch(() => null),
+          (freshOfficial ? apiFetchFresh(`/player/stats?brawlhalla_id=${id}&mode=all`) : apiFetch(`/player/stats?brawlhalla_id=${id}&mode=all`, 60_000)).catch(() => null),
+          (freshOfficial ? apiFetchFresh(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`) : apiFetch(`/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`, 60_000)).catch(() => null),
           getLegendMap().catch(() => new Map()),
           getCorehallaPlayerStats(id, forceFresh).catch(() => null),
           getCorehallaPlayerAliases(id, forceFresh).catch(() => []),
           localNamesSeedPromise,
-          getPlayerGuild(id, 10 * 60_000).catch(() => null)
+          getPlayerGuild(id, 10 * 60_000, freshOfficial).catch(() => null)
         ];
     const [v1Lifetime, rankedResponse, legendMap, coreStats, coreAliases, localNamesSeed, playerGuild] = await Promise.all(fetches);
     const ranked = await settleWithin(
