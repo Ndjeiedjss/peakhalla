@@ -217,7 +217,7 @@
       ui.save.disabled = true;
       const data = await arenaRequest('/api/arena/profile', { method: 'PATCH', body: JSON.stringify({ bio: ui.bioInput.value.trim(), avatar_data: state.arenaProfileAvatarData, remove_avatar: state.arenaRemoveAvatar }) });
       state.arenaUser = data.user;
-      window.dispatchEvent(new CustomEvent('arena-account-changed'));
+      window.dispatchEvent(new CustomEvent('arena-account-changed', { detail: { user: data.user } }));
       state.arenaProfileAvatarData = null;
       state.arenaRemoveAvatar = false;
       window.renderArenaAccount();

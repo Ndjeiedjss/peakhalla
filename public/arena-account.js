@@ -28,8 +28,9 @@
 
   async function request(url, options = {}) {
     const response = await fetch(url, {
+      cache: 'no-store',
       ...options,
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(options.headers || {}) }
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'Cache-Control': 'no-cache', ...(options.headers || {}) }
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || 'Request failed.');
@@ -153,7 +154,7 @@
   logout.addEventListener('click', async () => {
     await request('/api/arena/logout', { method: 'POST', body: '{}' }).catch(() => null);
     renderAccount(null, 0);
-    window.dispatchEvent(new CustomEvent('arena-account-changed'));
+    window.dispatchEvent(new CustomEvent('arena-account-changed', { detail: { user: null, unread: 0 } }));
     if (/^\/arena(?:\/|$)/.test(location.pathname)) location.href = '/arena';
   });
   document.addEventListener('click', (event) => {
@@ -162,7 +163,14 @@
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') setPanel(false);
   });
-  window.addEventListener('arena-account-changed', loadMe);
+  window.addEventListener('arena-account-changed', (event) => {
+    const detail = event.detail || {};
+    if (Object.prototype.hasOwnProperty.call(detail, 'user')) {
+      renderAccount(detail.user || null, detail.unread || 0);
+    }
+    // Verify the cookie-backed session immediately without requiring a refresh.
+    window.setTimeout(loadMe, 0);
+  });
 
   function startPolling() {
     clearInterval(pollTimer);

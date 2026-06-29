@@ -454,14 +454,22 @@ function playerPayloadSignature(data = {}) {
   ]);
 }
 
-const PLAYER_BROWSER_CACHE_KEY = 'peakhalla-player-cache-v3';
-const PLAYER_BROWSER_CACHE_MAX_AGE_MS = 24 * 60 * 60_000;
+const PLAYER_BROWSER_CACHE_KEY = 'peakhalla-player-cache-v4';
+const PLAYER_BROWSER_CACHE_MAX_AGE_MS = 60 * 60_000;
 function readPlayerBrowserCache(id) {
   try {
     const all = JSON.parse(localStorage.getItem(PLAYER_BROWSER_CACHE_KEY) || '{}');
     const entry = all[String(id)];
-    if (!entry?.data || Date.now() - Number(entry.saved_at || 0) > PLAYER_BROWSER_CACHE_MAX_AGE_MS) return null;
-    return entry.data;
+    const age = Date.now() - Number(entry?.saved_at || 0);
+    if (!entry?.data || !Number.isFinite(age) || age > PLAYER_BROWSER_CACHE_MAX_AGE_MS) return null;
+    // Render cached stats instantly, but never trust cached clan membership.
+    // A player can leave a clan between visits, so the live profile request is
+    // the only source allowed to show the clan card.
+    const data = typeof structuredClone === 'function'
+      ? structuredClone(entry.data)
+      : JSON.parse(JSON.stringify(entry.data));
+    if (data?.player) data.player.guild = null;
+    return data;
   } catch { return null; }
 }
 
@@ -521,7 +529,7 @@ function makePlayerSeedPayload(item = {}, player = {}) {
       lifetime_totals: {},
       lifetime_legends: [],
       legends: [],
-      guild: player.guild || null,
+      guild: null,
       data_quality: { source: 'Instant search preview · live stats loading', corehalla_enriched: false, live_fetch: false },
       updated_at: new Date().toISOString()
     },
@@ -1185,7 +1193,8 @@ function mergeRankedPreview(data, preview) {
   if (!target.main_legend && source.main_legend) target.main_legend = source.main_legend;
   if (!(target.top_legends || []).length && (source.top_legends || []).length) target.top_legends = source.top_legends;
   if (!(target.main_weapons || []).length && (source.main_weapons || []).length) target.main_weapons = source.main_weapons;
-  if (!target.guild && source.guild) target.guild = source.guild;
+  // Guild membership is intentionally never restored from a cached preview.
+  // A fresh null means the player left the clan and must clear the old card.
   target.updated_at = target.updated_at || source.updated_at;
   return data;
 }
@@ -2066,8 +2075,14 @@ function setupLiveQueuePage() {
 
 async function arenaRequest(url, options = {}) {
   const response = await fetch(url, {
+    cache: 'no-store',
     ...options,
-    headers: { Accept: 'application/json', ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...(options.headers || {}) }
+    headers: {
+      Accept: 'application/json',
+      'Cache-Control': 'no-cache',
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(options.headers || {})
+    }
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error || t('arenaAuthError'));
@@ -2202,7 +2217,7 @@ async function submitArenaAuth(event) {
     const endpoint = state.arenaAuthMode === 'login' ? '/api/arena/login' : '/api/arena/register';
     const data = await arenaRequest(endpoint, { method: 'POST', body: JSON.stringify({ username, password }) });
     state.arenaUser = data.user;
-    window.dispatchEvent(new CustomEvent('arena-account-changed'));
+    window.dispatchEvent(new CustomEvent('arena-account-changed', { detail: { user: data.user, unread: data.unread_notifications || 0 } }));
     els.arenaAuthForm.reset();
     renderArenaAccount();
     setArenaFormStatus(els.arenaPostStatus, state.arenaAuthMode === 'login' ? t('arenaSignedIn') : t('arenaAccountReady'), 'success');
@@ -2665,7 +2680,7 @@ els.legendStatsSort?.addEventListener('change', renderLifetimeLegends);
 
 document.querySelectorAll('[data-arena-auth-mode]').forEach((button) => button.addEventListener('click', () => setArenaAuthMode(button.dataset.arenaAuthMode)));
 els.arenaAuthForm?.addEventListener('submit', submitArenaAuth);
-els.arenaLogout?.addEventListener('click', async () => { await arenaRequest('/api/arena/logout', { method: 'POST' }).catch(() => null); state.arenaUser = null; window.dispatchEvent(new CustomEvent('arena-account-changed')); renderArenaAccount(); renderArenaPosts(); });
+els.arenaLogout?.addEventListener('click', async () => { await arenaRequest('/api/arena/logout', { method: 'POST' }).catch(() => null); state.arenaUser = null; window.dispatchEvent(new CustomEvent('arena-account-changed', { detail: { user: null, unread: 0 } })); renderArenaAccount(); renderArenaPosts(); });
 els.arenaImageInput?.addEventListener('change', async () => {
   try {
     state.arenaImageData = await readArenaImage(els.arenaImageInput.files?.[0]);
@@ -2762,17 +2777,27 @@ function resetBrowserNavigationState() {
 // Browsers can restore a page from the back/forward cache with the old
 // page-leaving class still applied. Clear it immediately so Back/Forward
 // never returns to a black, non-interactive screen.
-window.addEventListener('pageshow', () => {
+window.addEventListener('pageshow', (event) => {
   resetBrowserNavigationState();
   requestAnimationFrame(() => {
     resetBrowserNavigationState();
     activateImageFallbacks();
   });
+  if (event.persisted && standalonePlayerId && state.currentPlayer) {
+    loadPlayer(standalonePlayerId, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
+  }
 });
 window.addEventListener('popstate', resetBrowserNavigationState);
 window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && els.clanModal && !els.clanModal.hidden) closeClanModal(); });
 window.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') { resetBrowserNavigationState(); activateImageFallbacks(); }
+  if (document.visibilityState !== 'visible') return;
+  resetBrowserNavigationState();
+  activateImageFallbacks();
+  const playerId = state.currentPlayer?.player?.brawlhalla_id;
+  const fetchedAt = new Date(state.currentPlayer?.player?.updated_at || 0).getTime();
+  if (playerId && (!Number.isFinite(fetchedAt) || Date.now() - fetchedAt > 60_000)) {
+    loadPlayer(playerId, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
+  }
 });
 
 const pageParams = new URLSearchParams(location.search);

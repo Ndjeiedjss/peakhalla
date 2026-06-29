@@ -458,15 +458,15 @@ nav a:hover { color: white; }
 .rank-elo-grid b { display: block; margin-top: 7px; font: 700 20px/1 var(--display); }
 .rank-elo-grid > div:last-child b { color: var(--accent-soft); }
 .rank-progress { height: 6px; margin-top: 12px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.05); }
-.rank-progress i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent-3), #c4a7ff); box-shadow: 0 0 18px rgba(var(--accent-rgb),.32); transition: width .8s cubic-bezier(.2,.8,.2,1); }
+.rank-progress i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent-3), var(--accent-soft)); box-shadow: 0 0 18px rgba(var(--accent-rgb),.32); transition: width .8s cubic-bezier(.2,.8,.2,1); }
 .stats-grid { margin-top: 12px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
 .account-showcase { margin-top: 12px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
 .showcase-card { min-height: 140px; padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(180deg, rgba(var(--accent-2-rgb),.06), transparent 60%), var(--panel); }
 .showcase-label { display: inline-block; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .showcase-metric strong { display: block; margin: 16px 0 8px; font: 700 28px/1 var(--display); letter-spacing: -.03em; }
-.showcase-metric small { color: #8e83a0; font-size: 10px; line-height: 1.5; }
+.showcase-metric small { color: var(--muted); font-size: 10px; line-height: 1.5; }
 .xp-progress { height: 8px; margin-top: 14px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.05); }
-.xp-progress > div { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), #c7b1ff); }
+.xp-progress > div { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent-soft)); }
 .showcase-strip { margin-top: 14px; display: grid; gap: 10px; }
 .mini-legend { display: flex; align-items: center; gap: 10px; }
 .mini-legend strong { display: block; font-size: 14px; line-height: 1.1; }
@@ -487,14 +487,14 @@ nav a:hover { color: white; }
 .stat-card { min-height: 112px; padding: 18px; border: 1px solid var(--line); border-radius: 13px; background: var(--panel); }
 .stat-card span { color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .stat-card strong { display: block; margin: 14px 0 8px; font: 700 29px/1 var(--display); }
-.stat-card small { color: #756b83; font-size: 8px; }
+.stat-card small { color: var(--muted-dim); font-size: 8px; }
 .profile-layout { margin-top: 12px; display: grid; grid-template-columns: 1.55fr .85fr; gap: 12px; }
 .progress-panel, .summary-panel, .names-panel, .legends-panel, .power-panel, .tournament-panel, .champions-panel { padding: 22px; }
 .panel-heading { margin-bottom: 18px; display: flex; align-items: end; justify-content: space-between; gap: 16px; }
 .panel-heading h3 { margin: 6px 0 0; font: 700 23px/1 var(--display); letter-spacing: -.025em; }
 .history-chart { min-height: 220px; display: flex; align-items: end; gap: 6px; overflow-x: auto; padding: 24px 3px 0; border-bottom: 1px solid var(--line); }
 .chart-column { min-width: 35px; height: 190px; display: flex; flex-direction: column; justify-content: end; align-items: center; color: var(--muted); font-size: 8px; }
-.chart-column b { margin-bottom: 5px; color: #c7bdd3; font-size: 8px; }
+.chart-column b { margin-bottom: 5px; color: var(--text-secondary); font-size: 8px; }
 .chart-bar { width: 21px; min-height: 4px; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, var(--accent-2), var(--accent-3)); }
 .chart-column span { margin-top: 7px; }
 .summary-panel dl { margin: 0; }
@@ -1656,7 +1656,7 @@ body.arena-page-mode #arena-nav-link { color: white; }
 
 .arena-composer-header { margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .arena-composer-header > div { display: flex; align-items: center; gap: 11px; }
-.arena-avatar, .arena-comment-avatar { flex: 0 0 auto; display: grid; place-items: center; color: white; border: 1px solid rgba(255,255,255,.08); border-radius: 50%; background: linear-gradient(135deg, var(--accent), #5c31c7); font: 800 14px/1 var(--display); }
+.arena-avatar, .arena-comment-avatar { flex: 0 0 auto; display: grid; place-items: center; color: white; border: 1px solid rgba(255,255,255,.08); border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); font: 800 14px/1 var(--display); }
 .arena-avatar { width: 42px; height: 42px; }
 .arena-composer-header small { display: block; color: var(--muted); font-size: 8px; text-transform: uppercase; }
 .arena-composer-header strong { display: block; margin-top: 4px; font-size: 15px; }
@@ -1684,9 +1684,9 @@ body.arena-page-mode #arena-nav-link { color: white; }
 .arena-comment-avatar { width: 36px; height: 36px; font-size: 12px; }
 .arena-post-header strong { display: block; font-size: 14px; }
 .arena-post-header time, .arena-comment-body time { display: block; margin-top: 4px; color: var(--muted); font-size: 8px; }
-.arena-post-image { display: grid; place-items: center; overflow: hidden; border-block: 1px solid var(--line); background: #08050d; }
+.arena-post-image { display: grid; place-items: center; overflow: hidden; border-block: 1px solid var(--line); background: var(--panel-deep); }
 .arena-post-image img { max-width: 100%; max-height: 760px; object-fit: contain; }
-.arena-post-caption { margin: 0; padding: 17px 18px; color: #d8d0e4; font-size: 13px; line-height: 1.65; }
+.arena-post-caption { margin: 0; padding: 17px 18px; color: var(--text-secondary); font-size: 13px; line-height: 1.65; }
 .arena-comments { padding: 0 18px 18px; }
 .arena-comments > header { padding: 13px 0; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); }
 .arena-comments > header strong { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
@@ -1697,7 +1697,7 @@ body.arena-page-mode #arena-nav-link { color: white; }
 .arena-comment-body header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .arena-comment-body header strong { font-size: 11px; }
 .arena-comment-body header time { margin: 0; }
-.arena-comment-body p { margin: 8px 0 0; color: #cfc6dc; font-size: 11px; line-height: 1.55; white-space: pre-wrap; }
+.arena-comment-body p { margin: 8px 0 0; color: var(--copy-text); font-size: 11px; line-height: 1.55; white-space: pre-wrap; }
 .arena-reply-button { margin-top: 8px; padding: 0; color: var(--accent-2); border: 0; background: transparent; font-size: 9px; font-weight: 800; }
 .arena-replies { margin-top: 12px; display: grid; gap: 9px; }
 .arena-comment-reply { grid-template-columns: 30px minmax(0,1fr); }
@@ -1741,14 +1741,14 @@ body.arena-page-mode #arena-nav-link { color: white; }
 .arena-author-link:hover strong, .arena-comment-user:hover strong { color: var(--accent-2); }
 .arena-post-header-meta { margin-inline-start: auto; display: flex; align-items: center; gap: 10px; color: var(--muted); }
 .arena-post-header-meta time { font-size: 8px; }
-.arena-edited { color: #756b85; font-size: 8px; }
+.arena-edited { color: var(--muted-dim); font-size: 8px; }
 .arena-owner-actions { display: inline-flex; align-items: center; gap: 5px; }
 .arena-owner-actions button { height: 28px; padding: 0 9px; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,.018); font-size: 8px; font-weight: 800; }
 .arena-owner-actions button:hover { color: white; border-color: var(--accent); }
 .arena-owner-actions button.danger:hover { color: #ff9aac; border-color: rgba(255,141,161,.45); background: rgba(255,141,161,.06); }
 
 .arena-post-caption-wrap { position: relative; }
-.arena-empty-caption { color: #625872; }
+.arena-empty-caption { color: var(--muted-dim); }
 .arena-post-socialbar { padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: rgba(255,255,255,.01); }
 .arena-reactions { display: flex; align-items: center; gap: 8px; }
 .arena-reactions button { min-width: 92px; height: 38px; padding: 0 11px; display: flex; align-items: center; gap: 7px; color: var(--muted); border: 1px solid var(--line); border-radius: 11px; background: var(--field-bg); transition: transform .18s ease, border-color .18s ease, color .18s ease, background .18s ease; }
@@ -1774,7 +1774,7 @@ body.arena-page-mode #arena-nav-link { color: white; }
 
 body.arena-profile-open { overflow: hidden; }
 .arena-profile-modal { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 22px; }
-.arena-profile-backdrop { position: absolute; inset: 0; border: 0; background: rgba(5,3,9,.78); backdrop-filter: blur(10px); animation: arenaBackdropIn .24s ease both; }
+.arena-profile-backdrop { position: absolute; inset: 0; border: 0; background: rgba(var(--header-rgb),.82); backdrop-filter: blur(10px); animation: arenaBackdropIn .24s ease both; }
 @keyframes arenaBackdropIn { from { opacity: 0; } to { opacity: 1; } }
 .arena-profile-card { position: relative; z-index: 1; width: min(720px, 100%); max-height: min(860px, calc(100vh - 44px)); padding: 28px; overflow-y: auto; animation: arenaProfileIn .42s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes arenaProfileIn { from { opacity: 0; transform: translateY(28px) scale(.965); } to { opacity: 1; transform: none; } }
@@ -2636,10 +2636,10 @@ body.clan-page-mode .site-header nav a[href="/#clans"] {
   font: 800 10px/1 var(--display); letter-spacing: .08em;
 }
 .player-clan-copy { min-width: 0; display: grid; gap: 3px; }
-.player-clan-copy small { color: #9e91b5; font-size: 7px; font-weight: 800; letter-spacing: .14em; }
-.player-clan-copy strong { overflow: hidden; color: #f2edfb; font: 750 12px/1.15 var(--display); text-overflow: ellipsis; white-space: nowrap; }
-.player-clan-copy em { color: #b9abc9; font-size: 8px; font-style: normal; }
-.player-clan-arrow { color: #b991ff; font-size: 18px; transition: transform .28s cubic-bezier(.16,1,.3,1); }
+.player-clan-copy small { color: var(--muted); font-size: 7px; font-weight: 800; letter-spacing: .14em; }
+.player-clan-copy strong { overflow: hidden; color: var(--text); font: 750 12px/1.15 var(--display); text-overflow: ellipsis; white-space: nowrap; }
+.player-clan-copy em { color: var(--copy-text); font-size: 8px; font-style: normal; }
+.player-clan-arrow { color: var(--accent-2); font-size: 18px; transition: transform .28s cubic-bezier(.16,1,.3,1); }
 .player-clan-card:hover .player-clan-arrow { transform: translateX(3px); }
 [dir="rtl"] .player-clan-card:hover .player-clan-arrow { transform: translateX(-3px); }
 @media (max-width: 760px) {
@@ -3223,10 +3223,10 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
 .arena-global-profile,
 .arena-notification-button {
   min-height: 44px;
-  border: 1px solid rgba(151, 111, 255, .26);
-  background: linear-gradient(145deg, rgba(29, 20, 47, .94), rgba(14, 9, 24, .94));
+  border: 1px solid rgba(var(--accent-2-rgb), .26);
+  background: linear-gradient(145deg, rgba(var(--panel-2-rgb), .96), rgba(var(--panel-deep-rgb), .96));
   color: var(--text);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 28px rgba(5, 2, 12, .18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 28px rgba(var(--accent-shadow-rgb), .18);
 }
 .arena-global-login {
   display: inline-flex;
@@ -3240,7 +3240,7 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
   transition: transform .24s ease, border-color .24s ease, box-shadow .24s ease;
 }
 .arena-global-login span { color: var(--accent-soft); font-size: 18px; }
-.arena-global-login:hover { transform: translateY(-2px); border-color: rgba(var(--accent-soft-rgb),.58); box-shadow: 0 14px 34px rgba(84,48,168,.22); }
+.arena-global-login:hover { transform: translateY(-2px); border-color: rgba(var(--accent-soft-rgb),.58); box-shadow: 0 14px 34px rgba(var(--accent-shadow-rgb),.26); }
 .arena-global-user { display: flex; align-items: center; gap: 7px; }
 .arena-notification-button {
   position: relative;
@@ -3253,7 +3253,7 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
   transition: transform .24s ease, border-color .24s ease, background .24s ease;
 }
 .arena-notification-button:hover,
-.arena-global-account.is-open .arena-notification-button { transform: translateY(-2px); border-color: rgba(var(--accent-soft-rgb),.64); background: rgba(69,43,115,.74); }
+.arena-global-account.is-open .arena-notification-button { transform: translateY(-2px); border-color: rgba(var(--accent-soft-rgb),.64); background: rgba(var(--accent-rgb),.16); }
 .arena-notification-button svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .arena-notification-button.has-unread svg { animation: arenaBellPulse 2.8s ease-in-out infinite; }
 .arena-notification-button > span {
@@ -3265,9 +3265,9 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
   padding: 0 5px;
   display: grid;
   place-items: center;
-  border: 2px solid #0d0816;
+  border: 2px solid var(--bg);
   border-radius: 999px;
-  background: linear-gradient(135deg, #ff6f91, var(--accent));
+  background: linear-gradient(135deg, var(--accent-soft), var(--accent));
   color: white;
   font: 800 9px/1 var(--sans);
   box-shadow: 0 5px 16px rgba(var(--accent-rgb),.38);
@@ -3288,7 +3288,7 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
   display: grid;
   place-items: center;
   border-radius: 11px;
-  background: linear-gradient(145deg, #4c2c83, #201337);
+  background: linear-gradient(145deg, var(--accent), var(--accent-deep));
   color: var(--accent-pale);
   font: 800 13px/1 var(--display);
 }
@@ -3303,10 +3303,10 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
   inset-inline-end: 0;
   width: min(390px, calc(100vw - 24px));
   overflow: hidden;
-  border: 1px solid rgba(151,111,255,.3);
+  border: 1px solid rgba(var(--accent-2-rgb),.3);
   border-radius: 20px;
-  background: rgba(15, 9, 25, .98);
-  box-shadow: 0 28px 70px rgba(2,1,7,.58), inset 0 1px 0 rgba(255,255,255,.04);
+  background: rgba(var(--menu-rgb), .98);
+  box-shadow: 0 28px 70px rgba(var(--header-rgb),.62), inset 0 1px 0 rgba(255,255,255,.04);
   backdrop-filter: blur(22px);
   transform-origin: top right;
   animation: arenaNotificationIn .22s ease both;
@@ -3322,7 +3322,7 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
 .arena-notification-panel a { color: inherit; }
 .arena-notification-panel > header button,
 .arena-notification-panel > footer button,
-.arena-notification-panel > footer a { border: 0; background: none; color: #bcaed0; font: 700 10px/1 var(--sans); cursor: pointer; text-decoration: none; }
+.arena-notification-panel > footer a { border: 0; background: none; color: var(--copy-text); font: 700 10px/1 var(--sans); cursor: pointer; text-decoration: none; }
 .arena-notification-panel > header button:hover,
 .arena-notification-panel > footer button:hover,
 .arena-notification-panel > footer a:hover { color: var(--accent-pale); }
@@ -3353,7 +3353,7 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
 .arena-post-highlight { animation: arenaPostHighlight 2.2s ease both !important; }
 @keyframes arenaNotificationIn { from { opacity: 0; transform: translateY(-8px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes arenaBellPulse { 0%, 82%, 100% { transform: rotate(0); } 86% { transform: rotate(12deg); } 90% { transform: rotate(-10deg); } 94% { transform: rotate(7deg); } }
-@keyframes arenaPostHighlight { 0%,100% { box-shadow: var(--panel-shadow); } 20%,72% { box-shadow: 0 0 0 2px rgba(155,112,255,.7), 0 0 45px rgba(var(--accent-rgb),.25); } }
+@keyframes arenaPostHighlight { 0%,100% { box-shadow: var(--panel-shadow); } 20%,72% { box-shadow: 0 0 0 2px rgba(var(--accent-2-rgb),.7), 0 0 45px rgba(var(--accent-rgb),.25); } }
 @media (max-width: 1180px) {
   .arena-global-profile strong { display: none; }
   .arena-global-profile { padding-inline-end: 6px; }
@@ -3389,7 +3389,7 @@ body.esports-page-mode .esports-nav-dropdown .nav-dropdown-toggle {
   gap: 13px;
 }
 .player-clan-copy { padding-inline-start: 2px; }
-.player-clan-copy small { color: #aa9abd; }
+.player-clan-copy small { color: var(--muted); }
 .player-clan-copy strong { font-size: 13px; }
 
 .esports-view-switch {
@@ -3567,3 +3567,48 @@ html.theme-changing *, html.theme-changing *::before, html.theme-changing *::aft
   .is-arabic .theme-picker-menu { right: 10px; left: 10px; }
   .theme-picker-menu::before, .is-arabic .theme-picker-menu::before { display: none; }
 }
+
+
+/* PeakHalla v7.60 — fully theme-aware player and Arena surfaces */
+.fighter-main,
+.identity-meta,
+.rank-block-top > span,
+.rank-block > strong,
+.player-clan-arrow,
+.arena-profile-button,
+.arena-reply-button,
+.arena-notification-panel > header span { color: var(--accent-2); }
+.rank-elo-grid > div:last-child b,
+.profile-alias-chip small,
+.arena-global-login span { color: var(--accent-soft); }
+.arena-auth-panel,
+.arena-composer,
+.arena-post,
+.arena-profile-card {
+  border-color: var(--line);
+  background: linear-gradient(180deg, rgba(var(--accent-rgb),.035), transparent 42%), var(--panel);
+}
+.arena-global-login,
+.arena-global-profile,
+.arena-notification-button {
+  border-color: rgba(var(--accent-2-rgb),.26);
+  background: linear-gradient(145deg, rgba(var(--panel-2-rgb),.96), rgba(var(--panel-deep-rgb),.96));
+}
+.arena-notification-panel {
+  border-color: rgba(var(--accent-2-rgb),.30);
+  background: rgba(var(--menu-rgb),.98);
+}
+.arena-avatar,
+.arena-comment-avatar,
+.arena-profile-avatar,
+.arena-profile-photo-preview,
+.arena-global-avatar,
+.arena-notification-avatar {
+  background: linear-gradient(145deg, var(--accent), var(--accent-deep));
+}
+.player-clan-copy small,
+.arena-edited { color: var(--muted); }
+.player-clan-copy strong { color: var(--text); }
+.player-clan-copy em,
+.arena-post-caption,
+.arena-comment-body p { color: var(--copy-text); }
