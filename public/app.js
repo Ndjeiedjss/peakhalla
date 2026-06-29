@@ -22,7 +22,7 @@ const translations = {
     leaderboardPrefix: 'Top players ·', leaderboardSearch: 'Find a rank', leaderboardSearchPlaceholder: 'Search a player', leaderboardSearchTitle: 'Ranking search', emptyData: 'No data available right now.', allRegions: 'All regions', loadMorePlayers: 'Load next 20 players', loadingMorePlayers: 'Loading 20 more…', playersShown: 'players shown',
     clansTitle: 'Top clans by lifetime XP', clansText: 'Browse the highest-XP Brawlhalla clans, then open a dedicated roster page for every clan.', clanSearch: 'Find a clan', clanSearchPlaceholder: 'Clan name or guild ID', clanRank: 'XP rank', clanTier: 'Tier', clanMembers: 'Members', clanPoints: 'Weekly points', clanXp: 'Lifetime XP', clanRecruiting: 'Recruiting', clanClosed: 'Closed', clanOpen: 'Open clan', clanDetails: 'Clan profile', clanRoster: 'Clan roster', clanRole: 'Role', clanJoined: 'Joined', clanMemberXp: 'Member XP', clanNoData: 'No clan data is available right now. Refresh in a moment.', clanLoading: 'Loading top clans by XP…', clanUpdated: 'Updated', clanDiscoveryNote: 'Top clans are ordered by lifetime XP.', clanView: 'View clan', clanBack: 'Back to clans', clanRoleOrder: 'Role hierarchy', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'Members are ordered from Recruit to Leader.', playerClan: 'PLAYER CLAN', viewClanProfile: 'Open clan profile', noClan: 'No clan',
     MiddleEast: 'Middle East', Europe: 'Europe', USEast: 'US East', USWest: 'US West', SouthernAfrica: 'Southern Africa', SoutheastAsia: 'Southeast Asia', Brazil: 'Brazil', Australia: 'Australia', Japan: 'Japan',
-    esportsHubTitle: 'PeakHalla Esports', esportsHubText: 'Official power rankings and a live tournament directory for Brawlhalla esports.', esportsTitle: 'Esports power rankings', esportsText: 'Official competitive names, medals, earnings, and major tournament results.', powerRanking: 'Power rankings', player: 'Player', earnings: 'Earnings', tournamentDirectory: 'Tournament directory', tournamentDirectoryText: 'New Brawlhalla tournament announcements are checked automatically and added here.', liveTournamentFeed: 'LIVE TOURNAMENT FEED', autoUpdating: 'AUTO UPDATING', officialTournaments: 'Official tournaments', communityTournaments: 'Community tournaments', tournamentRegion: 'Tournament region', tournamentMode: 'Tournament mode', allTournamentModes: 'All modes', loadingTournaments: 'Loading tournaments…', noTournaments: 'No tournaments matched these filters yet.', tournamentEvents: 'events', tournamentSource: 'Open tournament', announced: 'Announced',
+    esportsHubTitle: 'PeakHalla Esports', esportsHubText: 'Official power rankings and a live tournament directory for Brawlhalla esports.', esportsTitle: 'Esports power rankings', esportsText: 'Official competitive names, medals, earnings, and major tournament results.', powerRanking: 'Power rankings', player: 'Player', earnings: 'Earnings', tournamentDirectory: 'Tournament directory', tournamentDirectoryText: 'New Brawlhalla tournament announcements are checked automatically and added here.', liveTournamentFeed: 'LIVE TOURNAMENT FEED', autoUpdating: 'AUTO UPDATING', officialTournaments: 'Official tournaments', communityTournaments: 'Community tournaments', tournamentRegion: 'Tournament region', tournamentMode: 'Tournament mode', allTournamentModes: 'All modes', loadingTournaments: 'Loading tournaments…', noTournaments: 'No tournaments matched these filters yet.', tournamentEvents: 'events', tournamentSource: 'Open tournament', announced: 'Announced', tournamentSingles: '1v1 tournaments', tournamentDoubles: '2v2 tournaments', tournamentOtherModes: 'Other tournaments',
     officialSource: 'Open official rankings ↗', tournamentList: 'Tournament list', proWinners: 'Pro players & major titles', notExhaustive: 'Featured titles, not a complete career list',
     rankingsUpdated: 'Updated', noPowerData: 'No official ranking data came back right now. Try Refresh in a moment.', powerSearch: 'Find a player', powerSearchPlaceholder: 'Search the power ranking', loadMorePowerPlayers: 'Load 20 more players', loadingMorePowerPlayers: 'Loading 20 more…', powerPlayersShown: 'players shown', powerSearchResults: 'ranking results', title: 'title', titles: 'titles',
     viewCareer: 'View tournament career', tournamentCareer: 'TOURNAMENT CAREER', loadingCareer: 'Loading tournament history…',
@@ -53,7 +53,7 @@ const translations = {
     leaderboardPrefix: 'المتصدرين ·', leaderboardSearch: 'ابحث في الترتيب', leaderboardSearchPlaceholder: 'اكتب اسم اللاعب', leaderboardSearchTitle: 'نتيجة الترتيب', emptyData: 'ما فيه بيانات الحين.', allRegions: 'كل المناطق', loadMorePlayers: 'اعرض 20 لاعب إضافي', loadingMorePlayers: 'نحمّل 20 لاعب إضافي…', playersShown: 'لاعب معروض',
     clansTitle: 'أفضل الكلانات حسب الخبرة', clansText: 'تصفح كلانات براولهالا الأعلى في Lifetime XP وافتح صفحة مستقلة ومنظمة لكل كلان.', clanSearch: 'ابحث عن كلان', clanSearchPlaceholder: 'اسم الكلان أو رقم Guild ID', clanRank: 'ترتيب الخبرة', clanTier: 'المستوى', clanMembers: 'الأعضاء', clanPoints: 'نقاط الأسبوع', clanXp: 'Lifetime XP', clanRecruiting: 'يقبل أعضاء', clanClosed: 'مغلق', clanOpen: 'كلان مفتوح', clanDetails: 'صفحة الكلان', clanRoster: 'أعضاء الكلان', clanRole: 'الرتبة', clanJoined: 'تاريخ الانضمام', clanMemberXp: 'خبرة العضو', clanNoData: 'بيانات الكلانات غير متاحة الآن، جرّب التحديث بعد قليل.', clanLoading: 'نحمّل أفضل الكلانات حسب الخبرة…', clanUpdated: 'آخر تحديث', clanDiscoveryNote: 'الكلانات مرتبة حسب Lifetime XP.', clanView: 'افتح الكلان', clanBack: 'الرجوع للكلانات', clanRoleOrder: 'تسلسل الرتب', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'الأعضاء مرتبون من Recruit إلى Leader.', playerClan: 'كلان اللاعب', viewClanProfile: 'افتح صفحة الكلان', noClan: 'بدون كلان',
     MiddleEast: 'الشرق الأوسط', Europe: 'أوروبا', USEast: 'شرق أمريكا', USWest: 'غرب أمريكا', SouthernAfrica: 'جنوب أفريقيا', SoutheastAsia: 'جنوب شرق آسيا', Brazil: 'البرازيل', Australia: 'أستراليا', Japan: 'اليابان',
-    esportsHubTitle: 'بطولات PeakHalla', esportsHubText: 'الباور رانكنق الرسمي ودليل مباشر للبطولات الرسمية وبطولات الكومينيتي.', esportsTitle: 'باور رانكنق المحترفين', esportsText: 'ترتيب اللاعبين الرسمي، الميداليات، الأرباح، ونتائج البطولات الكبرى.', powerRanking: 'الباور رانكنق', player: 'اللاعب', earnings: 'الأرباح', tournamentDirectory: 'دليل البطولات', tournamentDirectoryText: 'يتم فحص إعلانات بطولات براولهالا تلقائيًا وإضافة البطولات الجديدة هنا.', liveTournamentFeed: 'تحديث البطولات المباشر', autoUpdating: 'تحديث تلقائي', officialTournaments: 'البطولات الرسمية', communityTournaments: 'بطولات الكومينيتي', tournamentRegion: 'ريجون البطولة', tournamentMode: 'نمط البطولة', allTournamentModes: 'كل الأنماط', loadingTournaments: 'نحمّل البطولات…', noTournaments: 'ما فيه بطولات مطابقة للفلاتر حاليًا.', tournamentEvents: 'بطولة', tournamentSource: 'افتح البطولة', announced: 'تاريخ الإعلان',
+    esportsHubTitle: 'بطولات PeakHalla', esportsHubText: 'الباور رانكنق الرسمي ودليل مباشر للبطولات الرسمية وبطولات الكومينيتي.', esportsTitle: 'باور رانكنق المحترفين', esportsText: 'ترتيب اللاعبين الرسمي، الميداليات، الأرباح، ونتائج البطولات الكبرى.', powerRanking: 'الباور رانكنق', player: 'اللاعب', earnings: 'الأرباح', tournamentDirectory: 'دليل البطولات', tournamentDirectoryText: 'يتم فحص إعلانات بطولات براولهالا تلقائيًا وإضافة البطولات الجديدة هنا.', liveTournamentFeed: 'تحديث البطولات المباشر', autoUpdating: 'تحديث تلقائي', officialTournaments: 'البطولات الرسمية', communityTournaments: 'بطولات الكومينيتي', tournamentRegion: 'ريجون البطولة', tournamentMode: 'نمط البطولة', allTournamentModes: 'كل الأنماط', loadingTournaments: 'نحمّل البطولات…', noTournaments: 'ما فيه بطولات مطابقة للفلاتر حاليًا.', tournamentEvents: 'بطولة', tournamentSource: 'افتح البطولة', announced: 'تاريخ الإعلان', tournamentSingles: 'بطولات 1v1', tournamentDoubles: 'بطولات 2v2', tournamentOtherModes: 'بطولات أخرى',
     officialSource: 'افتح الترتيب الرسمي ↗', tournamentList: 'قائمة البطولات', proWinners: 'المحترفين وأهم ألقابهم', notExhaustive: 'ألقاب مختارة، مو كل مسيرة اللاعب',
     rankingsUpdated: 'آخر تحديث', noPowerData: 'ما رجعت بيانات الترتيب الرسمي الحين. جرّب تحدث بعد شوي.', powerSearch: 'ابحث عن لاعب', powerSearchPlaceholder: 'اكتب اسم اللاعب في الباور رانكنق', loadMorePowerPlayers: 'اعرض 20 لاعب إضافي', loadingMorePowerPlayers: 'نحمّل 20 لاعب إضافي…', powerPlayersShown: 'لاعب معروض', powerSearchResults: 'نتيجة في الترتيب', title: 'لقب', titles: 'ألقاب',
     viewCareer: 'شوف بطولاته', tournamentCareer: 'مسيرة البطولات', loadingCareer: 'نجيب بطولات اللاعب…',
@@ -68,7 +68,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRequestSequence: 0, playerRetryCount: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRequestSequence: 0, playerRetryCount: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, leaderboardRequestId: 0, leaderboardRetryCount: 0, leaderboardRetryTimer: null, leaderboardWatchdogTimer: null, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
 
 
 const PEAKHALLA_THEME_KEY = 'peakhalla-theme';
@@ -243,6 +243,7 @@ function applyLanguage() {
     if (state.queueData) renderLiveQueue(state.queueData);
   } else if (isEsportsPage) {
     if (state.esportsData && esportsRouteView === 'power') renderEsports(state.esportsData);
+    if (state.tournamentData && esportsRouteView === 'tournaments') renderTournamentDirectory(state.tournamentData);
     showEsportsView(esportsRouteView, { scroll: false });
   } else if (!isStandalonePlayerPage && !isClanPage && !isArenaPage) {
     loadLeaderboard();
@@ -253,7 +254,7 @@ function applyLanguage() {
   if (state.esportsCareer && !els.careerModal.hidden) renderCareer(state.esportsCareer);
 }
 
-const LEGEND_ASSET_VERSION = '7.67.0';
+const LEGEND_ASSET_VERSION = '7.68.0';
 
 function legendAssetSlug(name = '') {
   return String(name || '')
@@ -361,13 +362,13 @@ function legendImageMarkup(legend, options = {}) {
     ...(options.localCandidates === false ? [] : localLegendImageCandidates(name)),
     ...suppliedCandidates
   ].filter(Boolean))];
-  if (!candidates.length) return `<span class="legend-image-shell is-fallback"><span class="legend-fallback">${fallback}</span></span>`;
+  if (!candidates.length) return `<span class="legend-image-shell is-fallback" data-fallback="${fallback}"><span class="legend-fallback">${fallback}</span></span>`;
   // Portraits are small local assets. Eager loading is more reliable across
   // mobile browsers and avoids the old 'appears only after refresh' issue.
   // Very large lists can still opt into lazy loading explicitly.
   const eager = options.lazy !== true;
   const loading = eager ? 'loading="eager" fetchpriority="high" data-image-visible="1"' : 'loading="lazy" fetchpriority="auto"';
-  return `<span class="legend-image-shell"><img src="${escapeHtml(candidates[0])}" alt="${escapeHtml(name)}" ${loading} decoding="async" referrerpolicy="no-referrer" data-legend-image data-image-candidates='${escapeHtml(JSON.stringify(candidates))}' data-image-index="0" data-image-retry="0" onload="handleLegendImageLoad(this)" onerror="handleLegendImageError(this)"><span class="legend-fallback" hidden>${fallback}</span></span>`;
+  return `<span class="legend-image-shell" data-fallback="${fallback}"><img src="${escapeHtml(candidates[0])}" alt="${escapeHtml(name)}" ${loading} decoding="async" referrerpolicy="no-referrer" data-legend-image data-image-candidates='${escapeHtml(JSON.stringify(candidates))}' data-image-index="0" data-image-retry="0" onload="handleLegendImageLoad(this)" onerror="handleLegendImageError(this)"><span class="legend-fallback" hidden>${fallback}</span></span>`;
 }
 
 function portraitMarkup(legend, className = 'row-portrait', options = {}) {
@@ -640,15 +641,19 @@ function writePlayerPortraitCache(id, legend) {
   } catch {}
 }
 
-async function fetchPlayerPortraitBatch(ids = []) {
+async function fetchPlayerPortraitBatch(ids = [], options = {}) {
   const uniqueIds = [...new Set(ids.map(Number).filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, 80);
   if (!uniqueIds.length) return new Map();
   const result = readPlayerPortraitCache(uniqueIds);
   const missing = uniqueIds.filter((id) => !result.has(id));
   if (!missing.length) return result;
   try {
-    const params = new URLSearchParams({ ids: missing.join(','), warm: '1' });
-    const data = await getJson(`/api/players/portraits?${params}`, { timeoutMs: 3200 });
+    const params = new URLSearchParams({
+      ids: missing.join(','),
+      warm: '1',
+      resolve: options.resolve === false ? '0' : '1'
+    });
+    const data = await getJson(`/api/players/portraits?${params}`, { timeoutMs: Number(options.timeoutMs || 7200) });
     for (const [rawId, legend] of Object.entries(data?.portraits || {})) {
       const id = Number(rawId);
       if (!legend) continue;
@@ -684,44 +689,42 @@ function patchPlayerPortrait(button, legend, portraitSelector) {
 
 function enrichRenderedPortraits(container, buttonSelector, portraitSelector, concurrency = 3) {
   if (!container) return;
-  const targets = [...container.querySelectorAll(buttonSelector)]
-    .filter((button) => button.dataset.needsPortrait === '1' && Number(button.dataset.playerId) > 0);
-  if (!targets.length) return;
+  const enrichmentKey = `${buttonSelector}|${portraitSelector}`;
+  const activeKey = container.dataset.portraitEnrichmentKey;
+  if (activeKey === enrichmentKey && container.dataset.portraitEnriching === '1') return;
+  container.dataset.portraitEnrichmentKey = enrichmentKey;
+  container.dataset.portraitEnriching = '1';
 
-  (async () => {
-    const batch = await fetchPlayerPortraitBatch(targets.map((button) => Number(button.dataset.playerId)));
+  const retryDelays = [0, 1800, 4800, 9800, 18000];
+  const attempt = async (attemptIndex = 0) => {
+    if (!container.isConnected) return;
+    const targets = [...container.querySelectorAll(buttonSelector)]
+      .filter((button) => button.dataset.needsPortrait === '1' && Number(button.dataset.playerId) > 0);
+    if (!targets.length) {
+      delete container.dataset.portraitEnriching;
+      return;
+    }
+
+    const batch = await fetchPlayerPortraitBatch(
+      targets.map((button) => Number(button.dataset.playerId)),
+      { resolve: true, timeoutMs: 7600 }
+    );
     for (const button of targets) {
       const legend = batch.get(Number(button.dataset.playerId));
       if (legend && button.isConnected) patchPlayerPortrait(button, legend, portraitSelector);
     }
+    stabilizeLegendImages(container);
 
-    const queue = targets.filter((button) => button.isConnected && button.dataset.needsPortrait === '1').slice(0, 12);
-    let cursor = 0;
-    const worker = async () => {
-      while (cursor < queue.length) {
-        const button = queue[cursor++];
-        const id = Number(button.dataset.playerId);
-        const legend = await fetchPlayerPortrait(id);
-        if (!button.isConnected) continue;
-        if (legend) {
-          patchPlayerPortrait(button, legend, portraitSelector);
-          continue;
-        }
-        const attempts = Number(button.dataset.portraitAttempts || 0) + 1;
-        button.dataset.portraitAttempts = String(attempts);
-        if (attempts < 3) {
-          window.setTimeout(() => {
-            if (button.isConnected && button.dataset.needsPortrait === '1') {
-              enrichRenderedPortraits(container, buttonSelector, portraitSelector, 1);
-            }
-          }, 1200 + attempts * 900);
-        } else {
-          button.dataset.needsPortrait = '0';
-        }
-      }
-    };
-    await Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, worker));
-  })().catch(() => null);
+    const remaining = [...container.querySelectorAll(buttonSelector)]
+      .filter((button) => button.dataset.needsPortrait === '1' && Number(button.dataset.playerId) > 0);
+    if (!remaining.length || attemptIndex >= retryDelays.length - 1) {
+      delete container.dataset.portraitEnriching;
+      return;
+    }
+    window.setTimeout(() => attempt(attemptIndex + 1).catch(() => null), retryDelays[attemptIndex + 1]);
+  };
+
+  attempt(0).catch(() => { delete container.dataset.portraitEnriching; });
 }
 
 function playerCard(item, player) {
@@ -1527,14 +1530,17 @@ function updateLeaderboardPagination({ query = '', page = 1, totalPages = 1, rec
   }
 }
 
+const LEADERBOARD_BROWSER_CACHE_VERSION = 'v2';
+const LEADERBOARD_BROWSER_CACHE_MAX_AGE_MS = 30 * 60_000;
+
 function leaderboardBrowserCacheKey(region, mode, page = 1) {
-  return `peakhalla-leaderboard:${region}:${mode}:${page}`;
+  return `peakhalla-leaderboard:${LEADERBOARD_BROWSER_CACHE_VERSION}:${region}:${mode}:${page}`;
 }
 
 function readLeaderboardBrowserCache(region, mode, page = 1) {
   try {
-    const cached = JSON.parse(sessionStorage.getItem(leaderboardBrowserCacheKey(region, mode, page)) || 'null');
-    if (!cached?.rankings || Date.now() - Number(cached.savedAt || 0) > 5 * 60_000) return null;
+    const cached = JSON.parse(localStorage.getItem(leaderboardBrowserCacheKey(region, mode, page)) || 'null');
+    if (!cached?.rankings || Date.now() - Number(cached.savedAt || 0) > LEADERBOARD_BROWSER_CACHE_MAX_AGE_MS) return null;
     return cached;
   } catch {
     return null;
@@ -1543,22 +1549,36 @@ function readLeaderboardBrowserCache(region, mode, page = 1) {
 
 function writeLeaderboardBrowserCache(region, mode, page, data) {
   try {
-    sessionStorage.setItem(leaderboardBrowserCacheKey(region, mode, page), JSON.stringify({
+    localStorage.setItem(leaderboardBrowserCacheKey(region, mode, page), JSON.stringify({
       savedAt: Date.now(),
       rankings: data.rankings || [],
-      total_pages: Number(data.total_pages) || 0
+      total_pages: Number(data.total_pages) || 0,
+      source: data.source || 'live'
     }));
   } catch {}
 }
 
+function scheduleLeaderboardRecovery(options = {}) {
+  window.clearTimeout(state.leaderboardRetryTimer);
+  const attempt = Math.max(0, Number(state.leaderboardRetryCount || 0));
+  const delay = Number(options.delay || Math.min(8000, 900 + attempt * 1300));
+  state.leaderboardRetryTimer = window.setTimeout(() => {
+    if (document.visibilityState !== 'visible' || isLiveQueuePage || isClanPage || isArenaPage || isEsportsPage || isStandalonePlayerPage) return;
+    loadLeaderboard({ silent: true, recovery: true }).catch(() => null);
+  }, delay);
+}
+
 async function loadLeaderboard(options = {}) {
+  if (!els.leaderboard || !els.leaderboardRegion || !els.leaderboardMode) return;
   const append = Boolean(options.append);
-  const region = els.leaderboardRegion?.value || 'ALL';
-  const mode = els.leaderboardMode?.value || '1v1';
+  const silent = Boolean(options.silent);
+  const region = els.leaderboardRegion.value || 'ALL';
+  const mode = els.leaderboardMode.value || '1v1';
   const query = els.leaderboardSearch?.value.trim() || '';
   const page = append ? state.leaderboardPage + 1 : 1;
   if (append && (state.leaderboardLoadingMore || query.length >= 2)) return;
 
+  const requestId = ++state.leaderboardRequestId;
   els.leaderboardTitle.textContent = query.length >= 2
     ? `${t('leaderboardSearchTitle')} · ${query} · ${regionLabel(region)}`
     : `${t('leaderboardPrefix')} ${regionLabel(region)}`;
@@ -1572,10 +1592,13 @@ async function loadLeaderboard(options = {}) {
     }
   }
 
+  const hasVisibleRows = () => Boolean(els.leaderboard.querySelector('.leader-row'));
   if (!append) {
-    if (!cachedBoard) els.leaderboard.innerHTML = '<div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div>';
-    if (els.leaderboardLoadMore && !cachedBoard) els.leaderboardLoadMore.hidden = true;
-    if (els.leaderboardPageStatus && !cachedBoard) els.leaderboardPageStatus.textContent = '';
+    if (!cachedBoard && !silent && !hasVisibleRows()) {
+      els.leaderboard.innerHTML = '<div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div>';
+    }
+    if (els.leaderboardLoadMore && !cachedBoard && !hasVisibleRows()) els.leaderboardLoadMore.hidden = true;
+    if (els.leaderboardPageStatus && !cachedBoard && !hasVisibleRows()) els.leaderboardPageStatus.textContent = '';
   } else {
     state.leaderboardLoadingMore = true;
     if (els.leaderboardLoadMore) {
@@ -1586,23 +1609,44 @@ async function loadLeaderboard(options = {}) {
   }
 
   state.leaderboardSearchController?.abort();
-  state.leaderboardSearchController = new AbortController();
+  const controller = new AbortController();
+  state.leaderboardSearchController = controller;
+  window.clearTimeout(state.leaderboardWatchdogTimer);
+  if (!append) {
+    state.leaderboardWatchdogTimer = window.setTimeout(() => {
+      if (requestId !== state.leaderboardRequestId || hasVisibleRows()) return;
+      controller.abort();
+      state.leaderboardRetryCount = Math.min(5, Number(state.leaderboardRetryCount || 0) + 1);
+      scheduleLeaderboardRecovery({ delay: 250 });
+    }, 6500);
+  }
+
   try {
     const params = new URLSearchParams(query.length >= 2
       ? { q: query, region, mode }
       : { region, mode, page: String(page) });
+    if (options.refresh) params.set('refresh', '1');
     const endpoint = query.length >= 2 ? '/api/search' : '/api/leaderboard';
-    const response = await fetch(`${endpoint}?${params}`, { headers: { Accept: 'application/json' }, signal: state.leaderboardSearchController.signal });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || t('fetchError'));
+    const data = await getJson(`${endpoint}?${params}`, { signal: controller.signal, timeoutMs: 8000 });
+    if (requestId !== state.leaderboardRequestId) return;
     const rankings = data.rankings || [];
     renderLeaderboardRows(rankings, { append });
     updateLeaderboardPagination({ query, page, totalPages: Number(data.total_pages) || 0, received: rankings.length });
-    if (query.length < 2) writeLeaderboardBrowserCache(region, mode, page, data);
+    if (query.length < 2 && rankings.length) writeLeaderboardBrowserCache(region, mode, page, data);
+    state.leaderboardRetryCount = 0;
+    window.clearTimeout(state.leaderboardRetryTimer);
+    if (!append && (data.stale || data.refreshing || data.source === 'database-fallback')) {
+      scheduleLeaderboardRecovery({ delay: 2200 });
+    }
   } catch (error) {
-    if (error.name === 'AbortError') return;
-    if (!append) els.leaderboard.innerHTML = `<p class="empty-copy">${escapeHtml(t('friendlyProblem'))}</p>`;
+    if (error.name === 'AbortError' || requestId !== state.leaderboardRequestId) return;
+    state.leaderboardRetryCount = Math.min(5, Number(state.leaderboardRetryCount || 0) + 1);
+    if (!append && !cachedBoard && !hasVisibleRows() && state.leaderboardRetryCount >= 4) {
+      els.leaderboard.innerHTML = `<p class="empty-copy">${escapeHtml(t('friendlyProblem'))}</p>`;
+    }
+    if (!append && state.leaderboardRetryCount < 5) scheduleLeaderboardRecovery();
   } finally {
+    if (requestId === state.leaderboardRequestId) window.clearTimeout(state.leaderboardWatchdogTimer);
     state.leaderboardLoadingMore = false;
     if (append && els.leaderboardLoadMore?.disabled) {
       els.leaderboardLoadMore.disabled = false;
@@ -1944,34 +1988,83 @@ function tournamentCard(event, index) {
   return `${linkStart}<span class="tournament-card-number">${String(index + 1).padStart(2, '0')}</span><div class="tournament-card-copy"><div class="tournament-card-badges"><b class="event-region">${escapeHtml(tournamentRegionName(primaryRegion))}</b>${modes.map((mode) => `<em class="tournament-mode-badge">${escapeHtml(mode)}</em>`).join('')}<em>${escapeHtml(category)}</em></div><h4>${escapeHtml(event.name || 'Brawlhalla Tournament')}</h4><p>${escapeHtml(event.note || event.description || '')}</p><div class="tournament-card-meta">${date ? `<span>${escapeHtml(t('announced'))}: ${escapeHtml(date)}</span>` : ''}${sourceHost ? `<span>${escapeHtml(sourceHost)}</span>` : ''}</div></div><span class="tournament-card-arrow">↗</span>${linkEnd}`;
 }
 
+function tournamentDirectoryCacheKey(type, region, mode) {
+  return `peakhalla-tournaments-v2:${type}:${region}:${mode}`;
+}
+
+function readTournamentDirectoryCache(type, region, mode) {
+  try {
+    const entry = JSON.parse(localStorage.getItem(tournamentDirectoryCacheKey(type, region, mode)) || 'null');
+    if (!entry?.data?.events || Date.now() - Number(entry.savedAt || 0) > 30 * 60_000) return null;
+    return entry.data;
+  } catch { return null; }
+}
+
+function writeTournamentDirectoryCache(type, region, mode, data) {
+  try { localStorage.setItem(tournamentDirectoryCacheKey(type, region, mode), JSON.stringify({ savedAt: Date.now(), data })); }
+  catch {}
+}
+
+function tournamentModeSection(mode, events = []) {
+  if (!events.length) return '';
+  const heading = mode === '1v1' ? t('tournamentSingles') : mode === '2v2' ? t('tournamentDoubles') : t('tournamentOtherModes');
+  return `<section class="tournament-mode-section" data-tournament-group="${escapeHtml(mode)}"><header><span>${escapeHtml(mode)}</span><h4>${escapeHtml(heading)}</h4><small>${number(events.length, '0')} ${escapeHtml(t('tournamentEvents'))}</small></header><div class="tournament-mode-grid">${events.map(tournamentCard).join('')}</div></section>`;
+}
+
 function renderTournamentDirectory(data = {}) {
   state.tournamentData = data;
-  const events = data.events || [];
+  const events = Array.isArray(data.events) ? data.events : [];
   if (els.tournamentDirectoryUpdated) els.tournamentDirectoryUpdated.textContent = data.updated_at ? `${t('rankingsUpdated')}: ${dateTime(data.updated_at)}` : '';
   if (els.tournamentDirectoryCount) els.tournamentDirectoryCount.textContent = `${number(events.length, '0')} ${t('tournamentEvents')}`;
   if (!els.tournamentDirectoryList) return;
-  els.tournamentDirectoryList.innerHTML = events.length ? events.map(tournamentCard).join('') : `<p class="empty-copy tournament-directory-empty">${escapeHtml(t('noTournaments'))}</p>`;
+  if (!events.length) {
+    els.tournamentDirectoryList.innerHTML = `<p class="empty-copy tournament-directory-empty">${escapeHtml(t('noTournaments'))}</p>`;
+    return;
+  }
+
+  const selectedMode = state.tournamentMode || els.tournamentDirectoryMode?.value || 'ALL';
+  if (selectedMode === 'ALL') {
+    const singles = events.filter((event) => Array.isArray(event.modes) && event.modes.includes('1v1') && !event.modes.includes('2v2'));
+    const doubles = events.filter((event) => Array.isArray(event.modes) && event.modes.includes('2v2') && !event.modes.includes('1v1'));
+    const other = events.filter((event) => !singles.includes(event) && !doubles.includes(event));
+    els.tournamentDirectoryList.innerHTML = [
+      tournamentModeSection('1v1', singles),
+      tournamentModeSection('2v2', doubles),
+      tournamentModeSection('other', other)
+    ].join('');
+  } else {
+    els.tournamentDirectoryList.innerHTML = tournamentModeSection(selectedMode, events);
+  }
 }
 
 async function loadTournamentDirectory(options = {}) {
   if (!els.tournamentDirectoryList) return;
   const region = els.tournamentDirectoryRegion?.value || 'ALL';
   const mode = state.tournamentMode || els.tournamentDirectoryMode?.value || 'ALL';
-  const params = new URLSearchParams({ type: state.tournamentType || 'official', region, mode });
+  const type = state.tournamentType || 'official';
+  const params = new URLSearchParams({ type, region, mode });
   syncEsportsPageUrl();
   if (options.refresh) params.set('refresh', '1');
-  els.tournamentDirectoryList.innerHTML = `<div class="tournament-directory-loading"><span></span><strong>${escapeHtml(t('loadingTournaments'))}</strong></div>`;
+
+  const cached = !options.refresh ? readTournamentDirectoryCache(type, region, mode) : null;
+  if (cached) renderTournamentDirectory(cached);
+  else if (!options.silent) els.tournamentDirectoryList.innerHTML = `<div class="tournament-directory-loading"><span></span><strong>${escapeHtml(t('loadingTournaments'))}</strong></div>`;
   if (els.tournamentDirectoryRefresh) els.tournamentDirectoryRefresh.disabled = true;
   try {
-    renderTournamentDirectory(await getJson(`/api/esports/tournaments?${params}`));
+    const data = await getJson(`/api/esports/tournaments?${params}`, { timeoutMs: 9500 });
+    renderTournamentDirectory(data);
+    writeTournamentDirectoryCache(type, region, mode, data);
   } catch (error) {
-    els.tournamentDirectoryList.innerHTML = `<p class="empty-copy tournament-directory-empty">${escapeHtml(error.message || t('friendlyProblem'))}</p>`;
+    if (!cached) els.tournamentDirectoryList.innerHTML = `<p class="empty-copy tournament-directory-empty">${escapeHtml(error.message || t('friendlyProblem'))}</p>`;
+    window.setTimeout(() => {
+      if (document.visibilityState === 'visible' && state.esportsView === 'tournaments') loadTournamentDirectory({ silent: true }).catch(() => null);
+    }, 2500);
   } finally {
     if (els.tournamentDirectoryRefresh) els.tournamentDirectoryRefresh.disabled = false;
   }
   window.clearTimeout(state.tournamentRefreshTimer);
   state.tournamentRefreshTimer = window.setTimeout(() => {
-    if (document.visibilityState === 'visible' && state.esportsView === 'tournaments') loadTournamentDirectory();
+    if (document.visibilityState === 'visible' && state.esportsView === 'tournaments') loadTournamentDirectory({ silent: true });
   }, 5 * 60_000);
 }
 
@@ -2922,7 +3015,7 @@ els.playerClanCard?.addEventListener('click', () => {
 els.clansSearch?.addEventListener('input', scheduleClanSearch);
 els.clansRefresh?.addEventListener('click', () => loadClans({ refresh: true }));
 els.clanModal?.addEventListener('click', (event) => { if (event.target.closest('[data-clan-close]')) closeClanModal(); });
-els.refreshLeaderboard.addEventListener('click', () => loadLeaderboard());
+els.refreshLeaderboard.addEventListener('click', () => loadLeaderboard({ refresh: true }));
 els.leaderboardLoadMore?.addEventListener('click', () => loadLeaderboard({ append: true }));
 els.leaderboardSearch?.addEventListener('input', scheduleLeaderboardSearch);
 els.leaderboardRegion.addEventListener('change', loadLeaderboard);
@@ -3027,6 +3120,11 @@ if (isArenaPage) setupArenaPage();
 if (isClanPage) loadStandaloneClan();
 setupThemePicker();
 applyLanguage();
+if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage) {
+  window.setTimeout(() => {
+    if (!els.leaderboard?.querySelector('.leader-row')) loadLeaderboard({ silent: true, recovery: true }).catch(() => null);
+  }, 1400);
+}
 requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('page-entering')));
 function resetBrowserNavigationState() {
   const body = document.body;
@@ -3053,6 +3151,9 @@ window.addEventListener('pageshow', (event) => {
   if (event.persisted && standalonePlayerId && state.currentPlayer) {
     loadPlayer(standalonePlayerId, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
   }
+  if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage) {
+    window.setTimeout(() => loadLeaderboard({ silent: true }).catch(() => null), event.persisted ? 80 : 350);
+  }
 });
 window.addEventListener('popstate', resetBrowserNavigationState);
 window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && els.clanModal && !els.clanModal.hidden) closeClanModal(); });
@@ -3061,6 +3162,10 @@ window.addEventListener('visibilitychange', () => {
   resetBrowserNavigationState();
   activateImageFallbacks();
   if (isLiveQueuePage) loadLiveQueue({ silent: true }).catch(() => null);
+  if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage) {
+    loadLeaderboard({ silent: true }).catch(() => null);
+    enrichRenderedPortraits(els.leaderboard, '.leader-person[data-player-id]', '.row-portrait', 4);
+  }
   const playerId = state.currentPlayer?.player?.brawlhalla_id;
   const fetchedAt = new Date(state.currentPlayer?.player?.updated_at || 0).getTime();
   if (playerId && (!Number.isFinite(fetchedAt) || Date.now() - fetchedAt > 60_000)) {
