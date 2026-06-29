@@ -40,17 +40,27 @@ const imageCache = new Map();
 const fileQueues = new Map();
 const queueTrackers = new Map();
 const profileResponseCache = new Map();
-const PROFILE_RESPONSE_TTL_MS = 30 * 60_000;
+const PROFILE_RESPONSE_TTL_MS = 12 * 60_000;
+const PROFILE_RESPONSE_CACHE_LIMIT = Math.max(12, Math.min(100, Number(process.env.PROFILE_RESPONSE_CACHE_LIMIT || 36)));
 const PROFILE_DISK_CACHE_MAX_AGE_MS = 6 * 60 * 60_000;
-const PROFILE_DISK_CACHE_LIMIT = 200;
+const PROFILE_DISK_CACHE_LIMIT = Math.max(40, Math.min(200, Number(process.env.PROFILE_DISK_CACHE_LIMIT || 100)));
 const profileSearchResponseCache = new Map();
 const aliasSearchWarmups = new Map();
 const PROFILE_SEARCH_RESPONSE_TTL_MS = 2 * 60_000;
+const GENERAL_CACHE_LIMIT = Math.max(100, Math.min(1200, Number(process.env.GENERAL_CACHE_LIMIT || 320)));
+const IMAGE_CACHE_LIMIT = Math.max(4, Math.min(80, Number(process.env.IMAGE_CACHE_LIMIT || 18)));
+const IMAGE_CACHE_MAX_BYTES = Math.max(4, Math.min(64, Number(process.env.IMAGE_CACHE_MAX_MB || 14))) * 1024 * 1024;
+const TEAM_LOOKUP_CACHE_LIMIT = Math.max(20, Math.min(300, Number(process.env.TEAM_LOOKUP_CACHE_LIMIT || 80)));
+const RATE_LIMIT_CACHE_LIMIT = Math.max(500, Math.min(20_000, Number(process.env.RATE_LIMIT_CACHE_LIMIT || 3500)));
+const CACHE_CLEANUP_INTERVAL_MS = Math.max(30_000, Number(process.env.CACHE_CLEANUP_INTERVAL_MS || 60_000));
+const MEMORY_SOFT_LIMIT_MB = Math.max(160, Number(process.env.MEMORY_SOFT_LIMIT_MB || 220));
+const EXTERNAL_FETCH_CONCURRENCY = Math.max(2, Math.min(12, Number(process.env.EXTERNAL_FETCH_CONCURRENCY || 6)));
+const EXTERNAL_FETCH_QUEUE_LIMIT = Math.max(20, Math.min(300, Number(process.env.EXTERNAL_FETCH_QUEUE_LIMIT || 80)));
 const DATABASE_URL = String(process.env.DATABASE_URL || '').trim();
 const DATABASE_PROFILE_MAX_AGE_MS = Number(process.env.DATABASE_PROFILE_MAX_AGE_MS || 30 * 24 * 60 * 60_000);
-const DATABASE_DISCOVERY_INTERVAL_MS = Math.max(45_000, Number(process.env.DATABASE_DISCOVERY_INTERVAL_MS || 60_000));
+const DATABASE_DISCOVERY_INTERVAL_MS = Math.max(300_000, Number(process.env.DATABASE_DISCOVERY_INTERVAL_MS || 300_000));
 const DATABASE_DISCOVERY_ENABLED = String(process.env.DATABASE_DISCOVERY_ENABLED || '1') !== '0';
-const DATABASE_DISCOVERY_BATCH_SIZE = Math.max(1, Math.min(5, Number(process.env.DATABASE_DISCOVERY_BATCH_SIZE || 2)));
+const DATABASE_DISCOVERY_BATCH_SIZE = Math.max(1, Math.min(3, Number(process.env.DATABASE_DISCOVERY_BATCH_SIZE || 1)));
 const DATABASE_DISCOVERY_MAX_PAGE = Math.max(20, Math.min(500, Number(process.env.DATABASE_DISCOVERY_MAX_PAGE || 100)));
 const DATABASE_DISCOVERY_PAGE_SIZE = Math.max(10, Math.min(50, Number(process.env.DATABASE_DISCOVERY_PAGE_SIZE || 25)));
 const DATABASE_DISCOVERY_PRIORITY_EVERY = Math.max(5, Math.min(60, Number(process.env.DATABASE_DISCOVERY_PRIORITY_EVERY || 10)));
@@ -59,11 +69,216 @@ let dbReady = false;
 let dbLastError = null;
 let discoveryTimer = null;
 let discoveryRunning = false;
+let discoveryFailureCount = 0;
+let cacheCleanupTimer = null;
+let imageCacheBytes = 0;
+let externalFetchActive = 0;
+const externalFetchQueue = [];
 let nameHistorySearchCache = { expiresAt: 0, value: null };
 
 app.disable('x-powered-by');
 app.set('etag', 'strong');
 app.set('trust proxy', true);
+
+function releaseExternalFetchSlot() {
+  externalFetchActive = Math.max(0, externalFetchActive - 1);
+  const next = externalFetchQueue.shift();
+  if (next) {
+    externalFetchActive += 1;
+    next();
+  }
+}
+
+function acquireExternalFetchSlot() {
+  if (externalFetchActive < EXTERNAL_FETCH_CONCURRENCY) {
+    externalFetchActive += 1;
+    return Promise.resolve();
+  }
+  if (externalFetchQueue.length >= EXTERNAL_FETCH_QUEUE_LIMIT) {
+    const error = new Error('PeakHalla is busy refreshing data. Please try again in a moment.');
+    error.status = 503;
+    return Promise.reject(error);
+  }
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      const index = externalFetchQueue.indexOf(grant);
+      if (index >= 0) externalFetchQueue.splice(index, 1);
+      const error = new Error('External data queue timed out. Please try again.');
+      error.status = 503;
+      reject(error);
+    }, 12_000);
+    timer.unref?.();
+    const grant = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    externalFetchQueue.push(grant);
+  });
+}
+
+async function limitedFetch(url, options = {}) {
+  await acquireExternalFetchSlot();
+  let released = false;
+  const release = () => {
+    if (released) return;
+    released = true;
+    releaseExternalFetchSlot();
+  };
+  try {
+    const response = await globalThis.fetch(url, options);
+    const safetyTimer = setTimeout(() => {
+      try { response.body?.cancel?.(); } catch {}
+      release();
+    }, 30_000);
+    safetyTimer.unref?.();
+    const consume = (method) => async (...args) => {
+      try {
+        return await response[method](...args);
+      } finally {
+        clearTimeout(safetyTimer);
+        release();
+      }
+    };
+    return new Proxy(response, {
+      get(target, property) {
+        if (property === '__releaseExternalSlot') return release;
+        if (['text', 'json', 'arrayBuffer', 'blob', 'formData'].includes(property)) return consume(property);
+        const value = Reflect.get(target, property, target);
+        return typeof value === 'function' ? value.bind(target) : value;
+      }
+    });
+  } catch (error) {
+    release();
+    throw error;
+  }
+}
+
+async function discardLimitedResponse(response) {
+  try { await response?.body?.cancel?.(); } catch {}
+  try { response?.__releaseExternalSlot?.(); } catch {}
+}
+
+function deleteMapEntry(map, key) {
+  const value = map.get(key);
+  if (map === imageCache && value?.buffer) imageCacheBytes = Math.max(0, imageCacheBytes - value.buffer.length);
+  return map.delete(key);
+}
+
+function touchMapEntry(map, key, value) {
+  if (map.has(key)) map.delete(key);
+  map.set(key, value);
+}
+
+function pruneExpiredMap(map, now = Date.now()) {
+  for (const [key, value] of map) {
+    if (value?.expiresAt && value.expiresAt <= now) deleteMapEntry(map, key);
+  }
+}
+
+function trimMap(map, maxEntries) {
+  while (map.size > maxEntries) {
+    const oldestKey = map.keys().next().value;
+    if (oldestKey === undefined) break;
+    deleteMapEntry(map, oldestKey);
+  }
+}
+
+function setGeneralCache(key, value) {
+  pruneExpiredMap(cache);
+  touchMapEntry(cache, key, value);
+  trimMap(cache, GENERAL_CACHE_LIMIT);
+}
+
+function getGeneralCache(key) {
+  const value = cache.get(key);
+  if (!value) return null;
+  if (value.expiresAt && value.expiresAt <= Date.now()) {
+    cache.delete(key);
+    return null;
+  }
+  touchMapEntry(cache, key, value);
+  return value;
+}
+
+function setProfileMemoryCache(playerId, value, expiresAt = Date.now() + PROFILE_RESPONSE_TTL_MS) {
+  const key = String(playerId);
+  touchMapEntry(profileResponseCache, key, { value, expiresAt });
+  trimMap(profileResponseCache, PROFILE_RESPONSE_CACHE_LIMIT);
+}
+
+function setImageMemoryCache(key, value) {
+  if (!value?.buffer?.length) return;
+  if (imageCache.has(key)) deleteMapEntry(imageCache, key);
+  imageCache.set(key, value);
+  imageCacheBytes += value.buffer.length;
+  pruneExpiredMap(imageCache);
+  while (imageCache.size > IMAGE_CACHE_LIMIT || imageCacheBytes > IMAGE_CACHE_MAX_BYTES) {
+    const oldestKey = imageCache.keys().next().value;
+    if (oldestKey === undefined) break;
+    deleteMapEntry(imageCache, oldestKey);
+  }
+}
+
+function getImageMemoryCache(key) {
+  const value = imageCache.get(key);
+  if (!value) return null;
+  if (value.expiresAt && value.expiresAt <= Date.now()) {
+    deleteMapEntry(imageCache, key);
+    return null;
+  }
+  touchMapEntry(imageCache, key, value);
+  return value;
+}
+
+function cleanupRuntimeCaches(aggressive = false) {
+  const now = Date.now();
+  pruneExpiredMap(cache, now);
+  pruneExpiredMap(profileResponseCache, now);
+  pruneExpiredMap(profileSearchResponseCache, now);
+  pruneExpiredMap(officialTeamLookupCache, now);
+  pruneExpiredMap(imageCache, now);
+
+  for (const [key, recent] of wallRateLimits) {
+    const filtered = Array.isArray(recent) ? recent.filter((time) => now - Number(time || 0) < 60 * 60_000) : [];
+    if (filtered.length) wallRateLimits.set(key, filtered);
+    else wallRateLimits.delete(key);
+  }
+  trimMap(wallRateLimits, RATE_LIMIT_CACHE_LIMIT);
+
+  for (const [key, tracker] of queueTrackers) {
+    if (!tracker?.scanPromise && now - Number(tracker?.last_requested_at || 0) > 30 * 60_000) {
+      if (tracker.timer) clearTimeout(tracker.timer);
+      queueTrackers.delete(key);
+    }
+  }
+
+  trimMap(cache, aggressive ? Math.min(80, GENERAL_CACHE_LIMIT) : GENERAL_CACHE_LIMIT);
+  trimMap(profileResponseCache, aggressive ? Math.min(12, PROFILE_RESPONSE_CACHE_LIMIT) : PROFILE_RESPONSE_CACHE_LIMIT);
+  trimMap(profileSearchResponseCache, aggressive ? 40 : 120);
+  trimMap(officialTeamLookupCache, aggressive ? 20 : TEAM_LOOKUP_CACHE_LIMIT);
+  if (aggressive) {
+    while (imageCache.size > 6 || imageCacheBytes > 5 * 1024 * 1024) {
+      const oldestKey = imageCache.keys().next().value;
+      if (oldestKey === undefined) break;
+      deleteMapEntry(imageCache, oldestKey);
+    }
+  }
+}
+
+function scheduleRuntimeCacheCleanup() {
+  if (cacheCleanupTimer) return;
+  cacheCleanupTimer = setInterval(() => {
+    const memory = process.memoryUsage();
+    const rssMb = memory.rss / 1024 / 1024;
+    const heapMb = memory.heapUsed / 1024 / 1024;
+    const aggressive = rssMb >= MEMORY_SOFT_LIMIT_MB || heapMb >= MEMORY_SOFT_LIMIT_MB * 0.72;
+    cleanupRuntimeCaches(aggressive);
+    if (aggressive) {
+      console.warn(`PeakHalla memory pressure: RSS ${rssMb.toFixed(0)} MB, heap ${heapMb.toFixed(0)} MB. Runtime caches were reduced.`);
+    }
+  }, CACHE_CLEANUP_INTERVAL_MS);
+  cacheCleanupTimer.unref?.();
+}
 
 
 function databaseUsesSsl(connectionString) {
@@ -92,8 +307,8 @@ async function initDatabase() {
 
   dbPool = new Pool({
     connectionString: DATABASE_URL,
-    max: Math.max(2, Math.min(10, Number(process.env.PGPOOL_MAX || 5))),
-    idleTimeoutMillis: 30_000,
+    max: Math.max(1, Math.min(6, Number(process.env.PGPOOL_MAX || 3))),
+    idleTimeoutMillis: 15_000,
     connectionTimeoutMillis: 8_000,
     ssl: databaseUsesSsl(DATABASE_URL) ? { rejectUnauthorized: false } : undefined
   });
@@ -319,44 +534,56 @@ async function setDatabaseState(key, value) {
 
 async function saveAliasesToDatabase(entries, source = 'profile') {
   if (!dbReady || !entries?.length) return;
-  const cleanEntries = entries
-    .map((entry) => ({ id: Number(entry.id), name: sanitizePlayerName(entry.name) }))
-    .filter((entry) => Number.isSafeInteger(entry.id) && entry.id > 0 && isPlausiblePlayerName(entry.name) && !isGeneratedPlayerName(entry.name));
+  const uniqueEntries = new Map();
+  for (const raw of entries) {
+    const entry = { id: Number(raw.id), name: sanitizePlayerName(raw.name) };
+    if (!Number.isSafeInteger(entry.id) || entry.id <= 0 || !isPlausiblePlayerName(entry.name) || isGeneratedPlayerName(entry.name)) continue;
+    uniqueEntries.set(`${entry.id}:${normalizeName(entry.name)}`, entry);
+  }
+  const cleanEntries = [...uniqueEntries.values()].sort((a, b) => a.id - b.id || normalizeName(a.name).localeCompare(normalizeName(b.name)));
   if (!cleanEntries.length) return;
 
-  const client = await dbPool.connect();
-  try {
-    await client.query('BEGIN');
-    for (const entry of cleanEntries) {
-      const normalized = normalizeName(entry.name);
-      await client.query(`
-        INSERT INTO player_aliases (player_id, alias, alias_normalized, first_seen, last_seen, observations, sources)
-        VALUES ($1, $2, $3, NOW(), NOW(), 1, $4::jsonb)
-        ON CONFLICT (player_id, alias_normalized) DO UPDATE SET
-          alias = EXCLUDED.alias,
-          last_seen = NOW(),
-          observations = player_aliases.observations + 1,
-          sources = (
-            SELECT COALESCE(jsonb_agg(DISTINCT value), '[]'::jsonb)
-            FROM jsonb_array_elements(player_aliases.sources || EXCLUDED.sources)
-          )
-      `, [entry.id, entry.name, normalized, JSON.stringify([source])]);
-      await client.query(`
-        INSERT INTO players (brawlhalla_id, current_name, normalized_name, first_seen, last_seen)
-        VALUES ($1, $2, $3, NOW(), NOW())
-        ON CONFLICT (brawlhalla_id) DO UPDATE SET
-          last_seen = GREATEST(players.last_seen, NOW())
-      `, [entry.id, entry.name, normalized]);
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const client = await dbPool.connect();
+    try {
+      await client.query('BEGIN');
+      for (const entry of cleanEntries) {
+        const normalized = normalizeName(entry.name);
+        await client.query(`
+          INSERT INTO player_aliases (player_id, alias, alias_normalized, first_seen, last_seen, observations, sources)
+          VALUES ($1, $2, $3, NOW(), NOW(), 1, $4::jsonb)
+          ON CONFLICT (player_id, alias_normalized) DO UPDATE SET
+            alias = EXCLUDED.alias,
+            last_seen = NOW(),
+            observations = player_aliases.observations + 1,
+            sources = (
+              SELECT COALESCE(jsonb_agg(DISTINCT value), '[]'::jsonb)
+              FROM jsonb_array_elements(player_aliases.sources || EXCLUDED.sources)
+            )
+        `, [entry.id, entry.name, normalized, JSON.stringify([source])]);
+        await client.query(`
+          INSERT INTO players (brawlhalla_id, current_name, normalized_name, first_seen, last_seen)
+          VALUES ($1, $2, $3, NOW(), NOW())
+          ON CONFLICT (brawlhalla_id) DO UPDATE SET
+            last_seen = GREATEST(players.last_seen, NOW())
+        `, [entry.id, entry.name, normalized]);
+      }
+      await client.query('COMMIT');
+      nameHistorySearchCache = { expiresAt: 0, value: null };
+      invalidateProfileSearchCacheForNames(cleanEntries.map((entry) => entry.name));
+      return;
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => null);
+      dbLastError = error;
+      const retryable = error?.code === '40P01' || error?.code === '40001' || /deadlock detected|serialization failure/i.test(String(error?.message || ''));
+      if (!retryable || attempt === 2) {
+        console.warn('Could not save player aliases to PostgreSQL:', error.message);
+        return;
+      }
+      await wait(120 * (attempt + 1) + Math.floor(Math.random() * 100));
+    } finally {
+      client.release();
     }
-    await client.query('COMMIT');
-    nameHistorySearchCache = { expiresAt: 0, value: null };
-    invalidateProfileSearchCacheForNames(cleanEntries.map((entry) => entry.name));
-  } catch (error) {
-    await client.query('ROLLBACK').catch(() => null);
-    dbLastError = error;
-    console.warn('Could not save player aliases to PostgreSQL:', error.message);
-  } finally {
-    client.release();
   }
 }
 
@@ -412,10 +639,7 @@ async function getDatabaseCachedProfileResponse(playerId, maxAgeMs = DATABASE_PR
   if (!row?.profile_payload?.player) return null;
   const age = Date.now() - new Date(row.last_fetched || 0).getTime();
   if (Number.isFinite(maxAgeMs) && maxAgeMs > 0 && (!Number.isFinite(age) || age > maxAgeMs)) return null;
-  profileResponseCache.set(String(playerId), {
-    value: row.profile_payload,
-    expiresAt: Date.now() + PROFILE_RESPONSE_TTL_MS
-  });
+  setProfileMemoryCache(playerId, row.profile_payload);
   return row.profile_payload;
 }
 
@@ -605,28 +829,34 @@ async function importLegacyJsonIntoDatabase() {
   const imported = await getDatabaseState('legacy_json_import_v1', null);
   if (imported?.completed) return;
   console.log('Importing existing PeakHalla JSON cache into PostgreSQL...');
-  const [names, profiles, snapshots] = await Promise.all([
-    readJson(NAMES_FILE, {}),
-    readJson(PROFILE_CACHE_FILE, {}),
-    readJson(SNAPSHOTS_FILE, {})
-  ]);
-
+  let names = await readJson(NAMES_FILE, {});
+  const nameCount = Object.keys(names).length;
   for (const [id, entries] of Object.entries(names)) {
     const aliasEntries = cleanNameHistoryList(entries).map((entry) => ({ id: Number(id), name: entry.name }));
     await saveAliasesToDatabase(aliasEntries, 'legacy-json');
   }
+  names = null;
+
+  let profiles = await readJson(PROFILE_CACHE_FILE, {});
+  const profileCount = Object.keys(profiles).length;
   for (const [id, entry] of Object.entries(profiles)) {
     if (entry?.value?.player) await saveProfileToDatabase(Number(id), entry.value);
   }
+  profiles = null;
+
+  let snapshots = await readJson(SNAPSHOTS_FILE, {});
+  const snapshotPlayerCount = Object.keys(snapshots).length;
   for (const [id, rows] of Object.entries(snapshots)) {
     for (const row of Array.isArray(rows) ? rows.slice(-120) : []) await saveSnapshotToDatabase(Number(id), row);
   }
+  snapshots = null;
+
   await setDatabaseState('legacy_json_import_v1', {
     completed: true,
     imported_at: new Date().toISOString(),
-    names: Object.keys(names).length,
-    profiles: Object.keys(profiles).length,
-    snapshot_players: Object.keys(snapshots).length
+    names: nameCount,
+    profiles: profileCount,
+    snapshot_players: snapshotPlayerCount
   });
   console.log('Existing PeakHalla cache imported into PostgreSQL.');
 }
@@ -689,6 +919,14 @@ async function fetchDiscoveryPage(region, mode, page) {
 
 async function runDatabaseDiscoveryCycle() {
   if (!dbReady || !DATABASE_DISCOVERY_ENABLED || discoveryRunning) return;
+  const memory = process.memoryUsage();
+  const rssMb = memory.rss / 1024 / 1024;
+  const heapMb = memory.heapUsed / 1024 / 1024;
+  if (rssMb >= MEMORY_SOFT_LIMIT_MB || heapMb >= MEMORY_SOFT_LIMIT_MB * 0.72) {
+    cleanupRuntimeCaches(true);
+    console.warn(`PeakHalla discovery skipped under memory pressure (RSS ${rssMb.toFixed(0)} MB, heap ${heapMb.toFixed(0)} MB).`);
+    return;
+  }
   discoveryRunning = true;
   const startedAt = Date.now();
   try {
@@ -743,7 +981,9 @@ async function runDatabaseDiscoveryCycle() {
       last_error: null
     };
     await setDatabaseState('official_discovery_cursor_v2', state);
+    discoveryFailureCount = 0;
   } catch (error) {
+    discoveryFailureCount += 1;
     console.warn('PeakHalla background player discovery failed:', error.message);
     const previous = normalizeDiscoveryCursor(await getDatabaseState('official_discovery_cursor_v2', {}));
     const isRegionValidationError = /region must be one of/i.test(String(error?.message || ''));
@@ -765,12 +1005,19 @@ async function runDatabaseDiscoveryCycle() {
   }
 }
 
-function scheduleDatabaseDiscovery() {
+function scheduleDatabaseDiscovery(delayMs = 15_000) {
   if (!dbReady || !DATABASE_DISCOVERY_ENABLED || discoveryTimer) return;
-  discoveryTimer = setTimeout(() => {
-    runDatabaseDiscoveryCycle().catch(() => null);
-    discoveryTimer = setInterval(() => runDatabaseDiscoveryCycle().catch(() => null), DATABASE_DISCOVERY_INTERVAL_MS);
-  }, 5_000);
+  discoveryTimer = setTimeout(async () => {
+    discoveryTimer = null;
+    const beforeFailureCount = discoveryFailureCount;
+    await runDatabaseDiscoveryCycle().catch(() => null);
+    const failed = discoveryFailureCount > beforeFailureCount;
+    const backoff = failed
+      ? Math.min(30 * 60_000, DATABASE_DISCOVERY_INTERVAL_MS * Math.max(2, 2 ** Math.min(discoveryFailureCount, 4)))
+      : DATABASE_DISCOVERY_INTERVAL_MS;
+    scheduleDatabaseDiscovery(backoff);
+  }, Math.max(5_000, delayMs));
+  discoveryTimer.unref?.();
 }
 
 // Permanently move every legacy Railway URL to the public PeakHalla domain.
@@ -993,14 +1240,14 @@ function cleanNameHistoryList(list = []) {
 async function brawlToolsFetch(endpoint, ttlMs = 15 * 60_000) {
   const key = `brawltools:${endpoint}`;
   const now = Date.now();
-  const cached = cache.get(key);
-  if (cached && cached.expiresAt > now) return cached.value;
+  const cached = getGeneralCache(key);
+  if (cached) return cached.value;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15_000);
 
   try {
-    const response = await fetch(`${BRAWLTOOLS_API_BASE}${endpoint}`, {
+    const response = await limitedFetch(`${BRAWLTOOLS_API_BASE}${endpoint}`, {
       headers: {
         Accept: 'application/json',
         'User-Agent': 'Nad-BH-Tracker/5.5'
@@ -1022,7 +1269,7 @@ async function brawlToolsFetch(endpoint, ttlMs = 15 * 60_000) {
       throw error;
     }
 
-    cache.set(key, { value: body, expiresAt: now + ttlMs });
+    setGeneralCache(key, { value: body, expiresAt: now + ttlMs });
     return body;
   } finally {
     clearTimeout(timeout);
@@ -1031,18 +1278,18 @@ async function brawlToolsFetch(endpoint, ttlMs = 15 * 60_000) {
 
 async function apiFetch(endpoint, ttlMs = 60_000) {
   const now = Date.now();
-  const cached = cache.get(endpoint);
-  if (cached && cached.expiresAt > now) return cached.value;
+  const cached = getGeneralCache(endpoint);
+  if (cached) return cached.value;
   if (apiInFlight.has(endpoint)) return apiInFlight.get(endpoint);
 
   const task = (async () => {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6_000);
     try {
-      const response = await fetch(`${API_BASE}${endpoint}`, {
+      const response = await limitedFetch(`${API_BASE}${endpoint}`, {
         headers: {
           Accept: 'application/json',
-          'User-Agent': 'PeakHalla/7.61'
+          'User-Agent': 'PeakHalla/7.64'
         },
         signal: controller.signal
       });
@@ -1061,7 +1308,7 @@ async function apiFetch(endpoint, ttlMs = 60_000) {
         throw error;
       }
 
-      cache.set(endpoint, { value: body, expiresAt: Date.now() + ttlMs });
+      setGeneralCache(endpoint, { value: body, expiresAt: Date.now() + ttlMs });
       return body;
     } finally {
       clearTimeout(timeout);
@@ -1079,12 +1326,12 @@ async function apiFetchFresh(endpoint) {
   const timeout = setTimeout(() => controller.abort(), 15_000);
   try {
     cache.delete(endpoint);
-    const response = await fetch(`${API_BASE}${endpoint}`, {
+    const response = await limitedFetch(`${API_BASE}${endpoint}`, {
       headers: {
         Accept: 'application/json',
         'Cache-Control': 'no-cache, no-store, max-age=0',
         Pragma: 'no-cache',
-        'User-Agent': 'PeakHalla/7.61'
+        'User-Agent': 'PeakHalla/7.64'
       },
       cache: 'no-store',
       signal: controller.signal
@@ -1103,7 +1350,7 @@ async function apiFetchFresh(endpoint) {
     }
     // Keep the normal cache synchronized with the verified response so a fast
     // request that follows does not resurrect older player or clan data.
-    cache.set(endpoint, { value: body, expiresAt: Date.now() + 30_000 });
+    setGeneralCache(endpoint, { value: body, expiresAt: Date.now() + 30_000 });
     return body;
   } finally {
     clearTimeout(timeout);
@@ -1119,8 +1366,8 @@ function unwrapTrpcPayload(body) {
 async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFresh = false) {
   const key = `corehalla:${procedure}:${JSON.stringify(input)}`;
   const now = Date.now();
-  const cached = cache.get(key);
-  if (!forceFresh && cached && cached.expiresAt > now) return cached.value;
+  const cached = forceFresh ? null : getGeneralCache(key);
+  if (cached) return cached.value;
   const inFlightKey = `${key}:${forceFresh ? 'fresh' : 'normal'}`;
   if (corehallaInFlight.has(inFlightKey)) return corehallaInFlight.get(inFlightKey);
 
@@ -1158,7 +1405,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 8_500);
       try {
-        const response = await fetch(attempt.url, {
+        const response = await limitedFetch(attempt.url, {
           method: attempt.method,
           body: attempt.body,
           headers: {
@@ -1166,7 +1413,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
             ...(attempt.body ? { 'Content-Type': 'application/json' } : {}),
             'Cache-Control': 'no-cache, no-store, max-age=0',
             Pragma: 'no-cache',
-            'User-Agent': 'PeakHalla/7.61'
+            'User-Agent': 'PeakHalla/7.64'
           },
           cache: 'no-store',
           signal: controller.signal
@@ -1187,7 +1434,7 @@ async function corehallaFetch(procedure, input = {}, ttlMs = 5 * 60_000, forceFr
           lastError = new Error('Corehalla returned an empty response.');
           continue;
         }
-        cache.set(key, { value, expiresAt: Date.now() + ttlMs });
+        setGeneralCache(key, { value, expiresAt: Date.now() + ttlMs });
         return value;
       } catch (error) {
         lastError = error;
@@ -1245,6 +1492,7 @@ function getCachedProfileSearch(kind, query, region = 'ALL', mode = '1v1') {
     profileSearchResponseCache.delete(key);
     return null;
   }
+  touchMapEntry(profileSearchResponseCache, key, cached);
   return cached.value;
 }
 
@@ -1259,7 +1507,7 @@ function setCachedProfileSearch(kind, query, region, mode, value) {
   }
   const ttl = PROFILE_SEARCH_RESPONSE_TTL_MS;
   profileSearchResponseCache.set(key, { value, expiresAt: Date.now() + ttl });
-  if (profileSearchResponseCache.size > 250) {
+  if (profileSearchResponseCache.size > 120) {
     const oldest = profileSearchResponseCache.keys().next().value;
     if (oldest) profileSearchResponseCache.delete(oldest);
   }
@@ -1273,7 +1521,7 @@ function hasExactAliasMatch(matches, query) {
 
 function warmAliasSearchInBackground(query) {
   const key = normalizeName(query);
-  if (key.length < 2 || aliasSearchWarmups.has(key)) return;
+  if (key.length < 2 || aliasSearchWarmups.has(key) || aliasSearchWarmups.size >= 8) return;
   const job = (async () => {
     const matches = await searchCorehallaAliasesBroad(query, 5, false).catch(() => []);
     if (matches.length) await rememberCorehallaAliasMatches(matches).catch(() => null);
@@ -1290,6 +1538,7 @@ function getCachedProfileResponse(playerId) {
     profileResponseCache.delete(key);
     return null;
   }
+  touchMapEntry(profileResponseCache, key, cached);
   return cached.value;
 }
 
@@ -1299,42 +1548,49 @@ async function getDiskCachedProfileResponse(playerId) {
   if (!entry?.value) return null;
   const age = Date.now() - Number(entry.saved_at || 0);
   if (!Number.isFinite(age) || age > PROFILE_DISK_CACHE_MAX_AGE_MS) return null;
-  profileResponseCache.set(String(playerId), {
-    value: entry.value,
-    expiresAt: Date.now() + PROFILE_RESPONSE_TTL_MS
-  });
+  setProfileMemoryCache(playerId, entry.value);
   return entry.value;
 }
 
-function persistProfileResponse(playerId, value) {
-  saveProfileToDatabase(playerId, value).catch(() => null);
-  updateJson(PROFILE_CACHE_FILE, {}, (all) => {
+async function persistProfileResponse(playerId, value) {
+  await saveProfileToDatabase(playerId, value);
+  if (dbReady) return;
+  await updateJson(PROFILE_CACHE_FILE, {}, (all) => {
     all[String(playerId)] = { saved_at: Date.now(), value };
     const entries = Object.entries(all)
       .sort((a, b) => Number(b[1]?.saved_at || 0) - Number(a[1]?.saved_at || 0))
       .slice(0, PROFILE_DISK_CACHE_LIMIT);
     for (const key of Object.keys(all)) delete all[key];
     for (const [key, entry] of entries) all[key] = entry;
-  }).catch(() => null);
+  });
 }
 
 function setCachedProfileResponse(playerId, value) {
-  profileResponseCache.set(String(playerId), {
-    value,
-    expiresAt: Date.now() + PROFILE_RESPONSE_TTL_MS
-  });
-  persistProfileResponse(playerId, value);
+  setProfileMemoryCache(playerId, value);
+  return persistProfileResponse(playerId, value);
 }
 
 async function peekKnownNames(playerId) {
-  const [databaseNames, all] = await Promise.all([
-    getDatabaseKnownNames(playerId).catch(() => []),
-    readJson(NAMES_FILE, {})
-  ]);
+  const databaseNames = await getDatabaseKnownNames(playerId).catch(() => []);
+  if (dbReady) return cleanNameHistoryList(databaseNames || []);
+  const all = await readJson(NAMES_FILE, {});
   return cleanNameHistoryList([...(databaseNames || []), ...(all[String(playerId)] || [])]);
 }
 
 async function readSnapshotHistory(playerId) {
+  if (dbReady) {
+    const result = await dbQuery(`
+      SELECT snapshot_date AS date, name, rating, peak_rating, global_rank, games, wins, tier
+      FROM player_snapshots
+      WHERE player_id = $1
+      ORDER BY snapshot_date ASC
+      LIMIT 120
+    `, [Number(playerId)]);
+    return (result?.rows || []).map((row) => ({
+      ...row,
+      date: row.date instanceof Date ? row.date.toISOString().slice(0, 10) : String(row.date || '').slice(0, 10)
+    }));
+  }
   const all = await readJson(SNAPSHOTS_FILE, {});
   return Array.isArray(all[String(playerId)]) ? all[String(playerId)] : [];
 }
@@ -1568,13 +1824,13 @@ function mergeLifetimeStats(v1 = {}, legacy = null) {
 async function htmlFetch(url, ttlMs = 15 * 60_000) {
   const key = `html:${url}`;
   const now = Date.now();
-  const cached = cache.get(key);
-  if (cached && cached.expiresAt > now) return cached.value;
+  const cached = getGeneralCache(key);
+  if (cached) return cached.value;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 5_000);
   try {
-    const response = await fetch(url, {
+    const response = await limitedFetch(url, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
         'User-Agent': 'Nad-BH-Tracker/5.5'
@@ -1582,12 +1838,13 @@ async function htmlFetch(url, ttlMs = 15 * 60_000) {
       signal: controller.signal
     });
     if (!response.ok) {
+      await discardLimitedResponse(response);
       const error = new Error(`Official rankings error (${response.status})`);
       error.status = response.status;
       throw error;
     }
     const html = await response.text();
-    cache.set(key, { value: html, expiresAt: now + ttlMs });
+    setGeneralCache(key, { value: html, expiresAt: now + ttlMs });
     return html;
   } finally {
     clearTimeout(timeout);
@@ -1807,6 +2064,9 @@ function updateJson(file, fallback, mutator) {
       return result;
     });
   fileQueues.set(file, task);
+  task.finally(() => {
+    if (fileQueues.get(file) === task) fileQueues.delete(file);
+  }).catch(() => null);
   return task;
 }
 
@@ -1866,8 +2126,8 @@ async function fetchLegendArtwork(name) {
   if (!slug) return null;
   const cacheKey = `portrait:${slug}`;
   const now = Date.now();
-  const cached = imageCache.get(cacheKey);
-  if (cached && cached.expiresAt > now) return cached;
+  const cached = getImageMemoryCache(cacheKey);
+  if (cached) return cached;
 
   const cleanName = String(name || '').trim();
   const wikiName = legendWikiName(cleanName);
@@ -1888,22 +2148,22 @@ async function fetchLegendArtwork(name) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
     try {
-      const response = await fetch(url, {
+      const response = await limitedFetch(url, {
         headers: {
           Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-          'User-Agent': 'PeakHalla/7.61',
+          'User-Agent': 'PeakHalla/7.64',
           Referer: 'https://brawlhalla.wiki.gg/'
         },
         redirect: 'follow',
         signal: controller.signal
       });
-      if (!response.ok) continue;
+      if (!response.ok) { await discardLimitedResponse(response); continue; }
       const contentType = response.headers.get('content-type') || '';
-      if (!contentType.startsWith('image/')) continue;
+      if (!contentType.startsWith('image/')) { await discardLimitedResponse(response); continue; }
       const buffer = Buffer.from(await response.arrayBuffer());
       if (!buffer.length) continue;
       const value = { buffer, contentType, expiresAt: now + 7 * 24 * 60 * 60_000 };
-      imageCache.set(cacheKey, value);
+      setImageMemoryCache(cacheKey, value);
       return value;
     } catch {
       // Try the next portrait source.
@@ -1918,38 +2178,38 @@ async function fetchOfficialLegendImage(name) {
   const slug = legendSlug(name);
   if (!slug) return null;
   const now = Date.now();
-  const cached = imageCache.get(slug);
-  if (cached && cached.expiresAt > now) return cached;
+  const cached = getImageMemoryCache(slug);
+  if (cached) return cached;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12_000);
   try {
-    const pageResponse = await fetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
+    const pageResponse = await limitedFetch(`${OFFICIAL_LEGENDS_BASE}/${encodeURIComponent(slug)}`, {
       headers: {
         Accept: 'text/html,application/xhtml+xml',
-        'User-Agent': 'PeakHalla/7.61'
+        'User-Agent': 'PeakHalla/7.64'
       },
       signal: controller.signal
     });
-    if (!pageResponse.ok) return null;
+    if (!pageResponse.ok) { await discardLimitedResponse(pageResponse); return null; }
     const html = await pageResponse.text();
     const candidates = [...html.matchAll(/https:\/\/cms\.brawlhalla\.com\/c\/uploads\/[^"'<>\s]+\.(?:png|webp|jpe?g)/gi)]
       .map((match) => match[0].replace(/&amp;/g, '&'));
     const splashUrl = candidates.find((url) => /splash/i.test(url)) || candidates[0];
     if (!splashUrl) return null;
 
-    const imageResponse = await fetch(splashUrl, {
+    const imageResponse = await limitedFetch(splashUrl, {
       headers: {
         Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
         Referer: 'https://www.brawlhalla.com/'
       },
       signal: controller.signal
     });
-    if (!imageResponse.ok) return null;
+    if (!imageResponse.ok) { await discardLimitedResponse(imageResponse); return null; }
     const contentType = imageResponse.headers.get('content-type') || 'image/png';
     const buffer = Buffer.from(await imageResponse.arrayBuffer());
     const value = { buffer, contentType, expiresAt: now + 24 * 60 * 60_000 };
-    imageCache.set(slug, value);
+    setImageMemoryCache(slug, value);
     return value;
   } catch {
     return null;
@@ -2643,8 +2903,8 @@ function buildLifetimeTotals(lifetime = {}) {
 async function getMainLegendSummary(playerId) {
   const cacheKey = `main-legend:${playerId}`;
   const now = Date.now();
-  const cached = cache.get(cacheKey);
-  if (cached && cached.expiresAt > now) return cached.value;
+  const cached = getGeneralCache(cacheKey);
+  if (cached) return cached.value;
 
   try {
     const [officialLifetime, coreStats, legendMap] = await Promise.all([
@@ -2661,7 +2921,7 @@ async function getMainLegendSummary(playerId) {
         Number(b.level || 0) - Number(a.level || 0)
       )[0];
     const summary = makeLegendSummary(mainStats, legendMap.get(Number(mainStats?.legend_id)));
-    cache.set(cacheKey, { value: summary || null, expiresAt: now + (summary ? 10 * 60_000 : 60_000) });
+    setGeneralCache(cacheKey, { value: summary || null, expiresAt: now + (summary ? 10 * 60_000 : 60_000) });
     return summary || null;
   } catch {
     return null;
@@ -2679,7 +2939,8 @@ async function storeSnapshot(player) {
     wins: player.ranked_wins ?? null,
     tier: player.tier ?? null
   };
-  saveSnapshotToDatabase(player.brawlhalla_id, snapshot).catch(() => null);
+  await saveSnapshotToDatabase(player.brawlhalla_id, snapshot).catch(() => null);
+  if (dbReady) return readSnapshotHistory(player.brawlhalla_id);
   return updateJson(SNAPSHOTS_FILE, {}, (all) => {
     const key = String(player.brawlhalla_id);
     const list = Array.isArray(all[key]) ? all[key] : [];
@@ -2697,6 +2958,11 @@ async function storeObservedNamesBatch(entries, source = 'profile') {
     .map((entry) => ({ id: Number(entry.id), name: sanitizePlayerName(entry.name) }))
     .filter((entry) => Number.isSafeInteger(entry.id) && entry.id > 0 && isPlausiblePlayerName(entry.name) && !isGeneratedPlayerName(entry.name));
   if (!cleanEntries.length) return {};
+  if (dbReady) {
+    await saveAliasesToDatabase(cleanEntries, source).catch(() => null);
+    nameHistorySearchCache = { expiresAt: 0, value: null };
+    return {};
+  }
 
   const result = await updateJson(NAMES_FILE, {}, (all) => {
     const now = new Date().toISOString();
@@ -2733,8 +2999,7 @@ async function storeObservedNamesBatch(entries, source = 'profile') {
 }
 
 async function snapshotNameEntries(playerId) {
-  const snapshots = await readJson(SNAPSHOTS_FILE, {});
-  const rows = Array.isArray(snapshots[String(playerId)]) ? snapshots[String(playerId)] : [];
+  const rows = await readSnapshotHistory(playerId);
   const byName = new Map();
   for (const row of rows) {
     const name = sanitizePlayerName(row?.name);
@@ -2760,6 +3025,7 @@ async function readKnownNames(playerId) {
     snapshotNameEntries(playerId),
     getDatabaseKnownNames(playerId).catch(() => [])
   ]);
+  if (dbReady) return cleanNameHistoryList([...databaseNames, ...snapshots]);
   return updateJson(NAMES_FILE, {}, (all) => {
     const merged = [...cleanNameHistoryList(all[key]), ...databaseNames, ...snapshots];
     const cleaned = cleanNameHistoryList(merged);
@@ -2784,6 +3050,7 @@ async function findAliasMatches(query, limit = 8) {
   const needle = normalizeName(query);
   if (needle.length < 2) return [];
   const databaseMatches = await findDatabaseAliasMatches(query, limit).catch(() => []);
+  if (dbReady) return databaseMatches.slice(0, limit);
   if (!nameHistorySearchCache.value || nameHistorySearchCache.expiresAt <= Date.now()) {
     nameHistorySearchCache = {
       value: await readJson(NAMES_FILE, {}),
@@ -3384,6 +3651,7 @@ function wallRateLimit(req, bucket, limit, windowMs) {
   if (recent.length >= limit) return false;
   recent.push(now);
   wallRateLimits.set(key, recent);
+  trimMap(wallRateLimits, RATE_LIMIT_CACHE_LIMIT);
   return true;
 }
 
@@ -5388,7 +5656,11 @@ async function searchOfficial2v2LeaderboardForPlayer(playerId, forceFresh = fals
   if (!Number.isSafeInteger(id) || id <= 0) return [];
   const cacheKey = String(id);
   const cached = officialTeamLookupCache.get(cacheKey);
-  if (!forceFresh && cached && cached.expiresAt > Date.now()) return cached.rows;
+  if (!forceFresh && cached && cached.expiresAt > Date.now()) {
+    touchMapEntry(officialTeamLookupCache, cacheKey, cached);
+    return cached.rows;
+  }
+  if (cached?.expiresAt && cached.expiresAt <= Date.now()) officialTeamLookupCache.delete(cacheKey);
   if (officialTeamLookupInFlight.has(cacheKey)) return officialTeamLookupInFlight.get(cacheKey);
 
   const task = (async () => {
@@ -5429,10 +5701,11 @@ async function searchOfficial2v2LeaderboardForPlayer(playerId, forceFresh = fals
     }
 
     if (foundRows.length) await saveTeamRowsToDatabase(foundRows, 'official-2v2-leaderboard-lookup');
-    officialTeamLookupCache.set(cacheKey, {
+    touchMapEntry(officialTeamLookupCache, cacheKey, {
       rows: foundRows,
       expiresAt: Date.now() + (foundRows.length ? 10 * 60_000 : 90_000)
     });
+    trimMap(officialTeamLookupCache, TEAM_LOOKUP_CACHE_LIMIT);
     return foundRows;
   })().finally(() => officialTeamLookupInFlight.delete(cacheKey));
 
@@ -5840,8 +6113,7 @@ app.get('/api/player/:id', async (req, res, next) => {
     // Empty/partial timeout payloads must never replace the last complete
     // profile in memory, PostgreSQL, disk, or the browser cache.
     if (completeOfficialProfile && !fast && !instant) {
-      setCachedProfileResponse(id, payload);
-      await saveProfileToDatabase(id, payload).catch((error) => {
+      await setCachedProfileResponse(id, payload).catch((error) => {
         console.warn(`Could not synchronously index player ${id}:`, error.message);
       });
       invalidateProfileSearchCacheForNames([player.name, ...knownNames.map((item) => item?.name)]);
@@ -5899,6 +6171,24 @@ app.get('/api/system/database', async (_req, res) => {
     },
     discovery: discovery || null,
     coverage: coverage?.rows || [],
+    runtime: (() => {
+      const memory = process.memoryUsage();
+      return {
+        rss_mb: Math.round(memory.rss / 1024 / 1024),
+        heap_used_mb: Math.round(memory.heapUsed / 1024 / 1024),
+        external_mb: Math.round(memory.external / 1024 / 1024),
+        caches: {
+          general: cache.size,
+          profiles: profileResponseCache.size,
+          searches: profileSearchResponseCache.size,
+          images: imageCache.size,
+          image_mb: Math.round(imageCacheBytes / 1024 / 1024),
+          team_lookups: officialTeamLookupCache.size,
+          queue_trackers: queueTrackers.size
+        },
+        external_fetches: { active: externalFetchActive, queued: externalFetchQueue.length }
+      };
+    })(),
     last_error: dbLastError ? dbLastError.message : null
   });
 });
@@ -5913,14 +6203,10 @@ app.use((error, _req, res, _next) => {
 });
 
 async function startServer() {
+  scheduleRuntimeCacheCleanup();
+  let connected = false;
   try {
-    await cleanAllNameHistory();
-  } catch (error) {
-    console.warn('Could not clean name history on startup:', error.message);
-  }
-
-  try {
-    const connected = await initDatabase();
+    connected = await initDatabase();
     if (connected) {
       await importLegacyJsonIntoDatabase().catch((error) => console.warn('Legacy database import failed:', error.message));
       scheduleDatabaseDiscovery();
@@ -5929,13 +6215,22 @@ async function startServer() {
     console.warn('PeakHalla database startup failed; continuing with JSON storage:', error.message);
   }
 
+  if (!connected) {
+    try {
+      await cleanAllNameHistory();
+    } catch (error) {
+      console.warn('Could not clean name history on startup:', error.message);
+    }
+  }
+
   app.listen(PORT, () => {
     console.log(`PeakHalla running on http://localhost:${PORT}`);
   });
 }
 
 async function shutdown() {
-  if (discoveryTimer) clearInterval(discoveryTimer);
+  if (discoveryTimer) clearTimeout(discoveryTimer);
+  if (cacheCleanupTimer) clearInterval(cacheCleanupTimer);
   if (dbPool) await dbPool.end().catch(() => null);
   process.exit(0);
 }
