@@ -146,8 +146,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="/styles.css?v=7.69.0" as="style">
-  <link rel="stylesheet" href="/styles.css?v=7.69.0">
+  <link rel="preload" href="/styles.css?v=7.70.0" as="style">
+  <link rel="stylesheet" href="/styles.css?v=7.70.0">
 </head>
 <body>
   <header class="site-header">
@@ -586,9 +586,12 @@
         </div>
       </div>
       <div id="leaderboard-list" class="leaderboard-list panel"><div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div></div>
-      <div class="leaderboard-pagination">
+      <div class="leaderboard-pagination" aria-label="Leaderboard pages">
+        <button id="leaderboard-page-top" class="leaderboard-page-button" type="button" hidden><span data-i18n="pageTop">Top</span></button>
+        <button id="leaderboard-page-previous" class="leaderboard-page-button" type="button" hidden><b>←</b><span data-i18n="pagePrevious">Previous</span></button>
         <span id="leaderboard-page-status" class="leaderboard-page-status" aria-live="polite"></span>
-        <button id="leaderboard-load-more" class="leaderboard-load-more" type="button" hidden><span data-i18n="loadMorePlayers">Load next 20 players</span><b>↓</b></button>
+        <button id="leaderboard-page-next" class="leaderboard-page-button primary" type="button" hidden><span data-i18n="pageNext">Next</span><b>→</b></button>
+        <button id="leaderboard-load-more" class="leaderboard-load-more" type="button" hidden aria-hidden="true"><span data-i18n="loadMorePlayers">Load next 50 players</span><b>↓</b></button>
       </div>
     </section>
 
@@ -802,7 +805,7 @@
       </a>
     </div>
   </footer>
-  <script src="/app.js?v=7.69.0" defer></script>
+  <script src="/app.js?v=7.70.0" defer></script>
   <script src="/arena-v72.js?v=7.69.0" defer></script>
   <script src="/arena-account.js?v=7.69.0" defer></script>
 </body>

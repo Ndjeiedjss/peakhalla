@@ -19,7 +19,7 @@ const translations = {
     fullPlayerStats: 'Full player stats', officialLifetimeData: 'Official lifetime data', allLegendStats: 'Every legend · lifetime stats', searchLegends: 'Search legends', legendSearchPlaceholder: 'Legend or weapon', show: 'Show', playedOnly: 'Played only', allLegends: 'All legends', sortBy: 'Sort by', level: 'Level', xp: 'XP', losses: 'Losses', damageDealt: 'Damage dealt', damageTaken: 'Damage taken', kos: 'KOs', falls: 'Falls', kdRatio: 'K/D ratio', damageRatio: 'Damage ratio', suicides: 'Suicides', teamKOs: 'Team KOs', unarmedDamage: 'Unarmed damage', thrownDamage: 'Thrown-item damage', gadgetDamage: 'Gadget damage', gadgetKOs: 'Gadget KOs', unarmedKOs: 'Unarmed KOs', bombDamage: 'Bomb damage', mineDamage: 'Mine damage', spikeballDamage: 'Spikeball damage', sidekickDamage: 'Sidekick damage', snowballHits: 'Snowball hits', bombKOs: 'Bomb KOs', mineKOs: 'Mine KOs', sidekickKOs: 'Sidekick KOs', snowballKOs: 'Snowball KOs', spikeballKOs: 'Spikeball KOs', matchTime: 'Match time', seasonRanked: 'Current season ranked', lifetimeCombat: 'Lifetime combat', weaponBreakdown: 'Weapon breakdown', noLifetimeStats: 'No legends matched these filters.', legendsTotal: 'legends', playedLegends: 'played',
     legendUsed: 'legend used', legendsUsed: 'legends used', noRankedLegends: 'No ranked legend games found.', nameSeen: 'name recorded', namesSeen: 'names recorded', currentName: 'Current', previousName: 'Previous',
     firstSeen: 'First seen', lastSeen: 'Last seen', formerly: 'Formerly', aliasMatch: 'Old-name match', main: 'Main', unknownLegend: 'Main unknown', portraitLoading: 'Loading main legend…', recordSyncing: 'Record not reported by the source', prizePool: 'Prize pool',
-    leaderboardPrefix: 'Top players ·', leaderboardSearch: 'Find a rank', leaderboardSearchPlaceholder: 'Search a player', leaderboardSearchTitle: 'Ranking search', emptyData: 'No data available right now.', allRegions: 'All regions', loadMorePlayers: 'Load next 20 players', loadingMorePlayers: 'Loading 20 more…', playersShown: 'players shown',
+    leaderboardPrefix: 'Top players ·', leaderboardSearch: 'Find a rank', leaderboardSearchPlaceholder: 'Search a player', leaderboardSearchTitle: 'Ranking search', emptyData: 'No data available right now.', allRegions: 'All regions', loadMorePlayers: 'Load next 50 players', loadingMorePlayers: 'Loading page…', playersShown: 'players shown', pageTop: 'Top', pagePrevious: 'Previous', pageNext: 'Next', pageLabel: 'Page', loadingPage: 'Loading page…',
     clansTitle: 'Top clans by lifetime XP', clansText: 'Browse the highest-XP Brawlhalla clans, then open a dedicated roster page for every clan.', clanSearch: 'Find a clan', clanSearchPlaceholder: 'Clan name or guild ID', clanRank: 'XP rank', clanTier: 'Tier', clanMembers: 'Members', clanPoints: 'Weekly points', clanXp: 'Lifetime XP', clanRecruiting: 'Recruiting', clanClosed: 'Closed', clanOpen: 'Open clan', clanDetails: 'Clan profile', clanRoster: 'Clan roster', clanRole: 'Role', clanJoined: 'Joined', clanMemberXp: 'Member XP', clanNoData: 'No clan data is available right now. Refresh in a moment.', clanLoading: 'Loading top clans by XP…', clanUpdated: 'Updated', clanDiscoveryNote: 'Top clans are ordered by lifetime XP.', clanView: 'View clan', clanBack: 'Back to clans', clanRoleOrder: 'Role hierarchy', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'Members are ordered from Recruit to Leader.', playerClan: 'PLAYER CLAN', viewClanProfile: 'Open clan profile', noClan: 'No clan',
     MiddleEast: 'Middle East', Europe: 'Europe', USEast: 'US East', USWest: 'US West', SouthernAfrica: 'Southern Africa', SoutheastAsia: 'Southeast Asia', Brazil: 'Brazil', Australia: 'Australia', Japan: 'Japan',
     esportsHubTitle: 'PeakHalla Esports', esportsHubText: 'Official power rankings and a live tournament directory for Brawlhalla esports.', esportsTitle: 'Esports power rankings', esportsText: 'Official competitive names, medals, earnings, and major tournament results.', powerRanking: 'Power rankings', player: 'Player', earnings: 'Earnings', tournamentDirectory: 'Tournament directory', tournamentDirectoryText: 'New Brawlhalla tournament announcements are checked automatically and added here.', liveTournamentFeed: 'LIVE TOURNAMENT FEED', autoUpdating: 'AUTO UPDATING', officialTournaments: 'Official tournaments', communityTournaments: 'Community tournaments', tournamentRegion: 'Tournament region', tournamentMode: 'Tournament mode', allTournamentModes: 'All modes', loadingTournaments: 'Loading tournaments…', noTournaments: 'No tournaments matched these filters yet.', tournamentEvents: 'events', tournamentSource: 'Open tournament', announced: 'Announced', tournamentSingles: '1v1 tournaments', tournamentDoubles: '2v2 tournaments', tournamentOtherModes: 'Other tournaments',
@@ -50,7 +50,7 @@ const translations = {
     fullPlayerStats: 'إحصائيات اللاعب كاملة', officialLifetimeData: 'بيانات رسمية طوال عمر الحساب', allLegendStats: 'كل الشخصيات · إحصائيات العمر الكامل', searchLegends: 'ابحث في الشخصيات', legendSearchPlaceholder: 'اسم شخصية أو سلاح', show: 'العرض', playedOnly: 'اللي لعب بها فقط', allLegends: 'كل الشخصيات', sortBy: 'الترتيب حسب', level: 'اللفل', xp: 'الإكس بي', losses: 'الخسائر', damageDealt: 'الضرر المسبب', damageTaken: 'الضرر المستلم', kos: 'الإقصاءات', falls: 'مرات السقوط', kdRatio: 'نسبة K/D', damageRatio: 'نسبة الضرر', suicides: 'سقوط ذاتي', teamKOs: 'إقصاء الزملاء', unarmedDamage: 'ضرر بدون سلاح', thrownDamage: 'ضرر الأدوات المرميّة', gadgetDamage: 'ضرر الأدوات', gadgetKOs: 'إقصاءات الأدوات', unarmedKOs: 'إقصاءات بدون سلاح', bombDamage: 'ضرر القنابل', mineDamage: 'ضرر الألغام', spikeballDamage: 'ضرر الكرة الشائكة', sidekickDamage: 'ضرر المساعد', snowballHits: 'إصابات كرة الثلج', bombKOs: 'إقصاءات القنابل', mineKOs: 'إقصاءات الألغام', sidekickKOs: 'إقصاءات المساعد', snowballKOs: 'إقصاءات كرة الثلج', spikeballKOs: 'إقصاءات الكرة الشائكة', matchTime: 'وقت المباريات', seasonRanked: 'رانك الموسم الحالي', lifetimeCombat: 'قتال العمر الكامل', weaponBreakdown: 'تفاصيل الأسلحة', noLifetimeStats: 'ما فيه شخصيات مطابقة للفلاتر.', legendsTotal: 'شخصية', playedLegends: 'مستخدمة',
     legendUsed: 'شخصية مستخدمة', legendsUsed: 'شخصيات مستخدمة', noRankedLegends: 'ما لقينا مباريات رانك على الشخصيات.', nameSeen: 'اسم مسجل', namesSeen: 'أسماء مسجلة', currentName: 'الحالي', previousName: 'قديم',
     firstSeen: 'أول ظهور', lastSeen: 'آخر ظهور', formerly: 'كان اسمه', aliasMatch: 'تطابق اسم قديم', main: 'الأساسية', unknownLegend: 'الشخصية غير معروفة', portraitLoading: 'نحمّل الشخصية الأساسية…', recordSyncing: 'السجل غير متوفر من المصدر', prizePool: 'مجموع الجوائز',
-    leaderboardPrefix: 'المتصدرين ·', leaderboardSearch: 'ابحث في الترتيب', leaderboardSearchPlaceholder: 'اكتب اسم اللاعب', leaderboardSearchTitle: 'نتيجة الترتيب', emptyData: 'ما فيه بيانات الحين.', allRegions: 'كل المناطق', loadMorePlayers: 'اعرض 20 لاعب إضافي', loadingMorePlayers: 'نحمّل 20 لاعب إضافي…', playersShown: 'لاعب معروض',
+    leaderboardPrefix: 'المتصدرين ·', leaderboardSearch: 'ابحث في الترتيب', leaderboardSearchPlaceholder: 'اكتب اسم اللاعب', leaderboardSearchTitle: 'نتيجة الترتيب', emptyData: 'ما فيه بيانات الحين.', allRegions: 'كل المناطق', loadMorePlayers: 'اعرض 50 لاعب إضافي', loadingMorePlayers: 'نحمّل الصفحة…', playersShown: 'لاعب معروض', pageTop: 'الأول', pagePrevious: 'السابق', pageNext: 'التالي', pageLabel: 'صفحة', loadingPage: 'نحمّل الصفحة…',
     clansTitle: 'أفضل الكلانات حسب الخبرة', clansText: 'تصفح كلانات براولهالا الأعلى في Lifetime XP وافتح صفحة مستقلة ومنظمة لكل كلان.', clanSearch: 'ابحث عن كلان', clanSearchPlaceholder: 'اسم الكلان أو رقم Guild ID', clanRank: 'ترتيب الخبرة', clanTier: 'المستوى', clanMembers: 'الأعضاء', clanPoints: 'نقاط الأسبوع', clanXp: 'Lifetime XP', clanRecruiting: 'يقبل أعضاء', clanClosed: 'مغلق', clanOpen: 'كلان مفتوح', clanDetails: 'صفحة الكلان', clanRoster: 'أعضاء الكلان', clanRole: 'الرتبة', clanJoined: 'تاريخ الانضمام', clanMemberXp: 'خبرة العضو', clanNoData: 'بيانات الكلانات غير متاحة الآن، جرّب التحديث بعد قليل.', clanLoading: 'نحمّل أفضل الكلانات حسب الخبرة…', clanUpdated: 'آخر تحديث', clanDiscoveryNote: 'الكلانات مرتبة حسب Lifetime XP.', clanView: 'افتح الكلان', clanBack: 'الرجوع للكلانات', clanRoleOrder: 'تسلسل الرتب', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'الأعضاء مرتبون من Recruit إلى Leader.', playerClan: 'كلان اللاعب', viewClanProfile: 'افتح صفحة الكلان', noClan: 'بدون كلان',
     MiddleEast: 'الشرق الأوسط', Europe: 'أوروبا', USEast: 'شرق أمريكا', USWest: 'غرب أمريكا', SouthernAfrica: 'جنوب أفريقيا', SoutheastAsia: 'جنوب شرق آسيا', Brazil: 'البرازيل', Australia: 'أستراليا', Japan: 'اليابان',
     esportsHubTitle: 'بطولات PeakHalla', esportsHubText: 'الباور رانكنق الرسمي ودليل مباشر للبطولات الرسمية وبطولات الكومينيتي.', esportsTitle: 'باور رانكنق المحترفين', esportsText: 'ترتيب اللاعبين الرسمي، الميداليات، الأرباح، ونتائج البطولات الكبرى.', powerRanking: 'الباور رانكنق', player: 'اللاعب', earnings: 'الأرباح', tournamentDirectory: 'دليل البطولات', tournamentDirectoryText: 'يتم فحص إعلانات بطولات براولهالا تلقائيًا وإضافة البطولات الجديدة هنا.', liveTournamentFeed: 'تحديث البطولات المباشر', autoUpdating: 'تحديث تلقائي', officialTournaments: 'البطولات الرسمية', communityTournaments: 'بطولات الكومينيتي', tournamentRegion: 'ريجون البطولة', tournamentMode: 'نمط البطولة', allTournamentModes: 'كل الأنماط', loadingTournaments: 'نحمّل البطولات…', noTournaments: 'ما فيه بطولات مطابقة للفلاتر حاليًا.', tournamentEvents: 'بطولة', tournamentSource: 'افتح البطولة', announced: 'تاريخ الإعلان', tournamentSingles: 'بطولات 1v1', tournamentDoubles: 'بطولات 2v2', tournamentOtherModes: 'بطولات أخرى',
@@ -68,7 +68,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRequestSequence: 0, playerRetryCount: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, leaderboardRequestId: 0, leaderboardRetryCount: 0, leaderboardStaleRetryCount: 0, leaderboardRetryTimer: null, leaderboardWatchdogTimer: null, leaderboardSignature: '', leaderboardActiveKey: '', leaderboardLastFetchAt: 0, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRankedController: null, playerAliasController: null, playerLiveBusy: false, playerLiveBusyId: 0, playerRequestSequence: 0, playerRetryCount: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, leaderboardRequestId: 0, leaderboardRetryCount: 0, leaderboardStaleRetryCount: 0, leaderboardRetryTimer: null, leaderboardWatchdogTimer: null, leaderboardFreshTimer: null, leaderboardAutoTimer: null, leaderboardFreshKey: '', leaderboardSignature: '', leaderboardActiveKey: '', leaderboardLastFetchAt: 0, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, queuePromise: null, queueRequestKey: '', queueRequestId: 0, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
 
 
 const PEAKHALLA_THEME_KEY = 'peakhalla-theme';
@@ -197,7 +197,7 @@ const els = {
   form: $('#search-form'), name: $('#player-name'), region: $('#search-region'), mode: null, suggestions: $('#search-suggestions'), status: $('#status'),
   resultsSection: $('#search-results'), resultsGrid: $('#results-grid'), resultCount: $('#result-count'), profile: $('#player-profile'), accountShowcase: $('#account-showcase'), profileAliases: $('#player-aliases'), playerClanCard: $('#player-clan-card'), playerClanName: $('#player-clan-name'), playerClanRole: $('#player-clan-role'),
   leaderboard: $('#leaderboard-list'), refreshLeaderboard: $('#refresh-leaderboard'), leaderboardRegion: $('#leaderboard-region'),
-  leaderboardMode: $('#leaderboard-mode'), leaderboardSearch: $('#leaderboard-search'), leaderboardTitle: $('#leaderboard-title'), leaderboardLoadMore: $('#leaderboard-load-more'), leaderboardPageStatus: $('#leaderboard-page-status'), languageToggle: $('#language-toggle'), rankedNav: $('#ranked-nav-dropdown'), rankedToggle: $('#ranked-nav-toggle'), rankedMenu: $('#ranked-nav-menu'), rankedModeLabel: $('#ranked-mode-label'), queueNav: $('#queue-nav-dropdown'), queueToggle: $('#queue-nav-toggle'), queueMenu: $('#queue-nav-menu'), queueModeLabel: $('#queue-mode-label'), playerPeakRating: $('#player-peak-rating'), eloGap: $('#elo-gap'), rankProgressFill: $('#rank-progress-fill'),
+  leaderboardMode: $('#leaderboard-mode'), leaderboardSearch: $('#leaderboard-search'), leaderboardTitle: $('#leaderboard-title'), leaderboardLoadMore: $('#leaderboard-load-more'), leaderboardPageStatus: $('#leaderboard-page-status'), leaderboardTop: $('#leaderboard-page-top'), leaderboardPrevious: $('#leaderboard-page-previous'), leaderboardNext: $('#leaderboard-page-next'), languageToggle: $('#language-toggle'), rankedNav: $('#ranked-nav-dropdown'), rankedToggle: $('#ranked-nav-toggle'), rankedMenu: $('#ranked-nav-menu'), rankedModeLabel: $('#ranked-mode-label'), queueNav: $('#queue-nav-dropdown'), queueToggle: $('#queue-nav-toggle'), queueMenu: $('#queue-nav-menu'), queueModeLabel: $('#queue-mode-label'), playerPeakRating: $('#player-peak-rating'), eloGap: $('#elo-gap'), rankProgressFill: $('#rank-progress-fill'),
   esportsRegion: $('#esports-region'), esportsMode: $('#esports-mode'), powerSearch: $('#power-ranking-search'), powerBody: $('#power-ranking-body'), powerLoadMore: $('#power-ranking-load-more'), powerPageStatus: $('#power-ranking-page-status'), esportsUpdated: $('#esports-updated'), esportsNav: $('#esports-nav-dropdown'), esportsToggle: $('#esports-nav-toggle'), esportsMenu: $('#esports-nav-menu'), esportsPowerView: $('#esports-power-view'), esportsTournamentsView: $('#esports-tournaments-view'), tournamentDirectoryRegion: $('#tournament-directory-region'), tournamentDirectoryMode: $('#tournament-directory-mode'), tournamentDirectoryList: $('#tournament-directory-list'), tournamentDirectoryUpdated: $('#tournament-directory-updated'), tournamentDirectoryCount: $('#tournament-directory-count'), tournamentDirectoryRefresh: $('#tournament-directory-refresh'), championsGrid: $('#champions-grid'), esportsSource: $('#esports-source'),
   clansGrid: $('#clans-grid'), clansSearch: $('#clans-search'), clansRefresh: $('#clans-refresh'), clansUpdated: $('#clans-updated'), clanPage: $('#clan-page'), clanPageName: $('#clan-page-name'), clanPageMeta: $('#clan-page-meta'), clanPageStats: $('#clan-page-stats'), clanPageStatus: $('#clan-page-status'), clanPageMembers: $('#clan-page-members'), clanPageMemberCount: $('#clan-page-member-count'), clanPageRoles: $('#clan-page-roles'), clanModal: $('#clan-modal'), clanModalName: $('#clan-modal-name'), clanModalMeta: $('#clan-modal-meta'), clanModalStats: $('#clan-modal-stats'), clanMembersBody: $('#clan-members-body'), clanMemberCount: $('#clan-member-count'), clanModalStatus: $('#clan-modal-status'),
   careerModal: $('#esports-player-modal'), careerName: $('#career-player-name'), careerMeta: $('#career-player-meta'), careerStatus: $('#career-status'),
@@ -254,7 +254,7 @@ function applyLanguage() {
   if (state.esportsCareer && !els.careerModal.hidden) renderCareer(state.esportsCareer);
 }
 
-const LEGEND_ASSET_VERSION = '7.69.0';
+const LEGEND_ASSET_VERSION = '7.70.0';
 
 function legendAssetSlug(name = '') {
   return String(name || '')
@@ -611,7 +611,7 @@ async function fetchPlayerPortrait(id) {
   }
 }
 
-const PLAYER_PORTRAIT_CACHE_KEY = 'peakhalla-portrait-cache-v1';
+const PLAYER_PORTRAIT_CACHE_KEY = 'peakhalla-portrait-cache-v2';
 const PLAYER_PORTRAIT_CACHE_AGE_MS = 24 * 60 * 60_000;
 
 function readPlayerPortraitCache(ids = []) {
@@ -642,7 +642,7 @@ function writePlayerPortraitCache(id, legend) {
 }
 
 async function fetchPlayerPortraitBatch(ids = [], options = {}) {
-  const uniqueIds = [...new Set(ids.map(Number).filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, 40);
+  const uniqueIds = [...new Set(ids.map(Number).filter((id) => Number.isSafeInteger(id) && id > 0))].slice(0, 60);
   if (!uniqueIds.length) return new Map();
   const result = readPlayerPortraitCache(uniqueIds);
   const missing = uniqueIds.filter((id) => !result.has(id));
@@ -695,7 +695,7 @@ function enrichRenderedPortraits(container, buttonSelector, portraitSelector, co
   container.dataset.portraitEnrichmentKey = enrichmentKey;
   container.dataset.portraitEnriching = '1';
 
-  const retryDelays = [0, 2400, 6500, 14000, 30000, 60000];
+  const retryDelays = [0, 800, 2200, 5000, 10000, 22000];
   const attempt = async (attemptIndex = 0) => {
     if (!container.isConnected) return;
     const targets = [...container.querySelectorAll(buttonSelector)]
@@ -707,7 +707,7 @@ function enrichRenderedPortraits(container, buttonSelector, portraitSelector, co
 
     // Rotate portrait batches between attempts so one slow player cannot
     // block the rest of the visible leaderboard from receiving an image.
-    const chunkSize = 20;
+    const chunkSize = 30;
     const offset = targets.length ? (attemptIndex * chunkSize) % targets.length : 0;
     const attemptTargets = [...targets.slice(offset), ...targets.slice(0, offset)].slice(0, chunkSize);
     const batch = await fetchPlayerPortraitBatch(
@@ -1320,11 +1320,57 @@ function currentRenderedPlayerId() {
   return Number(state.currentPlayer?.player?.brawlhalla_id || 0);
 }
 
+async function refreshPlayerRankedLive(id) {
+  const playerId = Number(id);
+  if (!Number.isSafeInteger(playerId) || playerId <= 0 || currentRenderedPlayerId() !== playerId) return null;
+  state.playerRankedController?.abort();
+  const controller = new AbortController();
+  state.playerRankedController = controller;
+  try {
+    const data = await getJson(`/api/player/${encodeURIComponent(playerId)}/ranked-live?_=${Date.now()}`, { signal: controller.signal, timeoutMs: 22000 });
+    if (currentRenderedPlayerId() !== playerId || !data?.player || controller.signal.aborted) return null;
+    const merged = typeof structuredClone === 'function' ? structuredClone(state.currentPlayer) : JSON.parse(JSON.stringify(state.currentPlayer));
+    merged.player = { ...merged.player, ...data.player, data_quality: { ...(merged.player?.data_quality || {}), official_ranked_ok: true, ranked_live_checked: true, fetched_at: data.updated_at || new Date().toISOString() } };
+    merged.partial = Boolean(merged.partial && !merged.player.data_quality?.official_lifetime_ok);
+    const signature = playerPayloadSignature(merged);
+    if (signature !== state.playerSignature) {
+      renderPlayer(merged, false, { refreshSecondary: false });
+      state.playerSignature = signature;
+    } else state.currentPlayer = merged;
+    return merged;
+  } catch (error) {
+    if (error.name !== 'AbortError') return null;
+    return null;
+  }
+}
+
+async function refreshPlayerAliasesLive(id) {
+  const playerId = Number(id);
+  if (!Number.isSafeInteger(playerId) || playerId <= 0 || currentRenderedPlayerId() !== playerId) return null;
+  state.playerAliasController?.abort();
+  const controller = new AbortController();
+  state.playerAliasController = controller;
+  try {
+    const data = await getJson(`/api/player/${encodeURIComponent(playerId)}/aliases?refresh=1&_=${Date.now()}`, { signal: controller.signal, timeoutMs: 16000 });
+    if (currentRenderedPlayerId() !== playerId || controller.signal.aborted) return null;
+    const names = data?.known_names || [];
+    if (state.currentPlayer?.player) {
+      state.currentPlayer.known_names = names;
+      renderProfileAliases(names, state.currentPlayer.player.name);
+      state.playerSignature = playerPayloadSignature(state.currentPlayer);
+    }
+    return names;
+  } catch (error) {
+    if (error.name !== 'AbortError') return null;
+    return null;
+  }
+}
+
 function schedulePlayerLiveRefresh(id, delayMs = 250) {
   window.clearTimeout(state.playerAutoRefreshTimer);
   state.playerAutoRefreshTimer = window.setTimeout(() => {
     if (currentRenderedPlayerId() && currentRenderedPlayerId() !== Number(id)) return;
-    loadPlayer(id, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
+    loadPlayer(id, { background: true, forceFresh: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
   }, Math.max(50, Number(delayMs) || 250));
 }
 
@@ -1332,8 +1378,8 @@ function schedulePlayerLivePoll(id) {
   window.clearTimeout(state.playerLivePollTimer);
   state.playerLivePollTimer = window.setTimeout(() => {
     if (document.visibilityState !== 'visible' || currentRenderedPlayerId() !== Number(id)) return;
-    loadPlayer(id, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
-  }, 90_000);
+    loadPlayer(id, { background: true, forceFresh: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
+  }, 60_000);
 }
 
 async function loadPlayer(id, options = {}) {
@@ -1342,6 +1388,9 @@ async function loadPlayer(id, options = {}) {
   const silent = Boolean(options.silent);
   const manualRefresh = Boolean(options.refresh);
   const backgroundRefresh = Boolean(options.background);
+  const forceFreshBackground = backgroundRefresh && options.forceFresh !== false;
+  if (backgroundRefresh && state.playerLiveBusy && state.playerLiveBusyId === playerId) return state.currentPlayer;
+  if (backgroundRefresh) { state.playerLiveBusy = true; state.playerLiveBusyId = playerId; }
   const requestSequence = ++state.playerRequestSequence;
   let renderedInstantData = false;
   let renderedSeedOnly = false;
@@ -1358,6 +1407,8 @@ async function loadPlayer(id, options = {}) {
         state.playerSignature = playerPayloadSignature(cached);
         renderedInstantData = true;
         hideStatus();
+        window.setTimeout(() => refreshPlayerRankedLive(playerId).catch(() => null), 0);
+        window.setTimeout(() => refreshPlayerAliasesLive(playerId).catch(() => null), 40);
       }
     }
 
@@ -1366,7 +1417,7 @@ async function loadPlayer(id, options = {}) {
     }
 
     const params = new URLSearchParams({
-      [manualRefresh ? 'refresh' : (backgroundRefresh ? 'live' : 'fast')]: '1',
+      [(manualRefresh || forceFreshBackground) ? 'refresh' : (backgroundRefresh ? 'live' : 'fast')]: '1',
       _: String(Date.now())
     });
 
@@ -1375,7 +1426,7 @@ async function loadPlayer(id, options = {}) {
       state.playerRefreshController = new AbortController();
     }
 
-    const timeoutMs = manualRefresh ? 70_000 : (backgroundRefresh ? 60_000 : 24_000);
+    const timeoutMs = manualRefresh ? 70_000 : (backgroundRefresh ? 52_000 : 24_000);
     let data = await getJson(`/api/player/${encodeURIComponent(playerId)}?${params}`, {
       signal: manualRefresh ? state.playerRefreshController.signal : undefined,
       timeoutMs
@@ -1411,6 +1462,10 @@ async function loadPlayer(id, options = {}) {
       state.currentPlayer = data;
     }
     history.replaceState(null, '', `/player/${encodeURIComponent(playerId)}`);
+    if (!backgroundRefresh && !manualRefresh) {
+      window.setTimeout(() => refreshPlayerRankedLive(playerId).catch(() => null), 0);
+      window.setTimeout(() => refreshPlayerAliasesLive(playerId).catch(() => null), 80);
+    }
 
     if (partial) {
       state.playerRetryCount += 1;
@@ -1428,7 +1483,7 @@ async function loadPlayer(id, options = {}) {
     // The first response is optimized for speed. Always follow it with one
     // longer live verification so the page updates without a browser refresh.
     if (options.autoVerify !== false && !manualRefresh && !backgroundRefresh) {
-      schedulePlayerLiveRefresh(playerId, Number(data?.retry_after_ms || 220));
+      schedulePlayerLiveRefresh(playerId, Math.max(650, Number(data?.retry_after_ms || 650)));
     }
     return data;
   } catch (error) {
@@ -1453,6 +1508,11 @@ async function loadPlayer(id, options = {}) {
     showStatus(error?.message || t('friendlyProblem'), 'error');
     els.status.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return null;
+  } finally {
+    if (backgroundRefresh && state.playerLiveBusyId === playerId) {
+      state.playerLiveBusy = false;
+      state.playerLiveBusyId = 0;
+    }
   }
 }
 
@@ -1529,25 +1589,37 @@ function renderLeaderboardRows(rankings = [], options = {}) {
   }
 }
 
-function updateLeaderboardPagination({ query = '', page = 1, totalPages = 1, received = 0 } = {}) {
+function updateLeaderboardPagination({ query = '', page = 1, totalPages = 1, received = 0, pageSize = 50 } = {}) {
   const isSearch = query.length >= 2;
-  const loadedRows = els.leaderboard?.querySelectorAll('.leader-row').length || 0;
-  const hasMore = !isSearch && received > 0 && (totalPages > 0 ? page < totalPages : received >= 20);
-  state.leaderboardPage = page;
-  state.leaderboardTotalPages = totalPages || page;
-  if (els.leaderboardLoadMore) {
-    els.leaderboardLoadMore.hidden = !hasMore;
-    els.leaderboardLoadMore.disabled = false;
-    const label = els.leaderboardLoadMore.querySelector('span');
-    if (label) label.textContent = t('loadMorePlayers');
-  }
+  const hasRows = received > 0 || Boolean(els.leaderboard?.querySelector('.leader-row'));
+  const safePage = Math.max(1, Number(page) || 1);
+  const safeTotal = Math.max(safePage, Number(totalPages) || safePage);
+  const startRank = hasRows ? ((safePage - 1) * pageSize) + 1 : 0;
+  const endRank = hasRows ? startRank + Math.max(0, Number(received || els.leaderboard?.querySelectorAll('.leader-row').length || 0)) - 1 : 0;
+  const hasNext = !isSearch && hasRows && (safePage < safeTotal || received >= pageSize);
+
+  state.leaderboardPage = safePage;
+  state.leaderboardTotalPages = safeTotal;
+
+  if (els.leaderboardLoadMore) els.leaderboardLoadMore.hidden = true;
+  const controls = [els.leaderboardTop, els.leaderboardPrevious, els.leaderboardNext].filter(Boolean);
+  controls.forEach((button) => { button.hidden = isSearch || !hasRows; });
+  if (els.leaderboardTop) els.leaderboardTop.disabled = safePage <= 1;
+  if (els.leaderboardPrevious) els.leaderboardPrevious.disabled = safePage <= 1;
+  if (els.leaderboardNext) els.leaderboardNext.disabled = !hasNext;
+
   if (els.leaderboardPageStatus) {
-    els.leaderboardPageStatus.textContent = !isSearch && loadedRows ? `${number(loadedRows)} ${t('playersShown')}` : '';
+    if (isSearch || !hasRows) els.leaderboardPageStatus.textContent = '';
+    else {
+      const range = endRank >= startRank ? `${number(startRank)}–${number(endRank)}` : number(startRank);
+      els.leaderboardPageStatus.textContent = `${range} · ${t('pageLabel')} ${number(safePage)}${safeTotal > safePage ? ` / ${number(safeTotal)}` : ''}`;
+    }
   }
 }
 
-const LEADERBOARD_BROWSER_CACHE_VERSION = 'v3';
+const LEADERBOARD_BROWSER_CACHE_VERSION = 'v4-page50';
 const LEADERBOARD_BROWSER_CACHE_MAX_AGE_MS = 30 * 60_000;
+const LEADERBOARD_PAGE_SIZE = 50;
 
 function leaderboardBrowserCacheKey(region, mode, page = 1) {
   return `peakhalla-leaderboard:${LEADERBOARD_BROWSER_CACHE_VERSION}:${region}:${mode}:${page}`;
@@ -1574,6 +1646,16 @@ function writeLeaderboardBrowserCache(region, mode, page, data) {
   } catch {}
 }
 
+function syncLeaderboardUrl(region, mode, page) {
+  if (isStandalonePlayerPage || isLiveQueuePage || isClanPage || isArenaPage || isEsportsPage) return;
+  const params = new URLSearchParams(location.search);
+  if (page > 1) params.set('lbPage', String(page)); else params.delete('lbPage');
+  if (region && region !== 'ALL') params.set('lbRegion', region); else params.delete('lbRegion');
+  if (mode && mode !== '1v1') params.set('lbMode', mode); else params.delete('lbMode');
+  const query = params.toString();
+  history.replaceState(null, '', `${location.pathname}${query ? `?${query}` : ''}${location.hash}`);
+}
+
 function scheduleLeaderboardRecovery(options = {}) {
   window.clearTimeout(state.leaderboardRetryTimer);
   const failedAttempt = Math.max(0, Number(state.leaderboardRetryCount || 0));
@@ -1581,117 +1663,150 @@ function scheduleLeaderboardRecovery(options = {}) {
   if (options.stale && staleAttempt >= 2) return;
   if (!options.stale && failedAttempt >= 5) return;
   const delay = Number(options.delay || (options.stale
-    ? [8000, 22000][Math.min(staleAttempt, 1)]
+    ? [1200, 5000][Math.min(staleAttempt, 1)]
     : Math.min(12000, 1200 + failedAttempt * 2200)));
   state.leaderboardRetryTimer = window.setTimeout(() => {
     if (document.visibilityState !== 'visible' || isLiveQueuePage || isClanPage || isArenaPage || isEsportsPage || isStandalonePlayerPage) return;
-    loadLeaderboard({ silent: true, recovery: true, staleRecovery: Boolean(options.stale) }).catch(() => null);
+    loadLeaderboard({ page: state.leaderboardPage, silent: true, recovery: true, staleRecovery: Boolean(options.stale) }).catch(() => null);
   }, delay);
+}
+
+function scheduleLeaderboardFreshVerification({ region, mode, page, data } = {}) {
+  const cacheAge = Number(data?.cache_age_ms || 0);
+  const needsFresh = Boolean(data?.stale || data?.refreshing || (data?.cached && cacheAge > 12_000));
+  if (!needsFresh) return;
+  const key = `${region}:${mode}:${page}`;
+  if (state.leaderboardFreshKey === key && state.leaderboardFreshTimer) return;
+  state.leaderboardFreshKey = key;
+  window.clearTimeout(state.leaderboardFreshTimer);
+  state.leaderboardFreshTimer = window.setTimeout(() => {
+    state.leaderboardFreshTimer = null;
+    if (document.visibilityState !== 'visible') return;
+    loadLeaderboard({ page, silent: true, refresh: true, backgroundFresh: true }).catch(() => null);
+  }, data?.refreshing ? 850 : 250);
+}
+
+function scheduleLeaderboardAutoSync() {
+  window.clearTimeout(state.leaderboardAutoTimer);
+  if (isLiveQueuePage || isClanPage || isArenaPage || isEsportsPage || isStandalonePlayerPage) return;
+  state.leaderboardAutoTimer = window.setTimeout(() => {
+    if (document.visibilityState === 'visible' && !state.leaderboardLoadingMore) {
+      loadLeaderboard({ page: state.leaderboardPage, silent: true, autoSync: true }).catch(() => null);
+    }
+  }, 30_000);
 }
 
 async function loadLeaderboard(options = {}) {
   if (!els.leaderboard || !els.leaderboardRegion || !els.leaderboardMode) return;
-  const append = Boolean(options.append);
   const silent = Boolean(options.silent);
   const region = els.leaderboardRegion.value || 'ALL';
   const mode = els.leaderboardMode.value || '1v1';
   const query = els.leaderboardSearch?.value.trim() || '';
-  const page = append ? state.leaderboardPage + 1 : 1;
+  const page = query.length >= 2 ? 1 : Math.max(1, Number(options.page || state.leaderboardPage || 1));
   const activeKey = `${region}:${mode}:${query.toLowerCase()}`;
   if (activeKey !== state.leaderboardActiveKey) {
     state.leaderboardActiveKey = activeKey;
     state.leaderboardSignature = '';
     state.leaderboardRetryCount = 0;
     state.leaderboardStaleRetryCount = 0;
+    state.leaderboardPage = 1;
     window.clearTimeout(state.leaderboardRetryTimer);
+    window.clearTimeout(state.leaderboardFreshTimer);
+    state.leaderboardFreshKey = '';
   }
-  if (append && (state.leaderboardLoadingMore || query.length >= 2)) return;
+  if (state.leaderboardLoadingMore && !options.backgroundFresh && !options.autoSync) return;
 
   const requestId = ++state.leaderboardRequestId;
+  const priorPage = state.leaderboardPage;
   els.leaderboardTitle.textContent = query.length >= 2
     ? `${t('leaderboardSearchTitle')} · ${query} · ${regionLabel(region)}`
     : `${t('leaderboardPrefix')} ${regionLabel(region)}`;
 
   let cachedBoard = null;
-  if (!append && query.length < 2) {
+  if (query.length < 2 && !options.refresh) {
     cachedBoard = readLeaderboardBrowserCache(region, mode, page);
     if (cachedBoard) {
-      const cachedSignature = leaderboardRowsSignature(cachedBoard.rankings || [], activeKey);
-      renderLeaderboardRows(cachedBoard.rankings || [], { append: false, animate: state.leaderboardSignature !== cachedSignature });
+      const cachedSignature = leaderboardRowsSignature(cachedBoard.rankings || [], `${activeKey}:${page}`);
+      renderLeaderboardRows(cachedBoard.rankings || [], { append: false, animate: state.leaderboardSignature !== cachedSignature && !options.autoSync });
       state.leaderboardSignature = cachedSignature;
-      updateLeaderboardPagination({ query, page, totalPages: cachedBoard.total_pages || 0, received: (cachedBoard.rankings || []).length });
+      updateLeaderboardPagination({ query, page, totalPages: cachedBoard.total_pages || 0, received: (cachedBoard.rankings || []).length, pageSize: LEADERBOARD_PAGE_SIZE });
+      syncLeaderboardUrl(region, mode, page);
     }
   }
 
   const hasVisibleRows = () => Boolean(els.leaderboard.querySelector('.leader-row'));
-  if (!append) {
-    if (!cachedBoard && !silent && !hasVisibleRows()) {
-      els.leaderboard.innerHTML = '<div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div>';
-    }
-    if (els.leaderboardLoadMore && !cachedBoard && !hasVisibleRows()) els.leaderboardLoadMore.hidden = true;
-    if (els.leaderboardPageStatus && !cachedBoard && !hasVisibleRows()) els.leaderboardPageStatus.textContent = '';
-  } else {
-    state.leaderboardLoadingMore = true;
-    if (els.leaderboardLoadMore) {
-      els.leaderboardLoadMore.disabled = true;
-      const label = els.leaderboardLoadMore.querySelector('span');
-      if (label) label.textContent = t('loadingMorePlayers');
-    }
+  const pageNavigation = page !== priorPage;
+  if (!cachedBoard && !silent && !hasVisibleRows()) {
+    els.leaderboard.innerHTML = '<div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div>';
   }
+  state.leaderboardLoadingMore = true;
+  els.leaderboard.classList.add('is-page-loading');
+  els.leaderboard.setAttribute('aria-busy', 'true');
+  if (els.leaderboardPageStatus && pageNavigation && !cachedBoard) els.leaderboardPageStatus.textContent = t('loadingPage');
+  [els.leaderboardTop, els.leaderboardPrevious, els.leaderboardNext].forEach((button) => { if (button) button.disabled = true; });
 
   state.leaderboardSearchController?.abort();
   const controller = new AbortController();
   state.leaderboardSearchController = controller;
   window.clearTimeout(state.leaderboardWatchdogTimer);
-  if (!append) {
+  if (!hasVisibleRows()) {
     state.leaderboardWatchdogTimer = window.setTimeout(() => {
       if (requestId !== state.leaderboardRequestId || hasVisibleRows()) return;
       controller.abort();
       state.leaderboardRetryCount = Math.min(5, Number(state.leaderboardRetryCount || 0) + 1);
-      scheduleLeaderboardRecovery({ delay: 250 });
-    }, 12000);
+      scheduleLeaderboardRecovery({ delay: 300 });
+    }, 15000);
   }
 
   try {
     const params = new URLSearchParams(query.length >= 2
       ? { q: query, region, mode }
-      : { region, mode, page: String(page) });
+      : { region, mode, page: String(page), page_size: String(LEADERBOARD_PAGE_SIZE) });
+    params.set('_', String(Date.now()));
     if (options.refresh) params.set('refresh', '1');
     const endpoint = query.length >= 2 ? '/api/search' : '/api/leaderboard';
-    const data = await getJson(`${endpoint}?${params}`, { signal: controller.signal, timeoutMs: 14000 });
+    const data = await getJson(`${endpoint}?${params}`, { signal: controller.signal, timeoutMs: options.refresh ? 32000 : 18000 });
     if (requestId !== state.leaderboardRequestId) return;
     const rankings = data.rankings || [];
-    const nextSignature = leaderboardRowsSignature(rankings, `${activeKey}:${append ? page : 1}`);
-    const shouldRender = append || nextSignature !== state.leaderboardSignature;
+    const nextSignature = leaderboardRowsSignature(rankings, `${activeKey}:${page}`);
+    const shouldRender = nextSignature !== state.leaderboardSignature;
     if (shouldRender) {
-      renderLeaderboardRows(rankings, { append, animate: !cachedBoard && !options.recovery });
+      renderLeaderboardRows(rankings, { append: false, animate: !cachedBoard && !options.recovery && !options.backgroundFresh && !options.autoSync && !pageNavigation });
       state.leaderboardSignature = nextSignature;
     } else {
-      enrichRenderedPortraits(els.leaderboard, '.leader-person[data-player-id]', '.row-portrait', 5);
+      enrichRenderedPortraits(els.leaderboard, '.leader-person[data-player-id]', '.row-portrait', 6);
     }
-    updateLeaderboardPagination({ query, page, totalPages: Number(data.total_pages) || 0, received: rankings.length });
+    updateLeaderboardPagination({ query, page, totalPages: Number(data.total_pages) || 0, received: rankings.length, pageSize: LEADERBOARD_PAGE_SIZE });
     if (query.length < 2 && rankings.length) writeLeaderboardBrowserCache(region, mode, page, data);
+    if (query.length < 2) syncLeaderboardUrl(region, mode, page);
     state.leaderboardLastFetchAt = Date.now();
     state.leaderboardRetryCount = 0;
-    window.clearTimeout(state.leaderboardRetryTimer);
-    // Keep the current rows stable. A stale response is still useful and is
-    // replaced on the next deliberate visit/refresh rather than repainting the
-    // entire leaderboard every few seconds.
     state.leaderboardStaleRetryCount = 0;
+    window.clearTimeout(state.leaderboardRetryTimer);
+    if (!options.refresh) scheduleLeaderboardFreshVerification({ region, mode, page, data });
+    scheduleLeaderboardAutoSync();
+    if (pageNavigation && options.scroll !== false) document.querySelector('#leaderboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (error) {
     if (error.name === 'AbortError' || requestId !== state.leaderboardRequestId) return;
     state.leaderboardRetryCount = Math.min(5, Number(state.leaderboardRetryCount || 0) + 1);
-    if (!append && !cachedBoard && !hasVisibleRows() && state.leaderboardRetryCount >= 4) {
+    if (!cachedBoard && !hasVisibleRows() && state.leaderboardRetryCount >= 4) {
       els.leaderboard.innerHTML = `<p class="empty-copy">${escapeHtml(t('friendlyProblem'))}</p>`;
     }
-    if (!append && !hasVisibleRows() && state.leaderboardRetryCount < 5) scheduleLeaderboardRecovery({ stale: false });
+    if (!hasVisibleRows() && state.leaderboardRetryCount < 5) scheduleLeaderboardRecovery({ stale: false });
+    state.leaderboardPage = priorPage;
   } finally {
-    if (requestId === state.leaderboardRequestId) window.clearTimeout(state.leaderboardWatchdogTimer);
-    state.leaderboardLoadingMore = false;
-    if (append && els.leaderboardLoadMore?.disabled) {
-      els.leaderboardLoadMore.disabled = false;
-      const label = els.leaderboardLoadMore.querySelector('span');
-      if (label) label.textContent = t('loadMorePlayers');
+    if (requestId === state.leaderboardRequestId) {
+      window.clearTimeout(state.leaderboardWatchdogTimer);
+      state.leaderboardLoadingMore = false;
+      els.leaderboard.classList.remove('is-page-loading');
+      els.leaderboard.removeAttribute('aria-busy');
+      updateLeaderboardPagination({
+        query,
+        page: state.leaderboardPage,
+        totalPages: state.leaderboardTotalPages,
+        received: els.leaderboard.querySelectorAll('.leader-row').length,
+        pageSize: LEADERBOARD_PAGE_SIZE
+      });
     }
   }
 }
@@ -2256,11 +2371,12 @@ async function chooseRankedMode(mode) {
   if (els.mode) { els.mode.value = mode; els.mode.dispatchEvent(new Event('change', { bubbles: true })); }
   if (els.leaderboardMode) { els.leaderboardMode.value = mode; els.leaderboardMode._motionSync?.(); }
   if (els.rankedModeLabel) els.rankedModeLabel.textContent = mode;
+  state.leaderboardPage = 1;
   els.rankedMenu?.querySelectorAll('[data-ranked-mode]').forEach((button) => button.classList.toggle('selected', button.dataset.rankedMode === mode));
   closeRankedMenu();
 
   const leaderboardSection = document.querySelector('#leaderboard');
-  const loading = loadLeaderboard();
+  const loading = loadLeaderboard({ page: 1 });
   leaderboardSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   await loading;
 
@@ -2383,11 +2499,11 @@ function scheduleQueuePoll(data = state.queueData) {
   window.clearTimeout(state.queueTimer);
   if (!isLiveQueuePage) return;
   const fast = !data || data.scan_in_progress || data.status === 'warming' || data.status === 'scanning';
-  const delay = document.hidden ? 30_000 : (fast ? 4_000 : 15_000);
+  const delay = document.hidden ? 30_000 : (fast ? 2_500 : 9_000);
   state.queueTimer = window.setTimeout(() => loadLiveQueue({ silent: true }), delay);
 }
 
-function renderLiveQueue(data) {
+function renderLiveQueue(data, options = {}) {
   state.queueData = data;
   state.queueMode = data.mode || state.queueMode;
   state.queueRegion = data.region || state.queueRegion;
@@ -2422,33 +2538,54 @@ function renderLiveQueue(data) {
       if (id) navigateToPlayer(id);
     }));
     activateImageFallbacks();
-    enrichRenderedPortraits(els.queueList, '.queue-live-player[data-player-id]', '.queue-live-portrait', 4);
+    enrichRenderedPortraits(els.queueList, '.queue-live-player[data-player-id]', '.queue-live-portrait', 6);
   }
   if (!data.__fromBrowserCache) writeQueueBrowserCache(data);
-  scheduleQueuePoll(data);
+  if (options.schedule !== false) scheduleQueuePoll(data);
 }
 
 async function loadLiveQueue(options = {}) {
-  if (!isLiveQueuePage || !els.queueList) return;
+  if (!isLiveQueuePage || !els.queueList) return null;
   const silent = Boolean(options.silent);
-  state.queueController?.abort();
-  state.queueController = new AbortController();
+  const requestKey = `${state.queueRegion}:${state.queueMode}`;
+  if (state.queuePromise && state.queueRequestKey === requestKey) return state.queuePromise;
+  window.clearTimeout(state.queueTimer);
+  if (state.queuePromise && state.queueRequestKey !== requestKey) state.queueController?.abort();
+
+  const requestId = ++state.queueRequestId;
+  const controller = new AbortController();
+  state.queueController = controller;
+  state.queueRequestKey = requestKey;
   if (!silent && !state.queueData) {
     els.queueList.innerHTML = `<div class="queue-live-loading"><span></span><strong>${escapeHtml(t('queueWarming'))}</strong></div>`;
   }
-  const params = new URLSearchParams({ region: state.queueRegion, mode: state.queueMode });
-  try {
-    const response = await fetch(`/api/queue/activity?${params}`, { headers: { Accept: 'application/json' }, signal: state.queueController.signal });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || t('queueError'));
-    renderLiveQueue(data);
-  } catch (error) {
-    if (error.name === 'AbortError') return;
-    if (!silent || !state.queueData) {
-      els.queueList.innerHTML = `<div class="queue-live-empty"><span>!</span><strong>${escapeHtml(t('queueError'))}</strong></div>`;
+  const params = new URLSearchParams({ region: state.queueRegion, mode: state.queueMode, _: String(Date.now()) });
+  if (options.refresh) params.set('refresh', '1');
+
+  const promise = (async () => {
+    try {
+      const response = await fetch(`/api/queue/activity?${params}`, { cache: 'no-store', headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' }, signal: controller.signal });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || t('queueError'));
+      if (requestId !== state.queueRequestId || requestKey !== `${state.queueRegion}:${state.queueMode}`) return data;
+      renderLiveQueue(data);
+      return data;
+    } catch (error) {
+      if (error.name === 'AbortError') return null;
+      if (!silent || !state.queueData) {
+        els.queueList.innerHTML = `<div class="queue-live-empty"><span>!</span><strong>${escapeHtml(t('queueError'))}</strong></div>`;
+      }
+      scheduleQueuePoll(state.queueData);
+      return null;
+    } finally {
+      if (requestId === state.queueRequestId) {
+        state.queuePromise = null;
+        state.queueRequestKey = '';
+      }
     }
-    scheduleQueuePoll(state.queueData);
-  }
+  })();
+  state.queuePromise = promise;
+  return promise;
 }
 
 function setLiveQueueMode(mode, options = {}) {
@@ -2477,8 +2614,8 @@ function setupLiveQueuePage() {
   }
   setLiveQueueMode(state.queueMode, { skipLoad: true });
   const cachedQueue = readQueueBrowserCache(state.queueRegion, state.queueMode);
-  if (cachedQueue) renderLiveQueue({ ...cachedQueue, status: cachedQueue.status || 'stale', __fromBrowserCache: true });
-  loadLiveQueue({ silent: Boolean(cachedQueue) });
+  if (cachedQueue) renderLiveQueue({ ...cachedQueue, status: cachedQueue.status || 'stale', __fromBrowserCache: true }, { schedule: false });
+  loadLiveQueue({ silent: Boolean(cachedQueue), refresh: true });
 }
 
 
@@ -3036,7 +3173,7 @@ els.queueRegion?.addEventListener('change', () => {
   history.replaceState(null, '', `/queue?${params}`);
   loadLiveQueue();
 });
-els.queueRefresh?.addEventListener('click', () => loadLiveQueue());
+els.queueRefresh?.addEventListener('click', () => loadLiveQueue({ refresh: true }));
 document.addEventListener('click', (event) => {
   if (els.rankedNav && !els.rankedNav.contains(event.target)) closeRankedMenu();
   if (els.queueNav && !els.queueNav.contains(event.target)) closeQueueMenu();
@@ -3065,11 +3202,14 @@ els.playerClanCard?.addEventListener('click', () => {
 els.clansSearch?.addEventListener('input', scheduleClanSearch);
 els.clansRefresh?.addEventListener('click', () => loadClans({ refresh: true }));
 els.clanModal?.addEventListener('click', (event) => { if (event.target.closest('[data-clan-close]')) closeClanModal(); });
-els.refreshLeaderboard.addEventListener('click', () => loadLeaderboard({ refresh: true }));
-els.leaderboardLoadMore?.addEventListener('click', () => loadLeaderboard({ append: true }));
-els.leaderboardSearch?.addEventListener('input', scheduleLeaderboardSearch);
-els.leaderboardRegion.addEventListener('change', loadLeaderboard);
-els.leaderboardMode.addEventListener('change', loadLeaderboard);
+els.refreshLeaderboard.addEventListener('click', () => loadLeaderboard({ page: state.leaderboardPage, refresh: true, scroll: false }));
+els.leaderboardLoadMore?.addEventListener('click', () => loadLeaderboard({ page: state.leaderboardPage + 1, pageNavigation: true }));
+els.leaderboardTop?.addEventListener('click', () => loadLeaderboard({ page: 1, pageNavigation: true }));
+els.leaderboardPrevious?.addEventListener('click', () => loadLeaderboard({ page: Math.max(1, state.leaderboardPage - 1), pageNavigation: true }));
+els.leaderboardNext?.addEventListener('click', () => loadLeaderboard({ page: state.leaderboardPage + 1, pageNavigation: true }));
+els.leaderboardSearch?.addEventListener('input', () => { state.leaderboardPage = 1; scheduleLeaderboardSearch(); });
+els.leaderboardRegion.addEventListener('change', () => { state.leaderboardPage = 1; loadLeaderboard({ page: 1 }); });
+els.leaderboardMode.addEventListener('change', () => { state.leaderboardPage = 1; loadLeaderboard({ page: 1 }); });
 els.esportsRegion?.addEventListener('change', () => loadEsports());
 els.esportsMode?.addEventListener('change', () => loadEsports());
 els.powerSearch?.addEventListener('input', schedulePowerRankingSearch);
@@ -3168,6 +3308,15 @@ els.esportsMenu?.querySelectorAll('[data-esports-view]').forEach((button) => but
 if (isLiveQueuePage) setupLiveQueuePage();
 if (isArenaPage) setupArenaPage();
 if (isClanPage) loadStandaloneClan();
+const initialPageParams = new URLSearchParams(location.search);
+if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage) {
+  const savedRegion = initialPageParams.get('lbRegion');
+  const savedMode = initialPageParams.get('lbMode');
+  const savedPage = Math.max(1, Number(initialPageParams.get('lbPage') || 1));
+  if (els.leaderboardRegion && ['ALL','ME','EU','US-E','US-W','SA','SEA','BRZ','AUS','JPN'].includes(savedRegion)) els.leaderboardRegion.value = savedRegion;
+  if (els.leaderboardMode && ['1v1','2v2','3v3'].includes(savedMode)) els.leaderboardMode.value = savedMode;
+  state.leaderboardPage = savedPage;
+}
 setupThemePicker();
 applyLanguage();
 requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('page-entering')));
@@ -3194,10 +3343,10 @@ window.addEventListener('pageshow', (event) => {
     activateImageFallbacks();
   });
   if (event.persisted && standalonePlayerId && state.currentPlayer) {
-    loadPlayer(standalonePlayerId, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
+    loadPlayer(standalonePlayerId, { background: true, forceFresh: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
   }
   if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage && (event.persisted || !els.leaderboard?.querySelector('.leader-row'))) {
-    window.setTimeout(() => loadLeaderboard({ silent: true }).catch(() => null), event.persisted ? 120 : 450);
+    window.setTimeout(() => loadLeaderboard({ page: state.leaderboardPage, silent: true }).catch(() => null), event.persisted ? 120 : 450);
   }
 });
 window.addEventListener('popstate', resetBrowserNavigationState);
@@ -3208,17 +3357,17 @@ window.addEventListener('visibilitychange', () => {
   activateImageFallbacks();
   if (isLiveQueuePage) loadLiveQueue({ silent: true }).catch(() => null);
   if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage) {
-    if (!state.leaderboardLastFetchAt || Date.now() - state.leaderboardLastFetchAt > 5 * 60_000) loadLeaderboard({ silent: true }).catch(() => null);
+    if (!state.leaderboardLastFetchAt || Date.now() - state.leaderboardLastFetchAt > 5 * 60_000) loadLeaderboard({ page: state.leaderboardPage, silent: true }).catch(() => null);
     enrichRenderedPortraits(els.leaderboard, '.leader-person[data-player-id]', '.row-portrait', 4);
   }
   const playerId = state.currentPlayer?.player?.brawlhalla_id;
   const fetchedAt = new Date(state.currentPlayer?.player?.updated_at || 0).getTime();
   if (playerId && (!Number.isFinite(fetchedAt) || Date.now() - fetchedAt > 60_000)) {
-    loadPlayer(playerId, { background: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
+    loadPlayer(playerId, { background: true, forceFresh: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
   }
 });
 
-const pageParams = new URLSearchParams(location.search);
+const pageParams = initialPageParams;
 const playerFromUrl = pageParams.get('player');
 const rankedFromUrl = pageParams.get('ranked');
 if (standalonePlayerId) loadPlayer(standalonePlayerId);

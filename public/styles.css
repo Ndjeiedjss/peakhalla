@@ -3934,3 +3934,62 @@ body.arena-account-active .arena-global-profile strong {
   .tournament-mode-section > header { grid-template-columns: auto minmax(0,1fr); }
   .tournament-mode-section > header small { grid-column: 2; }
 }
+
+
+/* PeakHalla v7.70 — instant live sync and 50-player page navigation */
+.leaderboard-list {
+  position: relative;
+  transition: opacity .18s ease, filter .18s ease;
+}
+.leaderboard-list.is-page-loading {
+  opacity: .72;
+  filter: saturate(.86);
+  pointer-events: none;
+}
+.leaderboard-pagination {
+  flex-wrap: wrap;
+  gap: 9px;
+}
+.leaderboard-page-button {
+  min-height: 42px;
+  padding: 0 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: var(--text-secondary);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(var(--panel-rgb), .78);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+  font: 800 10px/1 var(--display);
+  transition: transform .18s ease, border-color .18s ease, background .18s ease, opacity .18s ease;
+}
+.leaderboard-page-button.primary {
+  color: var(--accent-pale);
+  border-color: rgba(var(--accent-rgb), .46);
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), .22), rgba(var(--accent-rgb), .08));
+}
+.leaderboard-page-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(var(--accent-2-rgb), .62);
+  background: rgba(var(--accent-rgb), .12);
+}
+.leaderboard-page-button:disabled { opacity: .38; cursor: default; transform: none; }
+.leaderboard-page-button b { color: var(--accent-2); font-size: 14px; }
+.leaderboard-page-status {
+  min-width: 150px;
+  min-height: 42px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(var(--accent-rgb), .13);
+  border-radius: 12px;
+  background: rgba(var(--accent-rgb), .045);
+}
+@media (max-width: 680px) {
+  .leaderboard-pagination { flex-direction: row; }
+  .leaderboard-page-status { width: 100%; order: -1; }
+  .leaderboard-page-button { flex: 1 1 30%; }
+}
