@@ -4487,8 +4487,42 @@ function isAllowedOthersImageUrl(value = '') {
     if (url.protocol !== 'https:') return false;
     const host = url.hostname.toLowerCase();
     return host === 'brawlhalla.com' || host.endsWith('.brawlhalla.com') ||
-      host === 'gamebanana.com' || host.endsWith('.gamebanana.com');
+      host === 'gamebanana.com' || host.endsWith('.gamebanana.com') ||
+      host === 'gb-cdn.net' || host.endsWith('.gb-cdn.net');
   } catch { return false; }
+}
+
+function collectExternalImageUrls(value, baseUrl = '', output = [], seen = new Set()) {
+  if (output.length >= 12 || value == null) return output;
+  if (typeof value === 'string') {
+    const decoded = decodeBasicEntities(value).trim();
+    const matches = decoded.match(/(?:https?:)?\/\/[^\s"'<>]+|\/[^\s"'<>]+/g) || [decoded];
+    for (const candidate of matches) {
+      const absolute = absoluteExternalUrl(candidate, baseUrl);
+      if (!absolute || seen.has(absolute) || !isAllowedOthersImageUrl(absolute)) continue;
+      if (!/\.(?:avif|gif|jpe?g|png|webp)(?:[?#]|$)/i.test(absolute) &&
+          !/\/img\/(?:ss|embeddables|Webpage)\//i.test(absolute)) continue;
+      seen.add(absolute);
+      output.push(absolute);
+      if (output.length >= 12) break;
+    }
+    return output;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) collectExternalImageUrls(item, baseUrl, output, seen);
+    return output;
+  }
+  if (typeof value === 'object') {
+    const preferredKeys = [
+      '_sFile', '_sUrl', '_sImageUrl', '_sFullsizeUrl', '_sStructuredDataFullsizeUrl',
+      'sFile', 'sUrl', 'url', 'image', 'src', 'full', 'fullsize', 'original'
+    ];
+    for (const key of preferredKeys) {
+      if (Object.prototype.hasOwnProperty.call(value, key)) collectExternalImageUrls(value[key], baseUrl, output, seen);
+    }
+    for (const nested of Object.values(value)) collectExternalImageUrls(nested, baseUrl, output, seen);
+  }
+  return output;
 }
 async function fetchExternalPreviewImage(pageUrl = '') {
   const normalized = absoluteExternalUrl(pageUrl);
@@ -4503,7 +4537,7 @@ async function fetchExternalPreviewImage(pageUrl = '') {
   try {
     const response = await limitedFetch(normalized, {
       signal: controller.signal,
-      headers: { accept: 'text/html,application/xhtml+xml', 'user-agent': 'PeakHalla/7.82 (+https://peakhalla.com)' }
+      headers: { accept: 'text/html,application/xhtml+xml', 'user-agent': 'PeakHalla/7.83 (+https://peakhalla.com)' }
     });
     if (response.ok) {
       const html = await response.text();
@@ -4520,20 +4554,36 @@ async function fetchExternalPreviewImage(pageUrl = '') {
 async function enrichExternalPreviewImages(items = [], limit = 12) {
   const targets = items.slice(0, Math.max(0, Number(limit) || 0));
   await Promise.all(targets.map(async (item) => {
+    const existing = [item.image, ...(Array.isArray(item.images) ? item.images : [])]
+      .filter(isAllowedOthersImageUrl);
+    if (existing.length) {
+      item.images = [...new Set(existing)].slice(0, 8);
+      item.image = item.images[0];
+      return;
+    }
     const preview = await settleWithin(fetchExternalPreviewImage(item.url), 8_500, '');
-    if (preview) item.image = preview;
+    if (preview) {
+      item.image = preview;
+      item.images = [preview];
+    }
   }));
   return items;
 }
 function publicOthersPayload(value = {}) {
   return {
     ...value,
-    items: (Array.isArray(value.items) ? value.items : []).map((item) => ({
-      ...item,
-      image: isAllowedOthersImageUrl(item.image)
-        ? `/api/others/image?url=${encodeURIComponent(item.image)}`
-        : ''
-    }))
+    items: (Array.isArray(value.items) ? value.items : []).map((item) => {
+      const sourceImages = [item.image, ...(Array.isArray(item.images) ? item.images : [])]
+        .filter(isAllowedOthersImageUrl);
+      const images = [...new Set(sourceImages)]
+        .slice(0, 6)
+        .map((image) => `/api/others/image?url=${encodeURIComponent(image)}`);
+      return {
+        ...item,
+        image: images[0] || '',
+        images
+      };
+    })
   };
 }
 const FALLBACK_PATCHES = [
@@ -4557,7 +4607,7 @@ async function fetchOfficialPatchFeed(force = false) {
   if (!force && cached && cached.expiresAt > Date.now()) return cached.value;
   let items = [];
   try {
-    const response = await limitedFetch(OFFICIAL_PATCH_NOTES_URL, { headers: { accept: 'text/html', 'user-agent': 'PeakHalla/7.82 (+https://peakhalla.com)' } });
+    const response = await limitedFetch(OFFICIAL_PATCH_NOTES_URL, { headers: { accept: 'text/html', 'user-agent': 'PeakHalla/7.83 (+https://peakhalla.com)' } });
     if (!response.ok) { await discardLimitedResponse(response); throw new Error(`Official patch page returned ${response.status}`); }
     const html = await response.text();
     const seen = new Set();
@@ -4592,21 +4642,49 @@ async function fetchOfficialPatchFeed(force = false) {
   othersContentCache.set('patches', { expiresAt: Date.now() + 30 * 60_000, value });
   return value;
 }
-async function gameBananaModData(id) {
-  const fields = 'name,Profile().sProfileUrl(),Preview().sStructuredDataFullsizeUrl(),Category().sName(),date,mdate,description';
-  const url = `${GAMEBANANA_API_BASE}/Core/Item/Data?itemtype=Mod&itemid=${encodeURIComponent(id)}&fields=${encodeURIComponent(fields)}&return_keys=1&format=json_min`;
-  const response = await limitedFetch(url, { headers: { accept: 'application/json', 'user-agent': 'PeakHalla/7.82 (+https://peakhalla.com)' } });
-  if (!response.ok) { await discardLimitedResponse(response); throw new Error(`GameBanana item ${id} returned ${response.status}`); }
+async function fetchGameBananaItemFields(id, fields) {
+  const url = `${GAMEBANANA_API_BASE}/Core/Item/Data?itemtype=Mod&itemid=${encodeURIComponent(id)}&fields=${encodeURIComponent(fields.join(','))}&return_keys=1&format=json_min`;
+  const response = await limitedFetch(url, { headers: { accept: 'application/json', 'user-agent': 'PeakHalla/7.83 (+https://peakhalla.com)' } });
+  if (!response.ok) {
+    await discardLimitedResponse(response);
+    const error = new Error(`GameBanana item ${id} returned ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
   const data = await response.json();
-  const value = data && typeof data === 'object' && !Array.isArray(data) ? data : {};
-  const title = value.name || '';
-  const category = value['Category().sName()'] || '';
+  return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+}
+async function gameBananaModData(id) {
+  // GameBanana's current Mod fields use Url().sProfileUrl() and Category().name.
+  // The legacy names used previously made the whole API request fail, which is
+  // why the map cards fell back to the word MAP instead of real screenshots.
+  const baseFields = [
+    'name', 'Url().sProfileUrl()', 'Preview().sStructuredDataFullsizeUrl()',
+    'Preview().sSubFeedImageUrl()', 'Category().name', 'date', 'mdate', 'description'
+  ];
+  let value;
+  try {
+    value = await fetchGameBananaItemFields(id, [...baseFields, 'screenshots']);
+  } catch (error) {
+    // Keep cards working even if GameBanana temporarily removes or renames its
+    // gallery field; the two official preview fields still provide a hero image.
+    value = await fetchGameBananaItemFields(id, baseFields);
+  }
+  const title = cleanExternalText(value.name || '');
+  const category = cleanExternalText(value['Category().name'] || '');
   if (!/(map|realm|stage|brawlhaven|fortress|temple|dome|falls|stadium|grove)/i.test(`${title} ${category}`)) return null;
+  const profileUrl = absoluteExternalUrl(value['Url().sProfileUrl()'] || `https://gamebanana.com/mods/${id}`, 'https://gamebanana.com/');
+  const images = collectExternalImageUrls([
+    value.screenshots,
+    value['Preview().sStructuredDataFullsizeUrl()'],
+    value['Preview().sSubFeedImageUrl()']
+  ], profileUrl).slice(0, 8);
   return {
     id: Number(id), title, category: category || 'Brawlhalla map',
     date: value.mdate || value.date || '',
-    url: value['Profile().sProfileUrl()'] || `https://gamebanana.com/mods/${id}`,
-    image: value['Preview().sStructuredDataFullsizeUrl()'] || '',
+    url: profileUrl || `https://gamebanana.com/mods/${id}`,
+    image: images[0] || '',
+    images,
     description: cleanExternalText(value.description || '').slice(0, 180), source: 'GameBanana'
   };
 }
@@ -4616,7 +4694,7 @@ async function fetchGameBananaMaps(force = false) {
   let items = [];
   try {
     const listUrl = `${GAMEBANANA_API_BASE}/Core/List/New?page=1&itemtype=Mod&gameid=5704&include_updated=1&format=json_min`;
-    const response = await limitedFetch(listUrl, { headers: { accept: 'application/json', 'user-agent': 'PeakHalla/7.82 (+https://peakhalla.com)' } });
+    const response = await limitedFetch(listUrl, { headers: { accept: 'application/json', 'user-agent': 'PeakHalla/7.83 (+https://peakhalla.com)' } });
     if (!response.ok) { await discardLimitedResponse(response); throw new Error(`GameBanana list returned ${response.status}`); }
     const list = await response.json();
     const ids = (Array.isArray(list) ? list : []).filter((entry) => Array.isArray(entry) && entry[0] === 'Mod').map((entry) => Number(entry[1])).filter(Boolean).slice(0, 24);
@@ -4665,7 +4743,7 @@ app.get('/api/others/image', async (req, res) => {
       signal: controller.signal,
       headers: {
         accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-        'user-agent': 'Mozilla/5.0 (compatible; PeakHalla/7.82; +https://peakhalla.com)',
+        'user-agent': 'Mozilla/5.0 (compatible; PeakHalla/7.83; +https://peakhalla.com)',
         referer: source.includes('gamebanana.com') ? 'https://gamebanana.com/' : 'https://www.brawlhalla.com/'
       }
     });
