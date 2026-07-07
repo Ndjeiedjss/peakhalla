@@ -4464,13 +4464,85 @@ function cleanExternalText(value = '') {
 function absoluteExternalUrl(value = '', base = '') {
   try { return new URL(String(value || ''), base).href; } catch { return ''; }
 }
+function htmlAttribute(tag = '', name = '') {
+  const escaped = String(name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = String(tag).match(new RegExp(`\\b${escaped}\\s*=\\s*(["'])([\\s\\S]*?)\\1`, 'i'));
+  return match ? decodeBasicEntities(match[2]).trim() : '';
+}
+function extractExternalPreviewImage(html = '', baseUrl = '') {
+  const tags = String(html).match(/<meta\b[^>]*>/gi) || [];
+  const accepted = new Set(['og:image', 'og:image:url', 'twitter:image', 'twitter:image:src']);
+  for (const tag of tags) {
+    const key = (htmlAttribute(tag, 'property') || htmlAttribute(tag, 'name')).toLowerCase();
+    if (!accepted.has(key)) continue;
+    const content = htmlAttribute(tag, 'content');
+    const absolute = absoluteExternalUrl(content, baseUrl);
+    if (absolute) return absolute;
+  }
+  return '';
+}
+function isAllowedOthersImageUrl(value = '') {
+  try {
+    const url = new URL(String(value || ''));
+    if (url.protocol !== 'https:') return false;
+    const host = url.hostname.toLowerCase();
+    return host === 'brawlhalla.com' || host.endsWith('.brawlhalla.com') ||
+      host === 'gamebanana.com' || host.endsWith('.gamebanana.com');
+  } catch { return false; }
+}
+async function fetchExternalPreviewImage(pageUrl = '') {
+  const normalized = absoluteExternalUrl(pageUrl);
+  if (!normalized) return '';
+  const cacheKey = `others-preview:${normalized}`;
+  const cached = getGeneralCache(cacheKey);
+  if (cached) return cached.value || '';
+  let image = '';
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8_000);
+  timer.unref?.();
+  try {
+    const response = await limitedFetch(normalized, {
+      signal: controller.signal,
+      headers: { accept: 'text/html,application/xhtml+xml', 'user-agent': 'PeakHalla/7.82 (+https://peakhalla.com)' }
+    });
+    if (response.ok) {
+      const html = await response.text();
+      const candidate = extractExternalPreviewImage(html, response.url || normalized);
+      if (isAllowedOthersImageUrl(candidate)) image = candidate;
+    } else {
+      await discardLimitedResponse(response);
+    }
+  } catch {}
+  finally { clearTimeout(timer); }
+  setGeneralCache(cacheKey, { value: image, expiresAt: Date.now() + (image ? 12 * 60 * 60_000 : 20 * 60_000) });
+  return image;
+}
+async function enrichExternalPreviewImages(items = [], limit = 12) {
+  const targets = items.slice(0, Math.max(0, Number(limit) || 0));
+  await Promise.all(targets.map(async (item) => {
+    const preview = await settleWithin(fetchExternalPreviewImage(item.url), 8_500, '');
+    if (preview) item.image = preview;
+  }));
+  return items;
+}
+function publicOthersPayload(value = {}) {
+  return {
+    ...value,
+    items: (Array.isArray(value.items) ? value.items : []).map((item) => ({
+      ...item,
+      image: isAllowedOthersImageUrl(item.image)
+        ? `/api/others/image?url=${encodeURIComponent(item.image)}`
+        : ''
+    }))
+  };
+}
 const FALLBACK_PATCHES = [
-  { title: 'New Legend: Aurus, Battle Pass Classic 8, & Heatwave – Patch 10.08', date: '2026-06-16', url: 'https://www.brawlhalla.com/news/aurus-patch' },
-  { title: 'Celebrate Brawlhalla Fest 2026 with Ascended Mordex & More! – Patch 10.07', date: '2026-05-15', url: 'https://www.brawlhalla.com/news/celebrate-brawlhalla-fest-2026-with-ascended-mordex-more-patch-10-07' },
-  { title: 'May the 4th Be With You! New Content & Gameplay Changes – Patch 10.06', date: '2026-04-26', url: 'https://www.brawlhalla.com/news/may-the-4th-be-with-you-new-content-gameplay-changes-patch-10-06' },
-  { title: 'Spring is Here with Bloomhalla 2026 – Patch 10.05', date: '2026-04-03', url: 'https://www.brawlhalla.com/news/bloomhalla-26' },
-  { title: 'Battle Pass Season 13: Age of Dragons – Patch 10.04', date: '2026-03-18', url: 'https://www.brawlhalla.com/news/bp13-patch-10-04' },
-  { title: 'Patch 10.04 – Balance, Bug Fixes, and Game Improvements', date: '2026-03-17', url: 'https://www.brawlhalla.com/news/patch-10-04-balance-bug-fixes-game-improvements' }
+  { title: 'New Legend: Aurus, Battle Pass Classic 8, & Heatwave – Patch 10.08', date: '2026-06-16', url: 'https://www.brawlhalla.com/news/aurus-patch', image: 'https://cms.brawlhalla.com/c/uploads/2026/06/PN1920.jpg' },
+  { title: 'Celebrate Brawlhalla Fest 2026 with Ascended Mordex & More! – Patch 10.07', date: '2026-05-15', url: 'https://www.brawlhalla.com/news/celebrate-brawlhalla-fest-2026-with-ascended-mordex-more-patch-10-07', image: 'https://cms.brawlhalla.com/c/uploads/2026/05/1920pn-1.jpg' },
+  { title: 'May the 4th Be With You! New Content & Gameplay Changes – Patch 10.06', date: '2026-04-26', url: 'https://www.brawlhalla.com/news/may-the-4th-be-with-you-new-content-gameplay-changes-patch-10-06', image: 'https://cms.brawlhalla.com/c/uploads/2026/04/MT4_1920x1080.png' },
+  { title: 'Spring is Here with Bloomhalla 2026 – Patch 10.05', date: '2026-04-03', url: 'https://www.brawlhalla.com/news/bloomhalla-26', image: 'https://cms.brawlhalla.com/c/uploads/2026/04/Main-graphic_4-2.jpg' },
+  { title: 'Battle Pass Season 13: Age of Dragons – Patch 10.04', date: '2026-03-18', url: 'https://www.brawlhalla.com/news/bp13-patch-10-04', image: 'https://cms.brawlhalla.com/c/uploads/2026/03/PN_1920x1080.jpg' },
+  { title: 'Patch 10.04 – Balance, Bug Fixes, and Game Improvements', date: '2026-03-17', url: 'https://www.brawlhalla.com/news/patch-10-04-balance-bug-fixes-game-improvements', image: 'https://cms.brawlhalla.com/c/uploads/2026/03/13fixes_1920x1080.jpg' }
 ];
 const FALLBACK_MAPS = [
   { id: 667314, title: 'CLEAR MAP 2026', category: 'Tournament map pack', date: '2026-04-11', url: 'https://gamebanana.com/mods/667314', description: 'Desaturated, unobstructed tournament maps for current 1v1 and 2v2 play.' },
@@ -4485,7 +4557,7 @@ async function fetchOfficialPatchFeed(force = false) {
   if (!force && cached && cached.expiresAt > Date.now()) return cached.value;
   let items = [];
   try {
-    const response = await limitedFetch(OFFICIAL_PATCH_NOTES_URL, { headers: { accept: 'text/html', 'user-agent': 'PeakHalla/7.81 (+https://peakhalla.com)' } });
+    const response = await limitedFetch(OFFICIAL_PATCH_NOTES_URL, { headers: { accept: 'text/html', 'user-agent': 'PeakHalla/7.82 (+https://peakhalla.com)' } });
     if (!response.ok) { await discardLimitedResponse(response); throw new Error(`Official patch page returned ${response.status}`); }
     const html = await response.text();
     const seen = new Set();
@@ -4509,7 +4581,12 @@ async function fetchOfficialPatchFeed(force = false) {
   } catch (error) {
     console.warn('Official patch feed refresh failed:', error.message);
   }
-  if (!items.length) items = FALLBACK_PATCHES.map((item) => ({ ...item, image: '', source: 'Brawlhalla official' }));
+  if (!items.length) items = FALLBACK_PATCHES.map((item) => ({ ...item, source: 'Brawlhalla official' }));
+  const fallbackPatchByUrl = new Map(FALLBACK_PATCHES.map((item) => [item.url, item]));
+  items.forEach((item) => {
+    if (!item.image && fallbackPatchByUrl.get(item.url)?.image) item.image = fallbackPatchByUrl.get(item.url).image;
+  });
+  await enrichExternalPreviewImages(items, 18);
   items.sort((a,b) => String(b.date).localeCompare(String(a.date)));
   const value = { items, source_url: OFFICIAL_PATCH_NOTES_URL, updated_at: new Date().toISOString(), live: items.some((x) => !FALLBACK_PATCHES.some((f) => f.url === x.url)) };
   othersContentCache.set('patches', { expiresAt: Date.now() + 30 * 60_000, value });
@@ -4518,7 +4595,7 @@ async function fetchOfficialPatchFeed(force = false) {
 async function gameBananaModData(id) {
   const fields = 'name,Profile().sProfileUrl(),Preview().sStructuredDataFullsizeUrl(),Category().sName(),date,mdate,description';
   const url = `${GAMEBANANA_API_BASE}/Core/Item/Data?itemtype=Mod&itemid=${encodeURIComponent(id)}&fields=${encodeURIComponent(fields)}&return_keys=1&format=json_min`;
-  const response = await limitedFetch(url, { headers: { accept: 'application/json', 'user-agent': 'PeakHalla/7.81 (+https://peakhalla.com)' } });
+  const response = await limitedFetch(url, { headers: { accept: 'application/json', 'user-agent': 'PeakHalla/7.82 (+https://peakhalla.com)' } });
   if (!response.ok) { await discardLimitedResponse(response); throw new Error(`GameBanana item ${id} returned ${response.status}`); }
   const data = await response.json();
   const value = data && typeof data === 'object' && !Array.isArray(data) ? data : {};
@@ -4539,7 +4616,7 @@ async function fetchGameBananaMaps(force = false) {
   let items = [];
   try {
     const listUrl = `${GAMEBANANA_API_BASE}/Core/List/New?page=1&itemtype=Mod&gameid=5704&include_updated=1&format=json_min`;
-    const response = await limitedFetch(listUrl, { headers: { accept: 'application/json', 'user-agent': 'PeakHalla/7.81 (+https://peakhalla.com)' } });
+    const response = await limitedFetch(listUrl, { headers: { accept: 'application/json', 'user-agent': 'PeakHalla/7.82 (+https://peakhalla.com)' } });
     if (!response.ok) { await discardLimitedResponse(response); throw new Error(`GameBanana list returned ${response.status}`); }
     const list = await response.json();
     const ids = (Array.isArray(list) ? list : []).filter((entry) => Array.isArray(entry) && entry[0] === 'Mod').map((entry) => Number(entry[1])).filter(Boolean).slice(0, 24);
@@ -4549,19 +4626,70 @@ async function fetchGameBananaMaps(force = false) {
     console.warn('GameBanana map feed refresh failed:', error.message);
   }
   const known = new Set(items.map((item) => Number(item.id)));
-  for (const fallback of FALLBACK_MAPS) if (!known.has(fallback.id)) items.push({ ...fallback, image: '', source: 'GameBanana' });
+  const missingFallbacks = FALLBACK_MAPS.filter((fallback) => !known.has(fallback.id));
+  const fallbackDetails = await Promise.all(missingFallbacks.map((fallback) =>
+    settleWithin(gameBananaModData(fallback.id), 7_500, null)
+  ));
+  missingFallbacks.forEach((fallback, index) => {
+    const detail = fallbackDetails[index];
+    items.push({
+      ...fallback,
+      ...(detail || {}),
+      description: detail?.description || fallback.description,
+      image: detail?.image || '',
+      source: 'GameBanana'
+    });
+  });
   items = items.slice(0, 18);
+  await enrichExternalPreviewImages(items, 18);
   const value = { items, source_url: GAMEBANANA_BRAWLHALLA_MAPS_URL, updated_at: new Date().toISOString(), attribution: 'Map mods are hosted by their creators on GameBanana.' };
   othersContentCache.set('maps', { expiresAt: Date.now() + 30 * 60_000, value });
   return value;
 }
 app.get('/api/others/patches', async (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=1800');
-  res.json(await fetchOfficialPatchFeed(req.query.refresh === '1'));
+  res.json(publicOthersPayload(await fetchOfficialPatchFeed(req.query.refresh === '1')));
 });
 app.get('/api/others/maps', async (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=1800');
-  res.json(await fetchGameBananaMaps(req.query.refresh === '1'));
+  res.json(publicOthersPayload(await fetchGameBananaMaps(req.query.refresh === '1')));
+});
+app.get('/api/others/image', async (req, res) => {
+  const source = String(req.query.url || '').trim();
+  if (!isAllowedOthersImageUrl(source)) return res.status(400).end();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12_000);
+  timer.unref?.();
+  try {
+    const upstream = await limitedFetch(source, {
+      signal: controller.signal,
+      headers: {
+        accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        'user-agent': 'Mozilla/5.0 (compatible; PeakHalla/7.82; +https://peakhalla.com)',
+        referer: source.includes('gamebanana.com') ? 'https://gamebanana.com/' : 'https://www.brawlhalla.com/'
+      }
+    });
+    if (!upstream.ok || !isAllowedOthersImageUrl(upstream.url || source)) {
+      await discardLimitedResponse(upstream);
+      return res.status(upstream.status || 502).end();
+    }
+    const contentType = String(upstream.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+    const contentLength = Number(upstream.headers.get('content-length') || 0);
+    if (!contentType.startsWith('image/') || contentLength > 8 * 1024 * 1024) {
+      await discardLimitedResponse(upstream);
+      return res.status(415).end();
+    }
+    const buffer = Buffer.from(await upstream.arrayBuffer());
+    if (!buffer.length || buffer.length > 8 * 1024 * 1024) return res.status(413).end();
+    res.setHeader('Content-Type', contentType || 'image/jpeg');
+    res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=2592000');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    return res.send(buffer);
+  } catch {
+    return res.status(502).end();
+  } finally {
+    clearTimeout(timer);
+  }
 });
 
 app.get('/api/legend-art/:name', async (req, res) => {
