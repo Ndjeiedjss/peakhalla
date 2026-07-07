@@ -1063,7 +1063,7 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '8mb' }));
 app.use((req, res, next) => {
   const isApi = req.path.startsWith('/api/');
-  const isHtml = req.path === '/' || req.path.endsWith('.html') || req.path.startsWith('/player/') || req.path.startsWith('/clan/') || req.path === '/queue' || req.path === '/arena' || req.path.startsWith('/esports/');
+  const isHtml = req.path === '/' || req.path.endsWith('.html') || ['/advertise', '/privacy', '/terms'].includes(req.path) || req.path.startsWith('/player/') || req.path.startsWith('/clan/') || req.path === '/queue' || req.path === '/arena' || req.path.startsWith('/esports/');
   const isVersionedAsset = /\.(?:js|css|svg|png|webp|jpg|jpeg|gif|ico)$/i.test(req.path);
   if (isApi || isHtml) {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -1090,6 +1090,10 @@ app.use(express.static(path.join(__dirname, 'public'), {
   }
 }));
 app.use('/uploads/arena', express.static(WALL_UPLOADS_DIR, { etag: true, maxAge: '30d', immutable: true }));
+
+app.get('/advertise', (req, res) => res.sendFile(path.join(__dirname, 'public', 'advertise.html')));
+app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public', 'privacy.html')));
+app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public', 'terms.html')));
 
 const SEO_INDEX_PATH = path.join(__dirname, 'public', 'index.html');
 let seoIndexTemplatePromise = null;

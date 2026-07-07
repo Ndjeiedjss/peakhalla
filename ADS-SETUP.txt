@@ -1,0 +1,30 @@
+PEAKHALLA ADS SETUP — v7.76
+
+CURRENT STATE
+- Direct sponsorship placeholders are enabled.
+- They send interested advertisers to the PeakHalla Discord.
+- Google AdSense is prepared but disabled until you add your real IDs.
+
+TO ACTIVATE ADSENSE
+1. Apply at https://adsense.google.com/ and add peakhalla.com.
+2. In public/ads-config.js:
+   - Change provider: 'sponsor' to provider: 'adsense'
+   - Add your client ID, for example ca-pub-1234567890123456
+   - Add the numeric ad slot ID for each placement.
+3. Create public/ads.txt with the exact line Google gives you, usually:
+   google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0
+4. In AdSense > Privacy & messaging, configure Google's consent message for the EEA, UK, and Switzerland.
+5. Deploy again.
+
+DIRECT SPONSOR ADS
+- Edit public/ads-config.js.
+- Change the title, description, CTA, URL, and image per placement.
+- An image may be a public URL such as /assets/sponsors/example.webp.
+
+PLACEMENTS
+- home_top
+- profile_top
+- leaderboard_bottom
+- tournaments_bottom
+- arena_feed
+- queue_bottom

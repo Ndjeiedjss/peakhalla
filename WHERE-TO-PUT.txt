@@ -1,0 +1,15 @@
+PeakHalla v7.76 — file locations
+
+Project root (next to package.json):
+- server.js
+- ADS-SETUP.txt (instructions only; optional on the server)
+
+Inside public:
+- index.html
+- styles.css
+- ads-config.js
+- ads.js
+- advertise.html
+- privacy.html
+- terms.html
+- sitemap.xml

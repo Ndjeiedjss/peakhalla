@@ -1,0 +1,22 @@
+PeakHalla v7.76 — Ads + AdSense verification
+
+Upload/replace these paths exactly:
+
+Project root:
+- server.js
+- ADS-SETUP.txt (documentation only)
+
+public folder:
+- index.html
+- styles.css
+- ads-config.js
+- ads.js
+- advertise.html
+- privacy.html
+- terms.html
+- sitemap.xml
+
+The included public/index.html already contains the AdSense verification code for:
+ca-pub-7303521190072465
+
+After deployment, return to AdSense, check "I've placed the code", then click Verify.
