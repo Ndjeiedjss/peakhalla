@@ -636,7 +636,8 @@ async function saveProfileToDatabase(playerId, payload) {
 async function getDatabaseCachedProfileResponse(playerId, maxAgeMs = DATABASE_PROFILE_MAX_AGE_MS) {
   if (!dbReady) return null;
   const result = await dbQuery(`
-    SELECT profile_payload, last_fetched
+    SELECT profile_payload, last_fetched, current_name, account_level, account_xp,
+           rating, peak_rating, tier, region, global_rank, main_legend, guild
     FROM players
     WHERE brawlhalla_id = $1 AND profile_payload <> '{}'::jsonb
     LIMIT 1
@@ -645,8 +646,25 @@ async function getDatabaseCachedProfileResponse(playerId, maxAgeMs = DATABASE_PR
   if (!row?.profile_payload?.player) return null;
   const age = Date.now() - new Date(row.last_fetched || 0).getTime();
   if (Number.isFinite(maxAgeMs) && maxAgeMs > 0 && (!Number.isFinite(age) || age > maxAgeMs)) return null;
-  setProfileMemoryCache(playerId, row.profile_payload);
-  return row.profile_payload;
+  const payload = typeof structuredClone === 'function'
+    ? structuredClone(row.profile_payload)
+    : JSON.parse(JSON.stringify(row.profile_payload));
+  const player = payload.player;
+  const fill = (field, value, useful = (candidate) => candidate !== null && candidate !== undefined && candidate !== '') => {
+    if (!useful(player[field]) && useful(value)) player[field] = value;
+  };
+  fill('name', row.current_name, (value) => Boolean(String(value || '').trim()) && !isGeneratedPlayerName(value));
+  fill('level', numberOrNull(row.account_level), (value) => Number(value) > 0);
+  fill('account_xp', numberOrNull(row.account_xp), (value) => Number(value) > 0);
+  fill('rating', numberOrNull(row.rating), (value) => Number.isFinite(Number(value)) && Number(value) > 0);
+  fill('peak_rating', numberOrNull(row.peak_rating), (value) => Number.isFinite(Number(value)) && Number(value) > 0);
+  fill('tier', row.tier, (value) => Boolean(value) && value !== 'Unranked');
+  fill('region', row.region, (value) => Boolean(value) && value !== '—');
+  fill('global_rank', numberOrNull(row.global_rank), (value) => Number(value) > 0);
+  fill('main_legend', row.main_legend, Boolean);
+  fill('guild', row.guild, Boolean);
+  setProfileMemoryCache(playerId, payload);
+  return payload;
 }
 
 async function getDatabaseKnownNames(playerId) {
@@ -1718,12 +1736,12 @@ function normalizeLegacyLegend(legend = {}) {
   return {
     ...legend,
     legend_id: Number(legacyField(legend, 'legend_id', 'legendId', 'id')),
-    games: legacyField(legend, 'games'),
-    wins: legacyField(legend, 'wins'),
-    level: legacyField(legend, 'level'),
-    xp: legacyField(legend, 'xp'),
-    xp_percentage: legacyField(legend, 'xp_percentage', 'xpPercentage'),
-    match_time: legacyField(legend, 'match_time', 'matchtime', 'matchTime'),
+    games: legacyField(legend, 'games', 'total_games', 'totalGames'),
+    wins: legacyField(legend, 'wins', 'total_wins', 'totalWins'),
+    level: legacyField(legend, 'level', 'legend_level', 'legendLevel'),
+    xp: legacyField(legend, 'xp', 'legend_xp', 'legendXp', 'legendXP'),
+    xp_percentage: legacyField(legend, 'xp_percentage', 'xpPercentage', 'xp_percent', 'xpPercent'),
+    match_time: legacyField(legend, 'match_time', 'matchtime', 'matchTime', 'match_time_seconds', 'matchTimeSeconds'),
     kos: legacyField(legend, 'kos'),
     falls: legacyField(legend, 'falls'),
     suicides: legacyField(legend, 'suicides'),
@@ -1741,6 +1759,30 @@ function normalizeLegacyLegend(legend = {}) {
     ko_weapon_two: legacyField(legend, 'ko_weapon_two', 'koweapontwo', 'koWeaponTwo'),
     time_held_weapon_one: legacyField(legend, 'time_held_weapon_one', 'timeheldweaponone', 'timeHeldWeaponOne'),
     time_held_weapon_two: legacyField(legend, 'time_held_weapon_two', 'timeheldweapontwo', 'timeHeldWeaponTwo')
+  };
+}
+
+function normalizeLifetimeStatsPayload(source = {}) {
+  let payload = source;
+  if (Array.isArray(payload)) payload = payload.find((item) => item && typeof item === 'object') || {};
+  if (!payload || typeof payload !== 'object') payload = {};
+  const candidates = [payload, payload.player, payload.stats, payload.playerStats, payload.data, payload.result];
+  const selected = candidates.find((item) => item && typeof item === 'object' && (
+    Array.isArray(item.legends) || Array.isArray(item.legend_stats) || Array.isArray(item.legendStats) ||
+    legacyField(item, 'xp', 'account_xp', 'accountXp', 'accountXP') !== null ||
+    legacyField(item, 'level', 'account_level', 'accountLevel') !== null
+  )) || payload;
+  const legends = legacyField(selected, 'legends', 'legend_stats', 'legendStats', 'legend_data', 'legendData');
+  return {
+    ...selected,
+    brawlhalla_id: legacyField(selected, 'brawlhalla_id', 'brawlhallaId', 'player_id', 'playerId', 'id'),
+    name: legacyField(selected, 'name', 'player_name', 'playerName'),
+    level: legacyField(selected, 'level', 'account_level', 'accountLevel'),
+    xp: legacyField(selected, 'xp', 'account_xp', 'accountXp', 'accountXP'),
+    xp_percentage: legacyField(selected, 'xp_percentage', 'xpPercentage', 'account_xp_percentage', 'accountXpPercentage'),
+    games: legacyField(selected, 'games', 'total_games', 'totalGames'),
+    wins: legacyField(selected, 'wins', 'total_wins', 'totalWins'),
+    legends: (Array.isArray(legends) ? legends : []).map(normalizeLegacyLegend).filter((legend) => Number.isFinite(legend.legend_id) && legend.legend_id > 0)
   };
 }
 
@@ -1773,13 +1815,12 @@ function progressPercentageForBestXp(live = {}, fallback = {}) {
 }
 
 function mergeLifetimeStats(v1 = {}, legacy = null) {
-  if (!legacy) return v1 || {};
+  const liveStats = normalizeLifetimeStatsPayload(v1 || {});
+  const legacyStats = legacy ? normalizeLifetimeStatsPayload(legacy) : null;
+  if (!legacyStats) return liveStats;
 
-  const legacyLegends = new Map((legacy.legends || []).map((legend) => {
-    const normalized = normalizeLegacyLegend(legend);
-    return [Number(normalized.legend_id), normalized];
-  }));
-  const v1Legends = new Map((v1?.legends || []).map((legend) => [Number(legend.legend_id), legend]));
+  const legacyLegends = new Map((legacyStats.legends || []).map((legend) => [Number(legend.legend_id), legend]));
+  const v1Legends = new Map((liveStats.legends || []).map((legend) => [Number(legend.legend_id), legend]));
   const ids = new Set([...v1Legends.keys(), ...legacyLegends.keys()]);
 
   const legends = [...ids].map((id) => {
@@ -1811,18 +1852,15 @@ function mergeLifetimeStats(v1 = {}, legacy = null) {
   });
 
   return {
-    ...legacy,
-    ...v1,
-    name: preferLiveValue(v1?.name, legacy.name),
-    brawlhalla_id: preferLiveValue(v1?.brawlhalla_id, legacy.brawlhalla_id ?? legacy.brawlhallaId),
-    level: highestProgressValue(v1?.level, legacyField(legacy, 'level')),
-    xp: highestProgressValue(v1?.xp, legacyField(legacy, 'xp')),
-    xp_percentage: progressPercentageForBestXp(v1, {
-      xp: legacyField(legacy, 'xp'),
-      xp_percentage: legacyField(legacy, 'xp_percentage', 'xpPercentage')
-    }),
-    games: preferLiveValue(v1?.games, legacyField(legacy, 'games')),
-    wins: preferLiveValue(v1?.wins, legacyField(legacy, 'wins')),
+    ...legacyStats,
+    ...liveStats,
+    name: preferLiveValue(liveStats?.name, legacyStats.name),
+    brawlhalla_id: preferLiveValue(liveStats?.brawlhalla_id, legacyStats.brawlhalla_id),
+    level: highestProgressValue(liveStats?.level, legacyStats.level),
+    xp: highestProgressValue(liveStats?.xp, legacyStats.xp),
+    xp_percentage: progressPercentageForBestXp(liveStats, legacyStats),
+    games: preferLiveValue(liveStats?.games, legacyStats.games),
+    wins: preferLiveValue(liveStats?.wins, legacyStats.wins),
     legends
   };
 }
@@ -4225,7 +4263,7 @@ async function scanQueueTracker(tracker) {
       pruneQueueActivity(tracker.activity, now);
       tracker.snapshot = currentSnapshot;
       tracker.last_scan_at = now;
-      tracker.refresh_delay_ms = hadBaseline ? QUEUE_SCAN_INTERVAL_MS : 15_000;
+      tracker.refresh_delay_ms = hadBaseline ? QUEUE_SCAN_INTERVAL_MS : 8_000;
       tracker.next_scan_at = now + tracker.refresh_delay_ms;
       tracker.status = 'ready';
       await persistQueueTracker(tracker);
@@ -4844,7 +4882,13 @@ app.get('/api/queue/activity', async (req, res, next) => {
     const region = allowed(String(req.query.region || 'ME').toUpperCase(), QUEUE_REGIONS, 'ME');
     const mode = allowed(String(req.query.mode || '1v1'), QUEUE_MODES, '1v1');
     const tracker = await ensureQueueTracker(region, mode);
-    if (String(req.query.refresh || '') === '1' && !tracker.scanPromise) scanQueueTracker(tracker).catch(() => null);
+    const wantsFresh = String(req.query.refresh || '') === '1' || String(req.query.wait || '') === '1';
+    if (wantsFresh && !tracker.scanPromise) scanQueueTracker(tracker).catch(() => null);
+    if (wantsFresh && tracker.scanPromise) {
+      // Initial page loads should receive the completed scan instead of an old
+      // snapshot that only changes after a manual browser refresh.
+      await settleWithin(tracker.scanPromise, 24_000, null);
+    }
     const now = Date.now();
     pruneQueueActivity(tracker.activity, now);
     const rawPlayers = [...tracker.activity.values()]
@@ -6565,7 +6609,8 @@ app.get('/api/player/:id', async (req, res, next) => {
     const playerName = sanitizePlayerName(ranked?.name || lifetime?.name || coreStats?.name || localNamesSeed?.[0]?.name || previousProfile?.player?.name || `Player ${id}`);
     const lifetimeSourceOk = officialLifetimeOk || Boolean(coreStats);
     const rankedSourceOk = officialRankedOk;
-    const profilePartial = fast || instant || !lifetimeSourceOk || !rankedSourceOk || !guildFetchOk;
+    const progressionSourceOk = numberOrNull(lifetime?.xp) !== null || numberOrNull(lifetime?.level) !== null;
+    let profilePartial = fast || instant || !lifetimeSourceOk || !rankedSourceOk || !progressionSourceOk;
 
     const player = {
       brawlhalla_id: id,
@@ -6642,7 +6687,36 @@ app.get('/api/player/:id', async (req, res, next) => {
     if (previousPlayer && isGeneratedPlayerName(player.name) && !isGeneratedPlayerName(previousPlayer.name)) {
       player.name = previousPlayer.name;
     }
+    if (previousPlayer) {
+      const keepPositive = (field) => {
+        if (!(Number(player[field]) > 0) && Number(previousPlayer[field]) > 0) player[field] = previousPlayer[field];
+      };
+      keepPositive('level');
+      keepPositive('account_xp');
+      keepPositive('game_time_seconds');
+      if (Number(player.game_time_seconds) > 0 && (!player.game_time_display || player.game_time_display === '—')) {
+        player.game_time_display = formatGameTime(player.game_time_seconds);
+      } else if (!(Number(player.game_time_seconds) > 0) && Number(previousPlayer.game_time_seconds) > 0) {
+        player.game_time_display = previousPlayer.game_time_display || formatGameTime(previousPlayer.game_time_seconds);
+      }
+      if ((!Array.isArray(player.top_legends) || !player.top_legends.length) && Array.isArray(previousPlayer.top_legends) && previousPlayer.top_legends.length) player.top_legends = previousPlayer.top_legends;
+      if ((!Array.isArray(player.main_weapons) || !player.main_weapons.length) && Array.isArray(previousPlayer.main_weapons) && previousPlayer.main_weapons.length) player.main_weapons = previousPlayer.main_weapons;
+      if ((!Array.isArray(player.lifetime_legends) || !player.lifetime_legends.length) && Array.isArray(previousPlayer.lifetime_legends) && previousPlayer.lifetime_legends.length) player.lifetime_legends = previousPlayer.lifetime_legends;
+      if ((!player.main_legend || !player.main_legend.name) && previousPlayer.main_legend) player.main_legend = previousPlayer.main_legend;
+      if (player.xp_percentage === null || player.xp_percentage === undefined) player.xp_percentage = previousPlayer.xp_percentage ?? null;
+      player.lifetime_totals = { ...(previousPlayer.lifetime_totals || {}), ...(player.lifetime_totals || {}) };
+      if (!(Number(player.lifetime_totals?.match_time_seconds) > 0) && Number(previousPlayer.lifetime_totals?.match_time_seconds) > 0) {
+        player.lifetime_totals.match_time_seconds = previousPlayer.lifetime_totals.match_time_seconds;
+        player.lifetime_totals.match_time_display = previousPlayer.lifetime_totals.match_time_display;
+      }
+    }
     player.guild = playerGuild;
+    profilePartial = fast || instant || !lifetimeSourceOk || !rankedSourceOk || !(
+      numberOrNull(player.account_xp) !== null || numberOrNull(player.level) !== null
+    );
+    player.data_quality.partial = profilePartial;
+    player.data_quality.account_xp_reported = numberOrNull(player.account_xp) !== null;
+    player.data_quality.account_level_reported = numberOrNull(player.level) !== null;
 
     if (playerGuild?.guild_id) {
       // Clan enrichment must never delay the player profile response.
@@ -6653,7 +6727,7 @@ app.get('/api/player/:id', async (req, res, next) => {
     if (fast || instant) storeObservedNamesBatch([{ id, name: player.name }], instant ? 'profile-instant' : 'profile-fast').catch(() => null);
     else await storeObservedNamesBatch([{ id, name: player.name }], 'profile');
 
-    const completeOfficialProfile = officialLifetimeOk && officialRankedOk && guildFetchOk;
+    const completeOfficialProfile = officialLifetimeOk && officialRankedOk;
     const history = completeOfficialProfile && !fast && !instant
       ? await storeSnapshot(player)
       : await readSnapshotHistory(id);
