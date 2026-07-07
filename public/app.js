@@ -68,7 +68,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRankedController: null, playerAliasController: null, playerLiveBusy: false, playerLiveBusyId: 0, playerRequestSequence: 0, playerRetryCount: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, leaderboardRequestId: 0, leaderboardRetryCount: 0, leaderboardStaleRetryCount: 0, leaderboardRetryTimer: null, leaderboardWatchdogTimer: null, leaderboardFreshTimer: null, leaderboardAutoTimer: null, leaderboardFreshKey: '', leaderboardSignature: '', leaderboardActiveKey: '', leaderboardLastFetchAt: 0, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, queuePromise: null, queueRequestKey: '', queueRequestId: 0, queueSignature: '', arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRankedController: null, playerAliasController: null, playerLiveBusy: false, playerLiveBusyId: 0, playerRequestSequence: 0, playerRetryCount: 0, playerLastVerifiedAt: 0, playerLastRankedRefreshAt: 0, playerLastAliasRefreshAt: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, leaderboardRequestId: 0, leaderboardRetryCount: 0, leaderboardStaleRetryCount: 0, leaderboardRetryTimer: null, leaderboardWatchdogTimer: null, leaderboardFreshTimer: null, leaderboardAutoTimer: null, leaderboardFreshKey: '', leaderboardSignature: '', leaderboardActiveKey: '', leaderboardLastFetchAt: 0, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, queuePromise: null, queueRequestKey: '', queueRequestId: 0, queueSignature: '', arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
 
 
 const PEAKHALLA_THEME_KEY = 'peakhalla-theme';
@@ -399,32 +399,57 @@ function formerNames(player) {
 
 function showStatus(message, type = 'loading') { els.status.hidden = false; els.status.className = `status shell ${type}`; els.status.textContent = message; }
 function hideStatus() { els.status.hidden = true; }
+function wait(ms) { return new Promise((resolve) => window.setTimeout(resolve, Math.max(0, Number(ms) || 0))); }
+
 async function getJson(url, options = {}) {
-  const controller = new AbortController();
-  const timeoutMs = Number(options.timeoutMs || 15000);
-  let timedOut = false;
-  const abortFromCaller = () => controller.abort();
-  if (options.signal) {
-    if (options.signal.aborted) controller.abort();
-    else options.signal.addEventListener('abort', abortFromCaller, { once: true });
-  }
-  const timer = window.setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
-  try {
-    const response = await fetch(url, { cache: 'no-store', headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' }, signal: controller.signal });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || t('fetchError'));
-    return data;
-  } catch (error) {
-    if (timedOut) {
-      const timeoutError = new Error(t('friendlyProblem'));
-      timeoutError.name = 'TimeoutError';
-      throw timeoutError;
+  const attempts = Math.max(1, 1 + Math.min(2, Number(options.retries || 0)));
+  let lastError = null;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const controller = new AbortController();
+    const timeoutMs = Number(options.timeoutMs || 15000);
+    let timedOut = false;
+    const abortFromCaller = () => controller.abort();
+    if (options.signal) {
+      if (options.signal.aborted) controller.abort();
+      else options.signal.addEventListener('abort', abortFromCaller, { once: true });
     }
-    throw error;
-  } finally {
-    window.clearTimeout(timer);
-    options.signal?.removeEventListener('abort', abortFromCaller);
+    const timer = window.setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
+    try {
+      const response = await fetch(url, {
+        cache: 'no-store',
+        headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' },
+        signal: controller.signal
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const error = new Error(data.error || t('fetchError'));
+        error.status = response.status;
+        const retryAfter = Number(response.headers.get('retry-after'));
+        error.retryAfterMs = Number.isFinite(retryAfter) ? retryAfter * 1000 : 0;
+        throw error;
+      }
+      return data;
+    } catch (error) {
+      if (options.signal?.aborted) throw error;
+      if (timedOut) {
+        const timeoutError = new Error(t('friendlyProblem'));
+        timeoutError.name = 'TimeoutError';
+        lastError = timeoutError;
+      } else {
+        lastError = error;
+      }
+      const transient = lastError?.name === 'TimeoutError'
+        || lastError?.name === 'TypeError'
+        || [408, 425, 429, 500, 502, 503, 504].includes(Number(lastError?.status));
+      if (!transient || attempt >= attempts - 1) throw lastError;
+      const baseDelay = Number(options.retryDelayMs || 500) * (attempt + 1);
+      await wait(Math.max(baseDelay, Number(lastError?.retryAfterMs || 0)));
+    } finally {
+      window.clearTimeout(timer);
+      options.signal?.removeEventListener('abort', abortFromCaller);
+    }
   }
+  throw lastError || new Error(t('fetchError'));
 }
 
 function playerPayloadSignature(data = {}) {
@@ -445,15 +470,14 @@ function playerPayloadSignature(data = {}) {
     player.main_legend.legend_id, player.main_legend.name,
     player.main_legend.image_url, player.main_legend.image_candidates
   ] : null;
-  const names = (data.known_names || []).map((item) => item?.name || item);
-  const regionRanks = (player.region_ranks || []).map((item) => [item.region, item.rank]);
+  const regionRanks = (player.region_ranks || []).map((item) => [item.region, item.rank]).sort((a, b) => String(a[0]).localeCompare(String(b[0])));
   return JSON.stringify([
     player.brawlhalla_id, player.name, player.account_xp, player.level,
     player.game_time_seconds, player.lifetime_games, player.lifetime_wins,
     player.rating, player.peak_rating, player.tier, player.region, player.global_rank,
     player.ranked_games, player.ranked_wins, player.ranked_win_rate, regionRanks,
     player.guild?.guild_id || null, mainLegend, topLegends, mainWeapons,
-    names, legends, rankedLegends, player.updated_at,
+    legends, rankedLegends,
     Boolean(data.partial || player.data_quality?.partial),
     Boolean(player.data_quality?.official_lifetime_ok),
     Boolean(player.data_quality?.official_ranked_ok),
@@ -461,32 +485,61 @@ function playerPayloadSignature(data = {}) {
   ]);
 }
 
-const PLAYER_BROWSER_CACHE_KEY = 'peakhalla-player-cache-v5';
-const PLAYER_BROWSER_CACHE_MAX_AGE_MS = 60 * 60_000;
+const PLAYER_BROWSER_CACHE_KEY = 'peakhalla-player-cache-v6';
+const PLAYER_BROWSER_CACHE_MAX_AGE_MS = 24 * 60 * 60_000;
+
+function profileCompletenessScore(data = {}) {
+  const player = data?.player || {};
+  let score = 0;
+  if (player.brawlhalla_id) score += 5;
+  if (player.name && !/^Player\s+\d+$/i.test(player.name)) score += 12;
+  if (Number.isFinite(Number(player.rating))) score += 12;
+  if (Number.isFinite(Number(player.peak_rating))) score += 6;
+  if (player.tier && player.tier !== 'Unranked') score += 4;
+  if (Number.isFinite(Number(player.account_xp)) && Number(player.account_xp) > 0) score += 10;
+  if (Number.isFinite(Number(player.level)) && Number(player.level) > 0) score += 6;
+  if (player.main_legend) score += 8;
+  if ((player.lifetime_legends || []).length) score += 8;
+  if ((player.legends || []).length) score += 6;
+  if ((data.known_names || []).length) score += 5;
+  if (player.data_quality?.official_ranked_ok) score += 8;
+  if (player.data_quality?.official_lifetime_ok || player.data_quality?.corehalla_enriched) score += 8;
+  if (player.data_quality?.official_guild_ok) score += 2;
+  return score;
+}
+
 function readPlayerBrowserCache(id) {
   try {
-    const all = JSON.parse(localStorage.getItem(PLAYER_BROWSER_CACHE_KEY) || '{}');
+    const rawCache = localStorage.getItem(PLAYER_BROWSER_CACHE_KEY) || localStorage.getItem('peakhalla-player-cache-v5') || '{}';
+    const all = JSON.parse(rawCache);
     const entry = all[String(id)];
     const age = Date.now() - Number(entry?.saved_at || 0);
     if (!entry?.data || !Number.isFinite(age) || age > PLAYER_BROWSER_CACHE_MAX_AGE_MS) return null;
-    // Render cached stats instantly, but never trust cached clan membership.
-    // A player can leave a clan between visits, so the live profile request is
-    // the only source allowed to show the clan card.
     const data = typeof structuredClone === 'function'
       ? structuredClone(entry.data)
       : JSON.parse(JSON.stringify(entry.data));
-    if (data?.player) data.player.guild = null;
+    if (data?.player) {
+      data.player.guild = null;
+      data.player.data_quality = { ...(data.player.data_quality || {}), browser_snapshot: true };
+    }
     return data;
   } catch { return null; }
 }
 
 function writePlayerBrowserCache(id, data) {
+  if (!data?.player) return;
   try {
     const all = JSON.parse(localStorage.getItem(PLAYER_BROWSER_CACHE_KEY) || '{}');
-    all[String(id)] = { saved_at: Date.now(), data };
+    const key = String(id);
+    const incomingScore = profileCompletenessScore(data);
+    const existing = all[key];
+    const existingScore = Number(existing?.score ?? profileCompletenessScore(existing?.data || {}));
+    const existingAge = Date.now() - Number(existing?.saved_at || 0);
+    if (existing?.data && existingAge < PLAYER_BROWSER_CACHE_MAX_AGE_MS && incomingScore + 4 < existingScore) return;
+    all[key] = { saved_at: Date.now(), score: incomingScore, data };
     const trimmed = Object.entries(all)
       .sort((a, b) => Number(b[1]?.saved_at || 0) - Number(a[1]?.saved_at || 0))
-      .slice(0, 50);
+      .slice(0, 80);
     localStorage.setItem(PLAYER_BROWSER_CACHE_KEY, JSON.stringify(Object.fromEntries(trimmed)));
   } catch { /* localStorage can be unavailable or full */ }
 }
@@ -575,12 +628,10 @@ function prefetchPlayerProfile(id) {
   })
     .then((response) => response.ok ? response.json() : null)
     .then((data) => {
-      const complete = data?.player
-        && !playerResponseIsPartial(data)
-        && data.player.data_quality?.official_lifetime_ok
-        && data.player.data_quality?.official_ranked_ok
-        && data.player.data_quality?.official_guild_ok;
-      if (complete) writePlayerBrowserCache(numericId, data);
+      if (data?.player) {
+        writePlayerBrowserCache(numericId, data);
+        state.playerSeeds.set(numericId, data);
+      }
       return data;
     })
     .catch(() => null)
@@ -1085,12 +1136,24 @@ function renderKnownNames(names = [], currentName = '') {
 }
 
 function navigateToPlayer(id, seed = null) {
-  if (!id) return;
-  const preparedSeed = seed || state.playerSeeds.get(Number(id));
+  const playerId = Number(id);
+  if (!Number.isSafeInteger(playerId) || playerId <= 0) return;
+  const preparedSeed = seed || state.playerSeeds.get(playerId);
   if (preparedSeed) writePlayerNavigationSeed(preparedSeed);
-  prefetchPlayerProfile(id);
   document.body.classList.add('page-leaving');
-  window.setTimeout(() => { location.href = `/player/${encodeURIComponent(id)}`; }, 160);
+  let navigated = false;
+  const go = (data = null) => {
+    if (navigated) return;
+    navigated = true;
+    if (data?.player) writePlayerNavigationSeed(data);
+    location.href = `/player/${encodeURIComponent(playerId)}`;
+  };
+  const fallbackTimer = window.setTimeout(() => go(), 260);
+  prefetchPlayerProfile(playerId).then((data) => {
+    if (navigated) return;
+    window.clearTimeout(fallbackTimer);
+    go(data || preparedSeed);
+  }).catch(() => null);
 }
 
 function teammateRankInfo(item = {}) {
@@ -1363,27 +1426,82 @@ function currentRenderedPlayerId() {
   return Number(state.currentPlayer?.player?.brawlhalla_id || 0);
 }
 
+function patchRenderedPlayerRankedSummary(merged) {
+  if (!merged?.player || currentRenderedPlayerId() !== Number(merged.player.brawlhalla_id)) return;
+  const player = merged.player;
+  state.currentPlayer = merged;
+  const currentElo = Number(player.rating);
+  const peakElo = Number(player.peak_rating);
+  const hasCurrent = Number.isFinite(currentElo);
+  const hasPeak = Number.isFinite(peakElo);
+  const regionalRank = player.region_ranks?.find((rank) => rank.region === player.region)?.rank;
+  const displayNumber = (value) => value === null || value === undefined || value === '' || !Number.isFinite(Number(value)) ? '—' : number(value);
+  const setText = (selector, value) => { const node = $(selector); if (node) node.textContent = value; };
+  setText('#player-title', player.name || `Player ${player.brawlhalla_id}`);
+  setText('#player-region', player.region || '—');
+  setText('#player-tier', player.tier || 'Unranked');
+  setText('#player-rating', hasCurrent ? number(currentElo) : '—');
+  setText('#updated-at', dateTime(player.updated_at));
+  if (els.playerPeakRating) els.playerPeakRating.textContent = hasPeak ? number(peakElo) : '—';
+  const gap = hasCurrent && hasPeak ? Math.max(0, peakElo - currentElo) : null;
+  if (els.eloGap) els.eloGap.textContent = gap === null ? '—' : (gap === 0 ? t('atPeak') : `${number(gap)} ${t('offPeak')}`);
+  if (els.rankProgressFill) {
+    const progress = hasCurrent && hasPeak && peakElo > 0 ? Math.max(8, Math.min(100, (currentElo / peakElo) * 100)) : 0;
+    els.rankProgressFill.style.width = `${progress}%`;
+  }
+  const statsGrid = $('#stats-grid');
+  if (statsGrid) statsGrid.innerHTML = [
+    statCard(t('globalRank'), player.global_rank ? `#${number(player.global_rank)}` : '—', 'WORLD POSITION'),
+    statCard(t('rankedGames'), displayNumber(player.ranked_games), 'CURRENT SEASON'),
+    statCard(t('rankedWins'), displayNumber(player.ranked_wins), 'CURRENT SEASON'),
+    statCard(t('winRate'), player.ranked_win_rate === null || player.ranked_win_rate === undefined ? '—' : `${number(player.ranked_win_rate)}%`, 'CURRENT SEASON')
+  ].join('');
+  const summary = $('#player-summary');
+  if (summary) summary.innerHTML = `<div><dt>${escapeHtml(t('accountLevel'))}</dt><dd>${displayNumber(player.level)}</dd></div><div><dt>${escapeHtml(t('regionRank'))}</dt><dd>${regionalRank ? `#${number(regionalRank)}` : '—'}</dd></div><div><dt>${escapeHtml(t('totalGames'))}</dt><dd>${displayNumber(player.lifetime_games)}</dd></div><div><dt>${escapeHtml(t('totalWins'))}</dt><dd>${displayNumber(player.lifetime_wins)}</dd></div><div><dt>${escapeHtml(t('overallWinRate'))}</dt><dd>${player.lifetime_win_rate === null || player.lifetime_win_rate === undefined ? '—' : `${number(player.lifetime_win_rate)}%`}</dd></div>`;
+  if (els.profile) els.profile.dataset.liveState = playerResponseIsPartial(merged) ? 'refreshing' : 'current';
+  if (els.statsSourceNote) {
+    const label = els.statsSourceNote.querySelector('span');
+    if (label) label.textContent = t('liveOfficialData');
+  }
+  state.playerSignature = playerPayloadSignature(merged);
+  if (!playerResponseIsPartial(merged)) writePlayerBrowserCache(player.brawlhalla_id, merged);
+}
+
 async function refreshPlayerRankedLive(id) {
   const playerId = Number(id);
   if (!Number.isSafeInteger(playerId) || playerId <= 0 || currentRenderedPlayerId() !== playerId) return null;
-  state.playerRankedController?.abort();
+  if (state.playerRankedController) return state.currentPlayer;
   const controller = new AbortController();
   state.playerRankedController = controller;
   try {
-    const data = await getJson(`/api/player/${encodeURIComponent(playerId)}/ranked-live?_=${Date.now()}`, { signal: controller.signal, timeoutMs: 22000 });
+    const data = await getJson(`/api/player/${encodeURIComponent(playerId)}/ranked-live?_=${Date.now()}`, {
+      signal: controller.signal,
+      timeoutMs: 12000,
+      retries: 1,
+      retryDelayMs: 450
+    });
     if (currentRenderedPlayerId() !== playerId || !data?.player || controller.signal.aborted) return null;
+    if (data.no_update || (data.api_unavailable && data.player.rating === undefined)) return state.currentPlayer;
     const merged = typeof structuredClone === 'function' ? structuredClone(state.currentPlayer) : JSON.parse(JSON.stringify(state.currentPlayer));
-    merged.player = { ...merged.player, ...data.player, data_quality: { ...(merged.player?.data_quality || {}), official_ranked_ok: true, ranked_live_checked: true, fetched_at: data.updated_at || new Date().toISOString() } };
+    merged.player = {
+      ...merged.player,
+      ...data.player,
+      data_quality: {
+        ...(merged.player?.data_quality || {}),
+        official_ranked_ok: data.stale ? Boolean(merged.player?.data_quality?.official_ranked_ok) : true,
+        ranked_live_checked: true,
+        ranked_live_stale: Boolean(data.stale),
+        fetched_at: data.updated_at || new Date().toISOString()
+      }
+    };
     merged.partial = Boolean(merged.partial && !merged.player.data_quality?.official_lifetime_ok);
-    const signature = playerPayloadSignature(merged);
-    if (signature !== state.playerSignature) {
-      renderPlayer(merged, false, { refreshSecondary: false });
-      state.playerSignature = signature;
-    } else state.currentPlayer = merged;
+    patchRenderedPlayerRankedSummary(merged);
+    if (!data.stale) state.playerLastRankedRefreshAt = Date.now();
     return merged;
   } catch (error) {
-    if (error.name !== 'AbortError') return null;
-    return null;
+    return state.currentPlayer;
+  } finally {
+    if (state.playerRankedController === controller) state.playerRankedController = null;
   }
 }
 
@@ -1394,7 +1512,7 @@ async function refreshPlayerAliasesLive(id) {
   const controller = new AbortController();
   state.playerAliasController = controller;
   try {
-    const data = await getJson(`/api/player/${encodeURIComponent(playerId)}/aliases?refresh=1&_=${Date.now()}`, { signal: controller.signal, timeoutMs: 16000 });
+    const data = await getJson(`/api/player/${encodeURIComponent(playerId)}/aliases?refresh=1&_=${Date.now()}`, { signal: controller.signal, timeoutMs: 12000, retries: 1, retryDelayMs: 500 });
     if (currentRenderedPlayerId() !== playerId || controller.signal.aborted) return null;
     const names = data?.known_names || [];
     if (state.currentPlayer?.player) {
@@ -1402,6 +1520,7 @@ async function refreshPlayerAliasesLive(id) {
       renderProfileAliases(names, state.currentPlayer.player.name);
       state.playerSignature = playerPayloadSignature(state.currentPlayer);
     }
+    state.playerLastAliasRefreshAt = Date.now();
     return names;
   } catch (error) {
     if (error.name !== 'AbortError') return null;
@@ -1409,20 +1528,24 @@ async function refreshPlayerAliasesLive(id) {
   }
 }
 
-function schedulePlayerLiveRefresh(id, delayMs = 250) {
+function schedulePlayerLiveRefresh(id, delayMs = 700) {
   window.clearTimeout(state.playerAutoRefreshTimer);
   state.playerAutoRefreshTimer = window.setTimeout(() => {
-    if (currentRenderedPlayerId() && currentRenderedPlayerId() !== Number(id)) return;
-    loadPlayer(id, { background: true, forceFresh: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
-  }, Math.max(50, Number(delayMs) || 250));
+    const activePlayerId = currentRenderedPlayerId() || Number(standalonePlayerId || 0);
+    if (document.visibilityState !== 'visible' || activePlayerId !== Number(id)) return;
+    loadPlayer(id, { background: true, forceFresh: false, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
+  }, Math.max(250, Number(delayMs) || 700));
 }
 
 function schedulePlayerLivePoll(id) {
   window.clearTimeout(state.playerLivePollTimer);
-  state.playerLivePollTimer = window.setTimeout(() => {
-    if (document.visibilityState !== 'visible' || currentRenderedPlayerId() !== Number(id)) return;
-    loadPlayer(id, { background: true, forceFresh: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
-  }, 60_000);
+  state.playerLivePollTimer = window.setTimeout(async () => {
+    const activePlayerId = currentRenderedPlayerId() || Number(standalonePlayerId || 0);
+    if (document.visibilityState !== 'visible' || activePlayerId !== Number(id)) return;
+    await refreshPlayerRankedLive(id).catch(() => null);
+    if (Date.now() - Number(state.playerLastAliasRefreshAt || 0) > 10 * 60_000) refreshPlayerAliasesLive(id).catch(() => null);
+    schedulePlayerLivePoll(id);
+  }, 2 * 60_000);
 }
 
 async function loadPlayer(id, options = {}) {
@@ -1431,7 +1554,6 @@ async function loadPlayer(id, options = {}) {
   const silent = Boolean(options.silent);
   const manualRefresh = Boolean(options.refresh);
   const backgroundRefresh = Boolean(options.background);
-  const forceFreshBackground = backgroundRefresh && options.forceFresh !== false;
   if (backgroundRefresh && state.playerLiveBusy && state.playerLiveBusyId === playerId) return state.currentPlayer;
   if (backgroundRefresh) { state.playerLiveBusy = true; state.playerLiveBusyId = playerId; }
   const requestSequence = ++state.playerRequestSequence;
@@ -1443,113 +1565,89 @@ async function loadPlayer(id, options = {}) {
       state.playerRetryCount = 0;
       window.clearTimeout(state.playerAutoRefreshTimer);
       window.clearTimeout(state.playerLivePollTimer);
-      const cached = readPlayerNavigationSeed(playerId) || readPlayerBrowserCache(playerId);
+      const cached = readPlayerBrowserCache(playerId) || readPlayerNavigationSeed(playerId);
       if (cached) {
         renderedSeedOnly = Boolean(cached.seed_only);
         renderPlayer(cached, options.shouldScroll !== false, { refreshSecondary: !renderedSeedOnly });
         state.playerSignature = playerPayloadSignature(cached);
         renderedInstantData = true;
         hideStatus();
-        window.setTimeout(() => refreshPlayerRankedLive(playerId).catch(() => null), 0);
-        window.setTimeout(() => refreshPlayerAliasesLive(playerId).catch(() => null), 40);
       }
     }
 
-    if (!silent && !renderedInstantData) {
-      showStatus(manualRefresh ? t('refreshingLiveStats') : t('loadingPlayer'));
-    }
+    const profileAlreadyVisible = currentRenderedPlayerId() === playerId && Boolean(state.currentPlayer?.player);
+    if (!silent && !renderedInstantData && !(manualRefresh && profileAlreadyVisible)) showStatus(manualRefresh ? t('refreshingLiveStats') : t('loadingPlayer'));
 
-    const params = new URLSearchParams({
-      [(manualRefresh || forceFreshBackground) ? 'refresh' : (backgroundRefresh ? 'live' : 'fast')]: '1',
-      _: String(Date.now())
-    });
-
+    const requestMode = manualRefresh ? 'refresh' : (backgroundRefresh ? 'live' : 'fast');
+    const params = new URLSearchParams({ [requestMode]: '1', _: String(Date.now()) });
     if (manualRefresh) {
       state.playerRefreshController?.abort();
       state.playerRefreshController = new AbortController();
     }
 
-    const timeoutMs = manualRefresh ? 70_000 : (backgroundRefresh ? 52_000 : 24_000);
+    const timeoutMs = manualRefresh ? 38000 : (backgroundRefresh ? 26000 : 9000);
     let data = await getJson(`/api/player/${encodeURIComponent(playerId)}?${params}`, {
       signal: manualRefresh ? state.playerRefreshController.signal : undefined,
-      timeoutMs
+      timeoutMs,
+      retries: backgroundRefresh ? 0 : 1,
+      retryDelayMs: 550
     });
-
-    // Ignore a slow response from a profile the user has already left.
     if (requestSequence !== state.playerRequestSequence) return data;
 
     const currentPreview = currentRenderedPlayerId() === playerId ? state.currentPlayer : null;
     data = mergeRankedPreview(data, currentPreview);
     const partial = playerResponseIsPartial(data);
-
-    // Only save a profile locally after all current official sources answered.
-    // This prevents a temporary API timeout from being remembered as
-    // "Unranked", "Main unknown", or an empty account until the next refresh.
-    if (data?.player && !partial
-      && data.player.data_quality?.official_lifetime_ok
-      && data.player.data_quality?.official_ranked_ok
-      && data.player.data_quality?.official_guild_ok) {
-      writePlayerBrowserCache(playerId, data);
-    }
+    if (data?.player) writePlayerBrowserCache(playerId, data);
 
     if (!silent) hideStatus();
     const signature = playerPayloadSignature(data);
     const changed = signature !== state.playerSignature;
-    const shouldRender = silent ? changed : (!renderedInstantData || changed || manualRefresh);
+    const hasCurrentRenderedProfile = currentRenderedPlayerId() === playerId && Boolean(state.currentPlayer?.player);
+    const shouldRender = !hasCurrentRenderedProfile || changed;
     if (shouldRender) {
       renderPlayer(data, renderedInstantData ? false : options.shouldScroll !== false, {
-        refreshSecondary: !silent && (!renderedInstantData || renderedSeedOnly)
+        refreshSecondary: !backgroundRefresh && (!renderedInstantData || renderedSeedOnly)
       });
       state.playerSignature = signature;
     } else {
       state.currentPlayer = data;
     }
     history.replaceState(null, '', `/player/${encodeURIComponent(playerId)}`);
-    if (!backgroundRefresh && !manualRefresh) {
-      window.setTimeout(() => refreshPlayerRankedLive(playerId).catch(() => null), 0);
-      window.setTimeout(() => refreshPlayerAliasesLive(playerId).catch(() => null), 80);
-    }
 
-    if (partial) {
-      state.playerRetryCount += 1;
-      if (state.playerRetryCount <= 4) {
-        const serverDelay = Number(data?.retry_after_ms || 0);
-        const retryDelays = [350, 1_500, 4_000, 10_000];
-        const delay = Math.max(serverDelay, retryDelays[Math.min(state.playerRetryCount - 1, retryDelays.length - 1)]);
-        schedulePlayerLiveRefresh(playerId, delay);
+    if (!backgroundRefresh && !manualRefresh) {
+      window.setTimeout(() => refreshPlayerRankedLive(playerId).catch(() => null), 60);
+      window.setTimeout(() => refreshPlayerAliasesLive(playerId).catch(() => null), 650);
+      schedulePlayerLiveRefresh(playerId, Math.max(900, Number(data?.retry_after_ms || 900)));
+    } else if (backgroundRefresh) {
+      state.playerLastVerifiedAt = Date.now();
+      if (partial && state.playerRetryCount < 2) {
+        state.playerRetryCount += 1;
+        schedulePlayerLiveRefresh(playerId, state.playerRetryCount === 1 ? 12000 : 30000);
+      } else {
+        state.playerRetryCount = 0;
+        schedulePlayerLivePoll(playerId);
       }
     } else {
       state.playerRetryCount = 0;
       schedulePlayerLivePoll(playerId);
     }
-
-    // The first response is optimized for speed. Always follow it with one
-    // longer live verification so the page updates without a browser refresh.
-    if (options.autoVerify !== false && !manualRefresh && !backgroundRefresh) {
-      schedulePlayerLiveRefresh(playerId, Math.max(650, Number(data?.retry_after_ms || 650)));
-    }
     return data;
   } catch (error) {
     if (error.name === 'AbortError') return null;
     if (requestSequence !== state.playerRequestSequence) return null;
-
-    if (silent || backgroundRefresh) {
-      state.playerRetryCount += 1;
-      if (state.playerRetryCount <= 4 && currentRenderedPlayerId() === playerId) {
-        const retryDelays = [1_000, 3_000, 8_000, 15_000];
-        schedulePlayerLiveRefresh(playerId, retryDelays[Math.min(state.playerRetryCount - 1, retryDelays.length - 1)]);
-      }
-      return state.currentPlayer;
-    }
-
-    if (renderedInstantData) {
+    const hasVisibleProfile = currentRenderedPlayerId() === playerId && Boolean(state.currentPlayer?.player);
+    if (hasVisibleProfile) {
       hideStatus();
-      schedulePlayerLiveRefresh(playerId, 1_200);
+      if (state.playerRetryCount < 2) {
+        state.playerRetryCount += 1;
+        schedulePlayerLiveRefresh(playerId, state.playerRetryCount === 1 ? 5000 : 20000);
+      }
+      schedulePlayerLivePoll(playerId);
       return state.currentPlayer;
     }
-    els.profile.hidden = true;
-    showStatus(error?.message || t('friendlyProblem'), 'error');
-    els.status.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    state.playerRetryCount += 1;
+    showStatus(t('loadingPlayer'));
+    if (state.playerRetryCount <= 3) schedulePlayerLiveRefresh(playerId, [1200, 4000, 12000][state.playerRetryCount - 1]);
     return null;
   } finally {
     if (backgroundRefresh && state.playerLiveBusyId === playerId) {
@@ -3416,7 +3514,7 @@ window.addEventListener('pageshow', (event) => {
     activateImageFallbacks();
   });
   if (event.persisted && standalonePlayerId && state.currentPlayer) {
-    loadPlayer(standalonePlayerId, { background: true, forceFresh: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
+    refreshPlayerRankedLive(standalonePlayerId).catch(() => null);
   }
   if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage && (event.persisted || !els.leaderboard?.querySelector('.leader-row'))) {
     window.setTimeout(() => loadLeaderboard({ page: state.leaderboardPage, silent: true }).catch(() => null), event.persisted ? 120 : 450);
@@ -3436,7 +3534,8 @@ window.addEventListener('visibilitychange', () => {
   const playerId = state.currentPlayer?.player?.brawlhalla_id;
   const fetchedAt = new Date(state.currentPlayer?.player?.updated_at || 0).getTime();
   if (playerId && (!Number.isFinite(fetchedAt) || Date.now() - fetchedAt > 60_000)) {
-    loadPlayer(playerId, { background: true, forceFresh: true, shouldScroll: false, silent: true, autoVerify: false }).catch(() => null);
+    refreshPlayerRankedLive(playerId).catch(() => null);
+    if (!state.playerLastVerifiedAt || Date.now() - state.playerLastVerifiedAt > 10 * 60_000) schedulePlayerLiveRefresh(playerId, 800);
   }
 });
 
