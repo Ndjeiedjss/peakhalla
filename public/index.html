@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" data-ui-version="7.77">
 <head>
   <!-- Google Analytics 4 -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FCQP3J4XH"></script>
@@ -148,10 +148,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="/styles.css?v=7.76.0" as="style">
-  <link rel="stylesheet" href="/styles.css?v=7.76.0">
+  <link rel="preload" href="/styles.css?v=7.77.0" as="style">
+  <link rel="stylesheet" href="/styles.css?v=7.77.0">
 </head>
-<body>
+<body class="tome-ui">
   <header class="site-header">
     <div class="shell header-inner">
       <a class="brand" href="#home" aria-label="PeakHalla home">
@@ -230,6 +230,9 @@
         <a href="/#about" data-i18n="navAbout">About</a>
       </nav>
       <div class="header-actions">
+        <button id="global-search-trigger" class="global-search-trigger" type="button" aria-label="Search PeakHalla">
+          <span aria-hidden="true">⌕</span><b>Search</b><kbd>Ctrl K</kbd>
+        </button>
         <div id="arena-global-account" class="arena-global-account" hidden>
           <a id="arena-global-login" class="arena-global-login" href="/arena" aria-label="Sign in to Arena Wall" hidden>
             <span aria-hidden="true">◎</span><b>ARENA</b>
@@ -483,11 +486,19 @@
         <label class="field main-field">
           <span data-i18n="playerName">Player name</span>
           <input id="player-name" type="search" minlength="2" maxlength="40" placeholder="Sandstorm" autocomplete="off" required data-i18n-placeholder="playerPlaceholder" aria-autocomplete="list" aria-controls="search-suggestions" aria-expanded="false">
+          <kbd class="search-shortcut" aria-hidden="true">Ctrl K</kbd>
           <div id="search-suggestions" class="search-suggestions" role="listbox" hidden></div>
         </label>
         <button type="submit" class="primary-button"><span data-i18n="searchButton">Search player</span><b>→</b></button>
         <p class="form-note" data-i18n="searchNote">Search the official ranked database by player name.</p>
       </form>
+
+      <nav class="home-shortcuts" aria-label="PeakHalla sections">
+        <a href="#leaderboard"><span>01</span><div><strong>Ranked</strong><small>Regional leaderboards</small></div><b>↗</b></a>
+        <a href="/queue/1v1/EU"><span>02</span><div><strong>Live Queue</strong><small>Recent ranked activity</small></div><b>↗</b></a>
+        <a href="#clans"><span>03</span><div><strong>Clans</strong><small>XP and rosters</small></div><b>↗</b></a>
+        <a href="#esports" data-home-esports-link><span>04</span><div><strong>Tournaments</strong><small>Events and prize pools</small></div><b>↗</b></a>
+      </nav>
     </section>
 
     <section id="status" class="status shell" hidden></section>
@@ -808,7 +819,7 @@
       </a>
     </div>
   </footer>
-  <script src="/app.js?v=7.76.0" defer></script>
+  <script src="/app.js?v=7.77.0" defer></script>
   <script src="/arena-v72.js?v=7.69.0" defer></script>
   <script src="/arena-account.js?v=7.69.0" defer></script>
 </body>
