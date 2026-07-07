@@ -2,17 +2,34 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://peakhalla.com/</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
+    <lastmod>2026-06-29</lastmod>
   </url>
   <url>
     <loc>https://peakhalla.com/queue</loc>
-    <changefreq>hourly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-06-29</lastmod>
   </url>
   <url>
     <loc>https://peakhalla.com/arena</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
+    <lastmod>2026-06-29</lastmod>
+  </url>
+  <url>
+    <loc>https://peakhalla.com/esports/power</loc>
+    <lastmod>2026-06-29</lastmod>
+  </url>
+  <url>
+    <loc>https://peakhalla.com/esports/tournaments</loc>
+    <lastmod>2026-06-29</lastmod>
+  </url>
+  <url>
+    <loc>https://peakhalla.com/advertise</loc>
+    <lastmod>2026-07-07</lastmod>
+  </url>
+  <url>
+    <loc>https://peakhalla.com/privacy</loc>
+    <lastmod>2026-07-07</lastmod>
+  </url>
+  <url>
+    <loc>https://peakhalla.com/terms</loc>
+    <lastmod>2026-07-07</lastmod>
   </url>
 </urlset>

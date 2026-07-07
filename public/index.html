@@ -9,6 +9,8 @@
     gtag('js', new Date());
     gtag('config', 'G-9FCQP3J4XH');
   </script>
+  <!-- Google AdSense site verification -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7303521190072465" crossorigin="anonymous"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="PeakHalla is a free Brawlhalla tracker for live player stats, current and peak ELO, ranked leaderboards, legend levels, clans, old names, 2v2 teams, and esports rankings.">
@@ -146,8 +148,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="/styles.css?v=7.72.0" as="style">
-  <link rel="stylesheet" href="/styles.css?v=7.72.0">
+  <link rel="preload" href="/styles.css?v=7.76.0" as="style">
+  <link rel="stylesheet" href="/styles.css?v=7.76.0">
 </head>
 <body>
   <header class="site-header">
@@ -363,6 +365,7 @@
       <div id="queue-status" class="queue-status" hidden></div>
       <div id="queue-activity-list" class="queue-activity-list"></div>
       <p class="queue-disclaimer" data-i18n="queueDisclaimerLive">Activity means leaderboard stats changed recently. It cannot see Brawlhalla's private matchmaking screen.</p>
+      <aside class="ph-ad-wrap ph-ad-queue" aria-label="Advertisement"><div class="ph-ad-slot" data-ad-placement="queue_bottom" data-ad-format="horizontal"></div></aside>
     </section>
 
 
@@ -424,6 +427,8 @@
           <p id="arena-post-status" class="arena-form-status" hidden></p>
         </article>
       </div>
+
+      <aside class="ph-ad-wrap ph-ad-arena" aria-label="Advertisement"><div class="ph-ad-slot" data-ad-placement="arena_feed" data-ad-format="horizontal"></div></aside>
 
       <div class="arena-feed-heading">
         <div><span class="eyebrow" data-i18n="arenaLatest">LATEST DROPS</span><h2 data-i18n="arenaFeed">Community feed</h2></div>
@@ -490,6 +495,10 @@
 
     <section id="status" class="status shell" hidden></section>
 
+    <aside class="shell ph-ad-wrap ph-ad-home" aria-label="Advertisement">
+      <div class="ph-ad-slot" data-ad-placement="home_top" data-ad-format="horizontal"></div>
+    </aside>
+
     <section id="search-results" class="shell section" hidden>
       <div class="section-heading">
         <div><span class="eyebrow">SEARCH</span><h2 data-i18n="searchResults">Search results</h2></div>
@@ -522,6 +531,10 @@
           <div class="rank-progress" aria-hidden="true"><i id="rank-progress-fill"></i></div>
         </div>
       </article>
+
+      <aside class="ph-ad-wrap ph-ad-profile" aria-label="Advertisement">
+        <div class="ph-ad-slot" data-ad-placement="profile_top" data-ad-format="horizontal"></div>
+      </aside>
 
       <div id="account-showcase" class="account-showcase"></div>
       <div id="stats-grid" class="stats-grid"></div>
@@ -593,6 +606,9 @@
         <button id="leaderboard-page-next" class="leaderboard-page-button primary" type="button" hidden><span data-i18n="pageNext">Next</span><b>→</b></button>
         <button id="leaderboard-load-more" class="leaderboard-load-more" type="button" hidden aria-hidden="true"><span data-i18n="loadMorePlayers">Load next 50 players</span><b>↓</b></button>
       </div>
+      <aside class="ph-ad-wrap ph-ad-leaderboard" aria-label="Advertisement">
+        <div class="ph-ad-slot" data-ad-placement="leaderboard_bottom" data-ad-format="horizontal"></div>
+      </aside>
     </section>
 
     <section id="clans" class="shell section clans-section">
@@ -666,6 +682,7 @@
         </div>
         <div class="tournament-directory-meta"><span id="tournament-directory-updated" class="muted"></span><small id="tournament-directory-count"></small></div>
         <div id="tournament-directory-list" class="tournament-directory-grid"><div class="tournament-directory-loading"><span></span><strong data-i18n="loadingTournaments">Loading tournaments…</strong></div></div>
+        <aside class="ph-ad-wrap ph-ad-tournaments" aria-label="Advertisement"><div class="ph-ad-slot" data-ad-placement="tournaments_bottom" data-ad-format="horizontal"></div></aside>
       </div>
     </section>
 
@@ -799,13 +816,16 @@
       <div class="footer-legal">
         <p class="footer-copyright">© <span id="copyright-year">2026</span> <strong>PeakHalla</strong>. <span data-i18n="rightsReserved">All rights reserved.</span></p>
         <p data-i18n="disclaimer">Unofficial community project. Not affiliated with Ubisoft or Blue Mammoth Games.</p>
+        <nav class="footer-policy-links" aria-label="Legal and advertising"><a href="/advertise">Advertise</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
       </div>
       <a class="footer-creator" href="https://www.tiktok.com/@nadbh" target="_blank" rel="noopener noreferrer" aria-label="Nad on TikTok">
         <span data-i18n="footerMade">Made by</span><strong>Nad</strong><small>@nadbh ↗</small>
       </a>
     </div>
   </footer>
-  <script src="/app.js?v=7.75.0" defer></script>
+  <script src="/ads-config.js?v=7.76.0"></script>
+  <script src="/ads.js?v=7.76.0" defer></script>
+  <script src="/app.js?v=7.76.0" defer></script>
   <script src="/arena-v72.js?v=7.69.0" defer></script>
   <script src="/arena-account.js?v=7.69.0" defer></script>
 </body>
