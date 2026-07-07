@@ -29,7 +29,7 @@ const translations = {
     allModes: 'All', top8Only: 'Top 8', careerEvents: 'Events', careerTitles: 'Titles', careerPodiums: 'Podiums', careerTop8: 'Top 8', bestFinish: 'Best finish',
     noPlacements: 'No official tournament placements were found for this player yet.', careerSource: 'Tournament data source ↗', officialEventsOnly: 'Official events only',
     onlineEvent: 'Online', offlineEvent: 'LAN', playerCareerNotFound: 'No tournament profile was found for this player.', placementLabel: 'Placement',
-    twoVTwoPartners: 'Ranked 2v2 teammates', twoVTwoPartnersNote: 'Official current-season teams from the player teams endpoint.', teammateElo: 'Player ELO', teamElo: 'Team ELO', noTeammates: 'No current-season 2v2 teammate was found for this account.', loadingTeammates: 'Loading 2v2 teammates…', backToTracker: 'Back to tracker', queueLiveTracking: 'LIVE ACTIVITY TRACKING', queueEyebrowLive: 'RANKED ACTIVITY', queueTitleLive: 'Who is playing ranked right now?', queueIntroLive: 'Tracks the top 500 leaderboard entries and shows players whose ranked games changed during the last 10 minutes.', queueActiveNow: 'ACTIVE NOW', queueDisclaimerLive: "Activity means leaderboard stats changed recently. It cannot see Brawlhalla's private matchmaking screen.", queueWarming: 'Building the first leaderboard snapshot. Active players appear after the next scan.', queueNoActivity: 'No ranked activity was detected in the top 500 during the last 10 minutes.', queueTrackedTop: 'Top entries tracked', queueLastScan: 'Last scan', queueNextScan: 'Next scan', queueGameDetected: 'game detected', queueGamesDetected: 'games detected', queueEloChange: 'ELO change', queueWatching: 'Watching the leaderboard live', queueError: 'Could not refresh live activity right now.',
+    twoVTwoPartners: 'Ranked 2v2 teammates', twoVTwoPartnersNote: 'Official current-season teams from the player teams endpoint.', teammateElo: 'Player ELO', teamElo: 'Team ELO', teamRank: 'Team rank', teamRecord: 'W / L', noTeammates: 'No current-season 2v2 teammate was found for this account.', loadingTeammates: 'Loading 2v2 teammates…', backToTracker: 'Back to tracker', queueLiveTracking: 'LIVE ACTIVITY TRACKING', queueEyebrowLive: 'RANKED ACTIVITY', queueTitleLive: 'Who is playing ranked right now?', queueIntroLive: 'Tracks the top 500 leaderboard entries and shows players whose ranked games changed during the last 10 minutes.', queueActiveNow: 'ACTIVE NOW', queueDisclaimerLive: "Activity means leaderboard stats changed recently. It cannot see Brawlhalla's private matchmaking screen.", queueWarming: 'Building the first leaderboard snapshot. Active players appear after the next scan.', queueNoActivity: 'No ranked activity was detected in the top 500 during the last 10 minutes.', queueTrackedTop: 'Top entries tracked', queueLastScan: 'Last scan', queueNextScan: 'Next scan', queueGameDetected: 'game detected', queueGamesDetected: 'games detected', queueEloChange: 'ELO change', queueWatching: 'Watching the leaderboard live', queueError: 'Could not refresh live activity right now.',
     arenaCommunity: 'COMMUNITY SCREENSHOTS', arenaEyebrow: 'COMMUNITY', arenaTitle: 'Arena Wall', arenaIntro: 'Share Brawlhalla screenshots, add a caption, and talk with other players through comments and replies.', arenaWhat: 'What is Arena Wall?', arenaWhatText: 'A community gallery for match screenshots, rank moments, funny clips captured as images, tournament results, and anything worth sharing from Brawlhalla. Create an account using only a username and password—no email or verification code.', arenaCreateAccount: 'Create account', arenaSignIn: 'Sign in', arenaNoEmail: 'NO EMAIL NEEDED', arenaJoinTitle: 'Join the wall', arenaJoinText: 'Choose a username and password. No email, verification code, or social login.', arenaUsername: 'Username', arenaPassword: 'Password', arenaPostingAs: 'Posting as', arenaLogout: 'Log out', arenaChooseScreenshot: 'Choose a screenshot', arenaImageLimit: 'PNG, JPG, or WebP · up to 5 MB', arenaCaption: 'Caption', arenaCaptionPlaceholder: 'What happened in this match?', arenaPublish: 'Publish screenshot', arenaLatest: 'LATEST DROPS', arenaFeed: 'Community feed', arenaLoading: 'Loading the wall…', arenaComments: 'Comments', arenaReply: 'Reply', arenaReplyingTo: 'Replying to', arenaCancelReply: 'Cancel', arenaWriteComment: 'Write a comment…', arenaSend: 'Send', arenaSignInToComment: 'Sign in to comment or reply.', arenaNoPosts: 'No screenshots yet. Be the first to post.', arenaChooseImageFirst: 'Choose a screenshot first.', arenaPosted: 'Screenshot published.', arenaAccountReady: 'Account created. Welcome to Arena Wall.', arenaSignedIn: 'Signed in.', arenaAuthError: 'Could not complete that request.', arenaPostError: 'Could not publish the screenshot.', friendlyProblem: 'Couldn’t reach Brawlhalla right now. Try again in a moment.'
   },
   ar: {
@@ -60,7 +60,7 @@ const translations = {
     allModes: 'الكل', top8Only: 'توب 8', careerEvents: 'بطولات', careerTitles: 'بطولات فاز فيها', careerPodiums: 'منصات', careerTop8: 'توب 8', bestFinish: 'أفضل مركز',
     noPlacements: 'ما لقينا نتائج بطولات رسمية لهذا اللاعب للحين.', careerSource: 'مصدر بيانات البطولات ↗', officialEventsOnly: 'بطولات رسمية فقط',
     onlineEvent: 'أونلاين', offlineEvent: 'حضوري', playerCareerNotFound: 'ما لقينا ملف بطولات لهذا اللاعب.', placementLabel: 'المركز',
-    twoVTwoPartners: 'شركاء رانك 2v2', twoVTwoPartnersNote: 'الفرق الرسمية للموسم الحالي من بيانات اللاعب.', teammateElo: 'إيلو اللاعب', teamElo: 'إيلو الفريق', noTeammates: 'ما لقينا شريك 2v2 لهذا الحساب في الموسم الحالي.', loadingTeammates: 'نجيب شركاء 2v2…', backToTracker: 'ارجع للتراكر', queueLiveTracking: 'تتبّع النشاط المباشر', queueEyebrowLive: 'نشاط الرانك', queueTitleLive: 'مين قاعد يلعب رانك الحين؟', queueIntroLive: 'نتابع أعلى 500 نتيجة في الترتيب ونظهر اللاعبين اللي تغيّرت مبارياتهم خلال آخر 10 دقائق.', queueActiveNow: 'نشط الحين', queueDisclaimerLive: 'النشاط يعني أن بيانات الرانك تغيّرت مؤخرًا، وليس وصولًا إلى شاشة المطابقة الخاصة داخل اللعبة.', queueWarming: 'نبني أول لقطة للترتيب. اللاعبين النشطين يظهرون بعد الفحص الجاي.', queueNoActivity: 'ما رصدنا نشاط رانك ضمن أعلى 500 خلال آخر 10 دقائق.', queueTrackedTop: 'نتيجة نتابعها', queueLastScan: 'آخر فحص', queueNextScan: 'الفحص الجاي', queueGameDetected: 'مباراة مرصودة', queueGamesDetected: 'مباريات مرصودة', queueEloChange: 'تغيّر الإيلو', queueWatching: 'متابعة الترتيب مباشرة', queueError: 'ما قدرنا نحدّث النشاط المباشر الحين.',
+    twoVTwoPartners: 'شركاء رانك 2v2', twoVTwoPartnersNote: 'الفرق الرسمية للموسم الحالي من بيانات اللاعب.', teammateElo: 'إيلو اللاعب', teamElo: 'إيلو الفريق', teamRank: 'رتبة الفريق', teamRecord: 'فوز / خسارة', noTeammates: 'ما لقينا شريك 2v2 لهذا الحساب في الموسم الحالي.', loadingTeammates: 'نجيب شركاء 2v2…', backToTracker: 'ارجع للتراكر', queueLiveTracking: 'تتبّع النشاط المباشر', queueEyebrowLive: 'نشاط الرانك', queueTitleLive: 'مين قاعد يلعب رانك الحين؟', queueIntroLive: 'نتابع أعلى 500 نتيجة في الترتيب ونظهر اللاعبين اللي تغيّرت مبارياتهم خلال آخر 10 دقائق.', queueActiveNow: 'نشط الحين', queueDisclaimerLive: 'النشاط يعني أن بيانات الرانك تغيّرت مؤخرًا، وليس وصولًا إلى شاشة المطابقة الخاصة داخل اللعبة.', queueWarming: 'نبني أول لقطة للترتيب. اللاعبين النشطين يظهرون بعد الفحص الجاي.', queueNoActivity: 'ما رصدنا نشاط رانك ضمن أعلى 500 خلال آخر 10 دقائق.', queueTrackedTop: 'نتيجة نتابعها', queueLastScan: 'آخر فحص', queueNextScan: 'الفحص الجاي', queueGameDetected: 'مباراة مرصودة', queueGamesDetected: 'مباريات مرصودة', queueEloChange: 'تغيّر الإيلو', queueWatching: 'متابعة الترتيب مباشرة', queueError: 'ما قدرنا نحدّث النشاط المباشر الحين.',
     arenaCommunity: 'صور المجتمع', arenaEyebrow: 'المجتمع', arenaTitle: 'ساحة الصور', arenaIntro: 'شارك لقطات براولهالا، اكتب تعليقك، وتكلم مع اللاعبين من خلال التعليقات والردود.', arenaWhat: 'وش هي ساحة الصور؟', arenaWhatText: 'معرض مجتمعي للقطات المباريات، لحظات الرانك، النتائج واللقطات المضحكة. الحساب يحتاج يوزر وباسورد فقط، بدون إيميل أو رمز تحقق.', arenaCreateAccount: 'إنشاء حساب', arenaSignIn: 'تسجيل الدخول', arenaNoEmail: 'بدون إيميل', arenaJoinTitle: 'ادخل الساحة', arenaJoinText: 'اختر يوزر وباسورد فقط، بدون إيميل أو رمز تحقق أو تسجيل اجتماعي.', arenaUsername: 'اسم المستخدم', arenaPassword: 'كلمة المرور', arenaPostingAs: 'تنشر باسم', arenaLogout: 'تسجيل الخروج', arenaChooseScreenshot: 'اختر سكرين شوت', arenaImageLimit: 'PNG أو JPG أو WebP · حتى 5 ميجا', arenaCaption: 'وصف الصورة', arenaCaptionPlaceholder: 'وش صار في المباراة؟', arenaPublish: 'انشر الصورة', arenaLatest: 'أحدث الصور', arenaFeed: 'صور المجتمع', arenaLoading: 'نحمّل الساحة…', arenaComments: 'التعليقات', arenaReply: 'رد', arenaReplyingTo: 'ترد على', arenaCancelReply: 'إلغاء', arenaWriteComment: 'اكتب تعليق…', arenaSend: 'إرسال', arenaSignInToComment: 'سجل دخول عشان تعلق أو ترد.', arenaNoPosts: 'ما فيه صور للحين، كن أول واحد ينشر.', arenaChooseImageFirst: 'اختر صورة أول.', arenaPosted: 'تم نشر الصورة.', arenaAccountReady: 'تم إنشاء الحساب، حيّاك في الساحة.', arenaSignedIn: 'تم تسجيل الدخول.', arenaAuthError: 'ما قدرنا نكمل الطلب.', arenaPostError: 'ما قدرنا ننشر الصورة.', friendlyProblem: 'براولهالا ما ردت الحين، جرّب بعد شوي.'
   }
 };
@@ -1093,17 +1093,60 @@ function navigateToPlayer(id, seed = null) {
   window.setTimeout(() => { location.href = `/player/${encodeURIComponent(id)}`; }, 160);
 }
 
+function teammateRankInfo(item = {}) {
+  const rating = Number(item.team_rating || 0);
+  const rawTier = String(item.tier || item.team_tier || '').trim();
+  const normalized = rawTier.toLowerCase();
+  let key = 'unranked';
+  if (/valhall/.test(normalized)) key = 'valhallan';
+  else if (/diamond/.test(normalized)) key = 'diamond';
+  else if (/platinum/.test(normalized)) key = 'platinum';
+  else if (/gold/.test(normalized)) key = 'gold';
+  else if (/silver/.test(normalized)) key = 'silver';
+  else if (/bronze/.test(normalized)) key = 'bronze';
+  else if (/tin/.test(normalized)) key = 'tin';
+  else if (rating >= 2000) key = 'diamond';
+  else if (rating >= 1680) key = 'platinum';
+  else if (rating >= 1390) key = 'gold';
+  else if (rating >= 1086) key = 'silver';
+  else if (rating >= 872) key = 'bronze';
+  else if (rating > 0) key = 'tin';
+
+  const labels = {
+    valhallan: 'Valhallan', diamond: 'Diamond', platinum: 'Platinum',
+    gold: 'Gold', silver: 'Silver', bronze: 'Bronze', tin: 'Tin', unranked: 'Unranked'
+  };
+  const shortLabels = {
+    valhallan: 'V', diamond: 'D', platinum: 'P', gold: 'G',
+    silver: 'S', bronze: 'B', tin: 'T', unranked: '—'
+  };
+  const divisionMatch = rawTier.match(/(?:^|\s)([0-5])(?:$|\s)/);
+  const label = rawTier || `${labels[key]}${divisionMatch ? ` ${divisionMatch[1]}` : ''}`;
+  return { key, label, short: shortLabels[key] };
+}
+
 function teammateCard(item) {
   const main = item.main_legend || { name: item.name };
-  return `<button class="teammate-card" type="button" data-teammate-id="${Number(item.id)}" data-player-id="${Number(item.id)}" data-needs-portrait="${item.main_legend ? '0' : '1'}">
+  const rank = teammateRankInfo(item);
+  const games = Math.max(0, Number(item.games || 0));
+  const wins = Math.max(0, Number(item.wins || 0));
+  const losses = Math.max(0, Number(item.losses ?? Math.max(0, games - wins)) || 0);
+  const teamRank = Number(item.team_rank || 0);
+  const rankMeta = teamRank > 0 ? `#${number(teamRank)}` : (item.region ? String(item.region).toUpperCase() : '2V2');
+  return `<button class="teammate-card teammate-rank-${rank.key}" type="button" data-teammate-id="${Number(item.id)}" data-player-id="${Number(item.id)}" data-needs-portrait="${item.main_legend ? '0' : '1'}">
     ${portraitMarkup(main, 'teammate-portrait', { lazy: false })}
     <span class="teammate-copy">
-      <span class="teammate-top"><b>${escapeHtml(item.name || 'Unknown')}</b><em>${escapeHtml(item.tier || item.team_tier || '—')}</em></span>
+      <span class="teammate-top"><b>${escapeHtml(item.name || 'Unknown')}</b></span>
       <small>${escapeHtml(main?.name || t('unknownLegend'))}</small>
-      <span class="teammate-stats teammate-team-only">
-        <span><small>2V2 TEAM ELO</small><strong>${number(item.team_rating)}</strong><em>${escapeHtml(t('peak'))}: ${number(item.team_peak_rating)}</em></span>
-        <span><small>${escapeHtml(t('games'))}</small><strong>${number(item.games)}</strong><em>${escapeHtml(t('wins'))}: ${number(item.wins)}</em></span>
+      <span class="teammate-stats teammate-team-stats">
+        <span class="teammate-primary-stat"><small>2V2 ${escapeHtml(t('teamElo'))}</small><strong>${number(item.team_rating)}</strong><em>${escapeHtml(t('peak'))}: ${number(item.team_peak_rating)}</em></span>
+        <span><small>${escapeHtml(t('games'))}</small><strong>${number(games)}</strong><em>${escapeHtml(t('teamRecord'))}: ${number(wins)} / ${number(losses)}</em></span>
       </span>
+    </span>
+    <span class="teammate-rank-panel" aria-label="${escapeHtml(rank.label)}">
+      <span class="teammate-rank-chip">${escapeHtml(rank.label)}</span>
+      <span class="teammate-rank-emblem"><i></i><b>${escapeHtml(rank.short)}</b></span>
+      <small>${escapeHtml(t('teamRank'))} · ${escapeHtml(rankMeta)}</small>
     </span>
     <span class="teammate-arrow">→</span>
   </button>`;

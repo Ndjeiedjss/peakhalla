@@ -3993,3 +3993,164 @@ body.arena-account-active .arena-global-profile strong {
   .leaderboard-page-status { width: 100%; order: -1; }
   .leaderboard-page-button { flex: 1 1 30%; }
 }
+
+
+/* PeakHalla v7.71 — ranked 2v2 teammate cards */
+.teammate-card {
+  --team-rank-a: var(--accent);
+  --team-rank-b: var(--accent-3);
+  --team-rank-soft: rgba(var(--accent-rgb), .22);
+  min-height: 136px;
+  position: relative;
+  isolation: isolate;
+  grid-template-columns: 76px minmax(0, 1fr) 138px 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 86% 15%, var(--team-rank-soft), transparent 34%),
+    linear-gradient(120deg, rgba(var(--accent-rgb),.07), transparent 52%),
+    rgba(255,255,255,.014);
+}
+.teammate-card::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  width: 210px;
+  height: 210px;
+  inset-inline-end: -56px;
+  top: -48px;
+  border: 1px solid color-mix(in srgb, var(--team-rank-a) 38%, transparent);
+  border-radius: 46% 54% 58% 42%;
+  opacity: .24;
+  transform: rotate(18deg);
+}
+.teammate-card::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 0 auto;
+  width: 34%;
+  background: linear-gradient(135deg, transparent, color-mix(in srgb, var(--team-rank-b) 18%, transparent));
+  pointer-events: none;
+}
+.teammate-card:hover::before { opacity: .38; transform: rotate(24deg) scale(1.04); transition: .35s ease; }
+.teammate-card .teammate-portrait {
+  box-shadow: 0 12px 28px rgba(0,0,0,.24), 0 0 0 1px color-mix(in srgb, var(--team-rank-a) 20%, transparent);
+}
+.teammate-top b { font-size: 19px; }
+.teammate-team-stats {
+  grid-template-columns: minmax(138px, 1.2fr) minmax(105px, .8fr);
+  max-width: 390px;
+}
+.teammate-team-stats .teammate-primary-stat strong { color: color-mix(in srgb, var(--team-rank-a) 70%, white 30%); font-size: 22px; }
+.teammate-rank-panel {
+  min-width: 0;
+  align-self: stretch;
+  position: relative;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  border-inline-start: 1px solid color-mix(in srgb, var(--team-rank-a) 24%, transparent);
+}
+.teammate-rank-chip {
+  max-width: 128px;
+  padding: 5px 8px;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--team-rank-a) 68%, white 32%);
+  border: 1px solid color-mix(in srgb, var(--team-rank-a) 40%, transparent);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--team-rank-a) 13%, transparent);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .05em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.teammate-rank-emblem {
+  width: 62px;
+  height: 57px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 11px 16px rgba(0,0,0,.26));
+}
+.teammate-rank-emblem i {
+  position: absolute;
+  inset: 0;
+  border: 2px solid color-mix(in srgb, var(--team-rank-a) 68%, white 10%);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--team-rank-a) 36%, transparent), color-mix(in srgb, var(--team-rank-b) 56%, transparent)),
+    var(--panel-deep);
+  clip-path: polygon(50% 0, 91% 17%, 84% 73%, 50% 100%, 16% 73%, 9% 17%);
+  box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--team-rank-a) 11%, transparent);
+}
+.teammate-rank-emblem::before,
+.teammate-rank-emblem::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  width: 23px;
+  height: 8px;
+  top: 22px;
+  border-top: 2px solid color-mix(in srgb, var(--team-rank-a) 72%, white 16%);
+}
+.teammate-rank-emblem::before { left: -3px; transform: rotate(-25deg); }
+.teammate-rank-emblem::after { right: -3px; transform: rotate(25deg); }
+.teammate-rank-emblem b {
+  position: relative;
+  z-index: 3;
+  color: color-mix(in srgb, var(--team-rank-a) 58%, white 42%);
+  font: 900 20px/1 var(--display);
+}
+.teammate-rank-panel > small {
+  max-width: 120px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.teammate-rank-valhallan { --team-rank-a: #ff5f7f; --team-rank-b: #7f1dff; --team-rank-soft: rgba(255,95,127,.22); }
+.teammate-rank-diamond { --team-rank-a: #ad8cff; --team-rank-b: #5d36c9; --team-rank-soft: rgba(173,140,255,.25); }
+.teammate-rank-platinum { --team-rank-a: #56d7ff; --team-rank-b: #1763ba; --team-rank-soft: rgba(86,215,255,.22); }
+.teammate-rank-gold { --team-rank-a: #ffd35a; --team-rank-b: #b56b00; --team-rank-soft: rgba(255,211,90,.20); }
+.teammate-rank-silver { --team-rank-a: #d8dee9; --team-rank-b: #657184; --team-rank-soft: rgba(216,222,233,.17); }
+.teammate-rank-bronze { --team-rank-a: #dc9562; --team-rank-b: #7b3f22; --team-rank-soft: rgba(220,149,98,.18); }
+.teammate-rank-tin { --team-rank-a: #aab0b6; --team-rank-b: #4a5158; --team-rank-soft: rgba(170,176,182,.14); }
+.teammate-rank-unranked { --team-rank-a: var(--muted); --team-rank-b: var(--panel-raised-2); --team-rank-soft: rgba(255,255,255,.06); }
+
+@media (max-width: 1050px) {
+  .teammate-card { grid-template-columns: 72px minmax(0, 1fr) 112px 16px; }
+  .teammate-rank-emblem { width: 54px; height: 50px; }
+  .teammate-rank-chip { max-width: 104px; }
+}
+@media (max-width: 700px) {
+  .teammate-card { grid-template-columns: 62px minmax(0, 1fr) 20px; min-height: 170px; align-items: start; }
+  .teammate-portrait { width: 60px; height: 70px; }
+  .teammate-rank-panel {
+    grid-column: 2 / -1;
+    width: 100%;
+    min-height: 58px;
+    margin-top: 4px;
+    padding-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    border-inline-start: 0;
+    border-top: 1px solid color-mix(in srgb, var(--team-rank-a) 24%, transparent);
+  }
+  .teammate-rank-emblem { width: 45px; height: 42px; }
+  .teammate-rank-emblem::before, .teammate-rank-emblem::after { display: none; }
+  .teammate-rank-panel > small { max-width: none; }
+  .teammate-arrow { position: absolute; inset-inline-end: 13px; top: 50%; }
+}
+@media (max-width: 480px) {
+  .teammate-team-stats { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .teammate-team-stats .teammate-primary-stat strong { font-size: 19px; }
+  .teammate-rank-chip { max-width: 94px; }
+}
