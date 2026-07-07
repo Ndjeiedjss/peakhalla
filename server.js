@@ -6200,8 +6200,9 @@ async function verifyOfficialGlobalRank(playerId, rankedPayload, forceFresh = fa
 }
 
 app.get('/api/player/:id/ranked-live', async (req, res, next) => {
+  let id = 0;
   try {
-    const id = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
+    id = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
     if (!id) return res.status(400).json({ error: 'Invalid player ID.' });
     const rankedEndpoint = `/player/stats?brawlhalla_id=${id}&mode=ranked_1v1`;
     const raw = await apiFetchFresh(rankedEndpoint);
@@ -6224,9 +6225,47 @@ app.get('/api/player/:id/ranked-live', async (req, res, next) => {
         ranked_win_rate: calculateWinRate(ranked?.wins, ranked?.games),
         updated_at: new Date().toISOString()
       },
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      stale: false
     });
-  } catch (error) { next(error); }
+  } catch (error) {
+    const cached = id ? (getCachedProfileResponse(id)
+      || await getDatabaseCachedProfileResponse(id).catch(() => null)
+      || await getDiskCachedProfileResponse(id).catch(() => null)) : null;
+    if (cached?.player) {
+      const player = cached.player;
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('X-Profile-Fallback', 'cached-ranked');
+      return res.json({
+        player: {
+          brawlhalla_id: id,
+          name: player.name || `Player ${id}`,
+          rating: numberOrNull(player.rating),
+          peak_rating: numberOrNull(player.peak_rating),
+          tier: player.tier || 'Unranked',
+          region: player.region || '—',
+          global_rank: numberOrNull(player.global_rank),
+          region_ranks: player.region_ranks || [],
+          ranked_games: numberOrZero(player.ranked_games),
+          ranked_wins: numberOrZero(player.ranked_wins),
+          ranked_win_rate: numberOrNull(player.ranked_win_rate) ?? calculateWinRate(player.ranked_wins, player.ranked_games),
+          updated_at: player.updated_at || new Date().toISOString()
+        },
+        updated_at: player.updated_at || new Date().toISOString(),
+        stale: true,
+        api_unavailable: true
+      });
+    }
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('X-Profile-Fallback', 'ranked-no-update');
+    return res.json({
+      player: { brawlhalla_id: id, updated_at: new Date().toISOString() },
+      updated_at: new Date().toISOString(),
+      stale: true,
+      no_update: true,
+      api_unavailable: true
+    });
+  }
 });
 
 app.get('/api/player/:id/aliases', async (req, res, next) => {
@@ -6375,11 +6414,12 @@ app.get('/api/player/:id/teammates', async (req, res, next) => {
 });
 
 app.get('/api/player/:id', async (req, res, next) => {
+  let id = 0;
   try {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    const id = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
+    id = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
     if (!id) return res.status(400).json({ error: 'Invalid player ID.' });
     const forceFresh = String(req.query.refresh || '') === '1';
     const instant = String(req.query.instant || '') === '1' && !forceFresh;
@@ -6645,6 +6685,83 @@ app.get('/api/player/:id', async (req, res, next) => {
     res.setHeader('X-Alias-Refresh', (fast || instant || profilePartial) ? 'background-pending' : 'automatic-fresh');
     res.json(payload);
   } catch (error) {
+    const fallback = id ? (getCachedProfileResponse(id)
+      || await getDatabaseCachedProfileResponse(id).catch(() => null)
+      || await getDiskCachedProfileResponse(id).catch(() => null)) : null;
+    if (fallback?.player) {
+      const preview = typeof structuredClone === 'function'
+        ? structuredClone(fallback)
+        : JSON.parse(JSON.stringify(fallback));
+      preview.player.guild = null;
+      preview.player.data_quality = {
+        ...(preview.player.data_quality || {}),
+        source: 'Saved PeakHalla profile · official API retrying in background',
+        live_fetch: false,
+        partial: true,
+        api_unavailable: true,
+        fetched_at: preview.player.updated_at || new Date().toISOString()
+      };
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('X-Profile-Fallback', 'cached-profile');
+      return res.json({
+        ...preview,
+        partial: true,
+        stale: true,
+        retry_after_ms: 12000,
+        background_refresh_recommended: true
+      });
+    }
+    if (id) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('X-Profile-Fallback', 'pending-profile');
+      return res.json({
+        player: {
+          brawlhalla_id: id,
+          name: `Player ${id}`,
+          level: null,
+          xp_percentage: null,
+          account_xp: null,
+          game_time_seconds: 0,
+          game_time_display: '—',
+          lifetime_games: null,
+          lifetime_wins: null,
+          lifetime_win_rate: null,
+          rating: null,
+          peak_rating: null,
+          tier: 'Unranked',
+          region: '—',
+          global_rank: null,
+          region_ranks: [],
+          ranked_games: null,
+          ranked_wins: null,
+          ranked_win_rate: null,
+          main_legend: null,
+          top_legends: [],
+          main_weapons: [],
+          lifetime_totals: {},
+          lifetime_legends: [],
+          legends: [],
+          guild: null,
+          data_quality: {
+            source: 'Official API retry pending',
+            live_fetch: false,
+            partial: true,
+            official_lifetime_ok: false,
+            official_ranked_ok: false,
+            official_guild_ok: false,
+            api_unavailable: true,
+            fetched_at: new Date().toISOString()
+          },
+          updated_at: new Date().toISOString()
+        },
+        history: [],
+        known_names: [],
+        partial: true,
+        stale: true,
+        retry_after_ms: 5000,
+        background_refresh_recommended: true
+      });
+    }
     next(error);
   }
 });
