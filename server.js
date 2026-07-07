@@ -1122,22 +1122,72 @@ function applySeoMeta(html, { title, description, canonical, robots = 'index, fo
     .replace(/<meta name="twitter:title" content="[^"]*">/i, `<meta name="twitter:title" content="${safeTitle}">`)
     .replace(/<meta name="twitter:description" content="[^"]*">/i, `<meta name="twitter:description" content="${safeDescription}">`);
 }
-async function sendSeoIndex(res, next, seo) {
+function safeJsonForHtml(value) {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
+}
+
+async function sendSeoIndex(res, next, seo, bootstrap = null) {
   try {
-    const html = await seoIndexTemplate();
-    res.type('html').send(applySeoMeta(html, seo));
+    const html = applySeoMeta(await seoIndexTemplate(), seo);
+    const withBootstrap = bootstrap
+      ? html.replace('</body>', `<script id="peakhalla-player-bootstrap" type="application/json">${safeJsonForHtml(bootstrap)}</script></body>`)
+      : html;
+    res.type('html').send(withBootstrap);
   } catch (error) {
     next(error);
   }
 }
 
-app.get('/player/:id', (req, res, next) => {
-  const id = String(req.params.id || '').replace(/[^0-9]/g, '').slice(0, 20) || 'Profile';
+app.get('/player/:id', async (req, res, next) => {
+  const rawId = String(req.params.id || '').replace(/[^0-9]/g, '').slice(0, 20);
+  const id = Number(rawId || 0);
+  let bootstrap = null;
+  if (Number.isSafeInteger(id) && id > 0) {
+    // Read the saved profile and current clan membership in parallel. The
+    // whole server-side bootstrap is capped below one second, so a direct
+    // profile URL can paint useful data immediately without waiting for the
+    // browser to make a second request.
+    const cachedPromise = Promise.resolve(getCachedProfileResponse(id)).then(async (memory) =>
+      memory
+      || await getDatabaseCachedProfileResponse(id).catch(() => null)
+      || await getDiskCachedProfileResponse(id).catch(() => null)
+    );
+    const guildPromise = getPlayerGuildResult(id, 0, true).catch(() => ({ ok: false, guild: null }));
+    const [savedProfile, liveGuild] = await Promise.all([
+      settleWithin(cachedPromise, 700, null),
+      settleWithin(guildPromise, 700, { ok: false, guild: null })
+    ]);
+    bootstrap = savedProfile;
+    if (bootstrap?.player) {
+      bootstrap = typeof structuredClone === 'function'
+        ? structuredClone(bootstrap)
+        : JSON.parse(JSON.stringify(bootstrap));
+      if (liveGuild?.ok) {
+        bootstrap.player.guild = liveGuild.guild || null;
+        bootstrap.player.data_quality = {
+          ...(bootstrap.player.data_quality || {}),
+          official_guild_ok: true,
+          guild_checked_at: new Date().toISOString()
+        };
+        updateCachedPlayerGuild(id, liveGuild.guild || null, true).catch(() => null);
+      }
+      bootstrap.history = Array.isArray(bootstrap.history) ? bootstrap.history.slice(-30) : [];
+      bootstrap.known_names = Array.isArray(bootstrap.known_names) ? bootstrap.known_names.slice(0, 30) : [];
+      bootstrap.__server_bootstrap = true;
+      bootstrap.__bootstrap_at = Date.now();
+    }
+  }
+  const displayId = rawId || 'Profile';
   return sendSeoIndex(res, next, {
-    title: `Brawlhalla Player ${id} Stats, ELO & Legends | PeakHalla`,
-    description: `View live Brawlhalla stats for player ${id}, including current and peak ELO, ranked tier, legends, account XP, clans, aliases, and 2v2 teams.`,
-    canonical: `https://${PRIMARY_HOST}/player/${encodeURIComponent(id)}`
-  });
+    title: `Brawlhalla Player ${displayId} Stats, ELO & Legends | PeakHalla`,
+    description: `View live Brawlhalla stats for player ${displayId}, including current and peak ELO, ranked tier, legends, account XP, clans, aliases, and 2v2 teams.`,
+    canonical: `https://${PRIMARY_HOST}/player/${encodeURIComponent(displayId)}`
+  }, bootstrap);
 });
 
 app.get('/clan/:id', (req, res, next) => {
@@ -4654,6 +4704,11 @@ app.get('/api/clans/:id', async (req, res, next) => {
       roster_checked_at: new Date().toISOString()
     };
     await rememberGuild(fullGuild).catch(() => null);
+    if (currentMembers.length) {
+      syncCurrentGuildRosterToProfileCaches(fullGuild, members).catch((error) => {
+        console.warn(`Could not synchronize current clan roster ${guildId}:`, error.message);
+      });
+    }
     res.json({
       guild: fullGuild,
       members,
@@ -4886,12 +4941,24 @@ app.get('/api/queue/activity', async (req, res, next) => {
     const region = allowed(String(req.query.region || 'ME').toUpperCase(), QUEUE_REGIONS, 'ME');
     const mode = allowed(String(req.query.mode || '1v1'), QUEUE_MODES, '1v1');
     const tracker = await ensureQueueTracker(region, mode);
-    const wantsFresh = String(req.query.refresh || '') === '1' || String(req.query.wait || '') === '1';
-    if (wantsFresh && !tracker.scanPromise) scanQueueTracker(tracker).catch(() => null);
+    const wantsWait = String(req.query.wait || '') === '1';
+    const wantsFresh = String(req.query.refresh || '') === '1' || wantsWait;
+
+    // Long-polling keeps the Queue page live without a browser refresh. If the
+    // next scan is only a few seconds away, hold this request, run that scan,
+    // and return the new result in the same response.
+    if (wantsWait && !tracker.scanPromise && tracker.next_scan_at) {
+      const untilNext = Math.max(0, Number(tracker.next_scan_at) - Date.now());
+      if (untilNext > 0 && untilNext <= 12_000) await wait(untilNext + 80);
+    }
+    if (wantsFresh && !tracker.scanPromise) {
+      const due = !tracker.last_scan_at || !tracker.next_scan_at || Date.now() >= Number(tracker.next_scan_at) - 100;
+      if (due) scanQueueTracker(tracker).catch(() => null);
+    }
     if (wantsFresh && tracker.scanPromise) {
-      // Initial page loads should receive the completed scan instead of an old
-      // snapshot that only changes after a manual browser refresh.
-      await settleWithin(tracker.scanPromise, 24_000, null);
+      // Initial loads and long polls receive the completed scan instead of an
+      // old snapshot that would otherwise only change after a manual refresh.
+      await settleWithin(tracker.scanPromise, 26_000, null);
     }
     const now = Date.now();
     pruneQueueActivity(tracker.activity, now);
@@ -5467,21 +5534,34 @@ function tournamentPrizePool(event = {}) {
   return '';
 }
 
+function tournamentLifecycleStatus(event = {}, now = Date.now()) {
+  const explicit = String(event.status || '').toLowerCase();
+  const start = new Date(event.date || event.start_date || event.startTime || 0).getTime();
+  const end = new Date(event.end_date || event.endTime || 0).getTime();
+  if (!Number.isFinite(start) || start <= 0) {
+    return ['completed', 'live', 'upcoming', 'announced'].includes(explicit) ? explicit : 'announced';
+  }
+  const estimatedEnd = Number.isFinite(end) && end > start ? end : start + 18 * 60 * 60_000;
+  if (now >= start - 30 * 60_000 && now <= estimatedEnd) return 'live';
+  if (now > estimatedEnd) return 'completed';
+  return 'upcoming';
+}
+
 const CURRENT_OFFICIAL_TOURNAMENTS = Object.freeze([
   { name: 'Summer Championship — Middle East 2026 — 1v1', regions: ['MENA'], modes: ['1v1'], date: '2026-07-17T11:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/d57d1465-41d8-4d62-e242-08deac38d3d7' },
   { name: 'Summer Championship — Southeast Asia 2026 — 1v1', regions: ['SEA'], modes: ['1v1'], date: '2026-07-17T09:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/9db3cc52-8c73-4152-6d13-08dea8b61f65' },
   { name: 'Summer Championship — Europe 2026 — 1v1', regions: ['EU'], modes: ['1v1'], date: '2026-07-18T10:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/44268709-24b7-405c-6d14-08dea8b61f65' },
-  { name: 'Summer Championship — South America 2026 — 1v1', regions: ['SA'], modes: ['1v1'], date: '2026-07-18T17:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/7db875a5-4452-4f81-e243-08deac38d3d7' },
+  { name: 'Summer Championship — South America 2026 — 1v1', regions: ['SA'], modes: ['1v1'], date: '2026-07-18T15:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/7db875a5-4452-4f81-e243-08deac38d3d7' },
   { name: 'Summer Championship — North America 2026 — 1v1', regions: ['NA'], modes: ['1v1'], date: '2026-07-19T14:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/2a4486e4-cfe5-4d25-6d16-08dea8b61f65' },
   { name: 'Summer Championship — Middle East 2026 — 2v2', regions: ['MENA'], modes: ['2v2'], date: '2026-07-24T11:15:00.000Z', source_url: CHALLENGERMODE_BRAWLHALLA_URL },
   { name: 'Summer Championship — Southeast Asia 2026 — 2v2', regions: ['SEA'], modes: ['2v2'], date: '2026-07-24T09:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/948d2501-6b6b-468d-6d18-08dea8b61f65' },
   { name: 'Summer Championship — Europe 2026 — 2v2', regions: ['EU'], modes: ['2v2'], date: '2026-07-25T10:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/eb136372-9608-404d-e246-08deac38d3d7' },
-  { name: 'Summer Championship — South America 2026 — 2v2', regions: ['SA'], modes: ['2v2'], date: '2026-07-25T17:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/62c15d77-842c-4546-6d1a-08dea8b61f65' },
+  { name: 'Summer Championship — South America 2026 — 2v2', regions: ['SA'], modes: ['2v2'], date: '2026-07-25T15:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/62c15d77-842c-4546-6d1a-08dea8b61f65' },
   { name: 'Summer Championship — North America 2026 — 2v2', regions: ['NA'], modes: ['2v2'], date: '2026-07-26T14:15:00.000Z', source_url: 'https://www.challengermode.com/s/Brawlhalla/tournaments/632dcc5d-5697-4b12-6d1b-08dea8b61f65' }
 ].map((event, index) => ({
   id: `official-summer-2026-${index + 1}`,
   category: 'official',
-  status: 'upcoming',
+  status: tournamentLifecycleStatus(event),
   series: 'Summer Championship 2026',
   note: 'Official regional Summer Championship registration.',
   source: 'Brawlhalla Esports',
@@ -5703,7 +5783,12 @@ app.get('/api/esports/tournaments', async (req, res) => {
     .filter((event) => {
       const regions = Array.isArray(event.regions) && event.regions.length ? event.regions : ['GLOBAL'];
       const modes = Array.isArray(event.modes) && event.modes.length ? event.modes : inferTournamentModes(`${event.name || ''} ${event.note || ''}`);
-      if (String(event.status || '').toLowerCase() === 'completed') return false;
+      const eventTime = new Date(event.date || event.start_date || 0).getTime();
+      const status = tournamentLifecycleStatus(event, now);
+      // Keep recent completed events so visitors can distinguish what ended
+      // from what is still open, but drop old or undated placeholder cards.
+      if (status === 'completed' && (!Number.isFinite(eventTime) || now - eventTime > 180 * 24 * 60 * 60_000)) return false;
+      if (!Number.isFinite(eventTime) && !event.source_url) return false;
       if (hasRegionalSummer2026 && regions.includes('GLOBAL') && /^summer championship 2026$/i.test(String(event.name || '').trim())) return false;
       const regionMatches = region === 'ALL' ? true : regions.includes(region) || regions.includes('GLOBAL');
       const modeMatches = mode === 'ALL' ? true : modes.includes(mode);
@@ -5713,17 +5798,19 @@ app.get('/api/esports/tournaments', async (req, res) => {
       ...event,
       regions: Array.isArray(event.regions) && event.regions.length ? event.regions : ['GLOBAL'],
       modes: Array.isArray(event.modes) && event.modes.length ? event.modes : inferTournamentModes(`${event.name || ''} ${event.note || ''}`),
+      status: tournamentLifecycleStatus(event, now),
       prize_pool: tournamentPrizePool(event),
       art_key: event.art_key || (/summer championship/i.test(String(event.name || '')) ? 'summer-2026' : '')
     }))
     .sort((left, right) => {
+      const priority = { live: 0, upcoming: 1, announced: 2, completed: 3 };
+      const leftStatus = tournamentLifecycleStatus(left, now);
+      const rightStatus = tournamentLifecycleStatus(right, now);
+      if ((priority[leftStatus] ?? 9) !== (priority[rightStatus] ?? 9)) return (priority[leftStatus] ?? 9) - (priority[rightStatus] ?? 9);
       const leftTime = new Date(left.date || 0).getTime();
       const rightTime = new Date(right.date || 0).getTime();
-      const leftUpcoming = leftTime >= now - 24 * 60 * 60_000 ? 1 : 0;
-      const rightUpcoming = rightTime >= now - 24 * 60 * 60_000 ? 1 : 0;
-      if (leftUpcoming !== rightUpcoming) return rightUpcoming - leftUpcoming;
-      if (leftUpcoming && rightUpcoming) return leftTime - rightTime || String(left.name).localeCompare(String(right.name));
-      return rightTime - leftTime || String(left.name).localeCompare(String(right.name));
+      if (leftStatus === 'completed') return rightTime - leftTime || String(left.name).localeCompare(String(right.name));
+      return leftTime - rightTime || String(left.name).localeCompare(String(right.name));
     })
     .slice(0, 80);
 
@@ -6316,6 +6403,163 @@ app.get('/api/player/:id/ranked-live', async (req, res, next) => {
   }
 });
 
+async function syncCurrentGuildRosterToProfileCaches(guild = {}, members = []) {
+  const guildId = Number(guild.guild_id || guild.id || 0);
+  if (!Number.isSafeInteger(guildId) || guildId <= 0 || !Array.isArray(members) || !members.length) return;
+  const throttleKey = `guild-roster-profile-sync:${guildId}`;
+  if (getGeneralCache(throttleKey)) return;
+  setGeneralCache(throttleKey, { value: true, expiresAt: Date.now() + 2 * 60_000 });
+
+  const memberById = new Map();
+  for (const member of members) {
+    const id = Number(member?.brawlhalla_id || member?.player_id || member?.id || 0);
+    if (!Number.isSafeInteger(id) || id <= 0) continue;
+    memberById.set(id, member);
+  }
+  if (!memberById.size) return;
+
+  const guildForMember = (member) => ({
+    guild_id: guildId,
+    guild_name: sanitizePlayerName(guild.guild_name || guild.name || `Clan ${guildId}`),
+    personal_xp: Number(member?.xp || member?.personal_xp || 0),
+    personal_xp_this_week: Number(member?.personal_xp_this_week || 0),
+    personal_points: Number(member?.guild_points || member?.personal_points || 0),
+    join_date: Number(member?.join_date || 0) || null,
+    rank: canonicalGuildRole(member?.rank || member?.role)
+  });
+  const updatePayload = (id, payload) => {
+    if (!payload?.player) return null;
+    const next = typeof structuredClone === 'function'
+      ? structuredClone(payload)
+      : JSON.parse(JSON.stringify(payload));
+    const member = memberById.get(Number(id));
+    const existingGuildId = Number(next.player.guild?.guild_id || 0);
+    if (!member && existingGuildId !== guildId) return null;
+    next.player.guild = member ? guildForMember(member) : null;
+    next.player.data_quality = {
+      ...(next.player.data_quality || {}),
+      official_guild_ok: true,
+      guild_roster_checked: true,
+      guild_checked_at: new Date().toISOString()
+    };
+    return next;
+  };
+
+  // Keep in-memory responses correct immediately.
+  for (const [key, entry] of profileResponseCache.entries()) {
+    const next = updatePayload(Number(key), entry?.value);
+    if (next) setProfileMemoryCache(key, next, entry?.expiresAt || Date.now() + PROFILE_RESPONSE_TTL_MS);
+  }
+
+  if (dbReady) {
+    const memberIds = [...memberById.keys()];
+    const rows = await dbQuery(`
+      SELECT brawlhalla_id, profile_payload
+      FROM players
+      WHERE profile_payload IS NOT NULL
+        AND (
+          brawlhalla_id = ANY($2::bigint[])
+          OR profile_payload->'player'->'guild'->>'guild_id' = $1
+        )
+      LIMIT 500
+    `, [String(guildId), memberIds]).then((result) => result?.rows || []).catch(() => []);
+    const updates = [];
+    for (const row of rows) {
+      const id = Number(row.brawlhalla_id);
+      const next = updatePayload(id, row.profile_payload);
+      if (!next) continue;
+      setProfileMemoryCache(id, next);
+      updates.push({ id, payload: next, guild: next.player.guild || null });
+    }
+    if (updates.length) {
+      await dbQuery(`
+        WITH roster_updates AS (
+          SELECT * FROM jsonb_to_recordset($1::jsonb)
+            AS item(id BIGINT, payload JSONB, guild JSONB)
+        )
+        UPDATE players AS player
+        SET profile_payload = roster_updates.payload,
+            guild = roster_updates.guild,
+            last_fetched = NOW()
+        FROM roster_updates
+        WHERE player.brawlhalla_id = roster_updates.id
+      `, [JSON.stringify(updates)]).catch((error) => {
+        console.warn(`Could not synchronize cached profiles for clan ${guildId}:`, error.message);
+      });
+    }
+    return;
+  }
+
+  await updateJson(PROFILE_CACHE_FILE, {}, (all) => {
+    for (const [key, entry] of Object.entries(all)) {
+      const next = updatePayload(Number(key), entry?.value);
+      if (!next) continue;
+      entry.value = next;
+      entry.saved_at = Date.now();
+    }
+  }).catch(() => null);
+}
+
+async function updateCachedPlayerGuild(playerId, guild, verified = true) {
+  const id = Number(playerId);
+  if (!Number.isSafeInteger(id) || id <= 0) return null;
+  const cached = getCachedProfileResponse(id)
+    || await getDatabaseCachedProfileResponse(id).catch(() => null)
+    || await getDiskCachedProfileResponse(id).catch(() => null);
+  if (!cached?.player) return null;
+  const next = typeof structuredClone === 'function'
+    ? structuredClone(cached)
+    : JSON.parse(JSON.stringify(cached));
+  next.player.guild = guild || null;
+  next.player.data_quality = {
+    ...(next.player.data_quality || {}),
+    official_guild_ok: Boolean(verified),
+    guild_roster_checked: Boolean(verified),
+    guild_checked_at: new Date().toISOString()
+  };
+  await setCachedProfileResponse(id, next).catch(() => null);
+  return next;
+}
+
+app.get('/api/player/:id/guild-live', async (req, res, next) => {
+  try {
+    const id = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
+    if (!id) return res.status(400).json({ error: 'Invalid player ID.' });
+    const cached = getCachedProfileResponse(id)
+      || await getDatabaseCachedProfileResponse(id).catch(() => null)
+      || await getDiskCachedProfileResponse(id).catch(() => null);
+    const cachedGuild = cached?.player?.guild || null;
+    const result = await settleWithin(getPlayerGuildResult(id, 0, true), 5_500, { ok: false, guild: cachedGuild });
+    if (!result?.ok) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      return res.json({ player_id: id, guild: cachedGuild, verified: false, stale: true });
+    }
+    const guild = result.guild || null;
+    // /player/guild is the fastest current-membership source. Return it at
+    // once so the profile card is corrected without holding the page open for
+    // a second roster request. A roster cross-check continues in background.
+    await updateCachedPlayerGuild(id, guild, true);
+    if (guild?.guild_id) {
+      verifyPlayerGuildMembership(id, guild, true)
+        .then((verification) => {
+          if (verification?.checked) return updateCachedPlayerGuild(id, verification.guild || null, true);
+          return null;
+        })
+        .catch(() => null);
+    }
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.json({
+      player_id: id,
+      guild,
+      verified: true,
+      roster_checked: !guild,
+      updated_at: new Date().toISOString()
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get('/api/player/:id/aliases', async (req, res, next) => {
   try {
     const id = asInt(req.params.id, 0, 1, Number.MAX_SAFE_INTEGER);
@@ -6479,23 +6723,25 @@ app.get('/api/player/:id', async (req, res, next) => {
       const preview = typeof structuredClone === 'function'
         ? structuredClone(cachedProfile)
         : JSON.parse(JSON.stringify(cachedProfile));
+      const previewPartial = Boolean(preview?.partial || preview?.player?.data_quality?.partial);
       if (preview?.player) {
-        // A preview may show cached stats immediately, but clan membership is
-        // always withheld until the live /player/guild verification completes.
-        preview.player.guild = null;
         preview.player.data_quality = {
           ...(preview.player.data_quality || {}),
-          source: 'Cached profile preview · live verification pending',
+          source: previewPartial
+            ? 'Saved PeakHalla profile · missing fields are refreshing quietly'
+            : 'Instant saved PeakHalla profile · live checks run quietly',
           live_fetch: false,
-          partial: true
+          partial: previewPartial,
+          cache_preview: true
         };
       }
-      const previewPartial = true;
-      res.setHeader('X-Profile-Cache', 'hit-preview');
+      res.setHeader('X-Profile-Cache', 'hit-complete');
       return res.json({
         ...preview,
         partial: previewPartial,
-        retry_after_ms: 180,
+        cached: true,
+        stale: true,
+        retry_after_ms: previewPartial ? 2500 : null,
         background_refresh_recommended: true
       });
     }
@@ -6770,7 +7016,6 @@ app.get('/api/player/:id', async (req, res, next) => {
       const preview = typeof structuredClone === 'function'
         ? structuredClone(fallback)
         : JSON.parse(JSON.stringify(fallback));
-      preview.player.guild = null;
       preview.player.data_quality = {
         ...(preview.player.data_quality || {}),
         source: 'Saved PeakHalla profile · official API retrying in background',
