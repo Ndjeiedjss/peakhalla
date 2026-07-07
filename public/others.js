@@ -36,7 +36,8 @@
     const images = [...new Set([item.image, ...(Array.isArray(item.images) ? item.images : [])].filter(Boolean))].slice(0, 5);
     let media = '';
     if (images.length) {
-      const hero = `<img class="content-card-hero" src="${escapeHtml(images[0])}" alt="${escapeHtml(item.title || itemFallback)}" loading="lazy" decoding="async">`;
+      const heroFallbacks = encodeURIComponent(JSON.stringify(images.slice(1)));
+      const hero = `<img class="content-card-hero" src="${escapeHtml(images[0])}" data-fallback-sources="${escapeHtml(heroFallbacks)}" alt="${escapeHtml(item.title || itemFallback)}" loading="lazy" decoding="async" sizes="${maps ? '(min-width: 760px) 50vw, 100vw' : '(min-width: 900px) 33vw, 100vw'}">`;
       const thumbs = maps && images.length > 1
         ? `<div class="content-card-thumbnails" aria-hidden="true">${images.slice(1, 5).map((image) => `<img src="${escapeHtml(image)}" alt="" loading="lazy" decoding="async">`).join('')}</div>`
         : '';
@@ -53,8 +54,19 @@
       thumbnails.forEach((image) => image.addEventListener('error', () => image.remove(), { once: true }));
       if (!hero) return;
       const showFallback = () => media.classList.add('is-fallback');
-      hero.addEventListener('error', showFallback, { once: true });
-      if (hero.complete && hero.naturalWidth === 0) showFallback();
+      const tryNextSource = () => {
+        let alternatives = [];
+        try { alternatives = JSON.parse(decodeURIComponent(hero.dataset.fallbackSources || '[]')); } catch {}
+        const next = alternatives.shift();
+        hero.dataset.fallbackSources = encodeURIComponent(JSON.stringify(alternatives));
+        if (next) {
+          hero.src = next;
+          return;
+        }
+        showFallback();
+      };
+      hero.addEventListener('error', tryNextSource);
+      if (hero.complete && hero.naturalWidth === 0) tryNextSource();
     });
   }
 

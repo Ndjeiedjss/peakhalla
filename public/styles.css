@@ -4582,3 +4582,42 @@ body.esports-page-mode .ph-ad-home { display: none !important; }
   .map-content-card .content-card-media { min-height: 210px; }
   .map-content-card .content-card-hero { min-height: 154px; }
 }
+
+
+/* PeakHalla v7.84 — clearer full-size map screenshots */
+.map-content-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.map-content-card .content-card-media {
+  min-height: 330px;
+  grid-template-rows: minmax(0, 1fr) 74px;
+  background: #09080f;
+}
+.map-content-card .content-card-hero {
+  min-height: 256px;
+  object-fit: contain;
+  object-position: center;
+  image-rendering: auto;
+  filter: none;
+  transform: none !important;
+  background: #09080f;
+}
+.map-content-card:hover .content-card-hero { transform: none !important; }
+.map-content-card .content-card-thumbnails {
+  min-height: 74px;
+  padding: 7px;
+  gap: 7px;
+}
+.map-content-card .content-card-thumbnails img {
+  height: 58px;
+  object-fit: cover;
+  image-rendering: auto;
+}
+@media (max-width: 760px) {
+  .map-content-grid { grid-template-columns: 1fr; }
+  .map-content-card .content-card-media { min-height: 270px; grid-template-rows: minmax(0,1fr) 66px; }
+  .map-content-card .content-card-hero { min-height: 204px; }
+  .map-content-card .content-card-thumbnails { min-height: 66px; }
+  .map-content-card .content-card-thumbnails img { height: 50px; }
+}
