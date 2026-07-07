@@ -148,8 +148,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="/styles.css?v=7.80.0" as="style">
-  <link rel="stylesheet" href="/styles.css?v=7.80.0">
+  <link rel="preload" href="/styles.css?v=7.81.0" as="style">
+  <link rel="stylesheet" href="/styles.css?v=7.81.0">
 </head>
 <body>
   <header class="site-header">
@@ -217,7 +217,7 @@
           </div>
         </div>
         <a href="/arena" id="arena-nav-link" data-i18n="navArena">Arena Wall</a>
-        <a href="/#clans" data-i18n="navClans">Clans</a>
+        <a href="/clans" data-i18n="navClans">Clans</a>
         <div class="nav-dropdown esports-nav-dropdown" id="esports-nav-dropdown">
           <button class="nav-dropdown-toggle" id="esports-nav-toggle" type="button" aria-expanded="false" aria-haspopup="true">
             <span data-i18n="navEsports">Esports</span><b>⌄</b>
@@ -225,6 +225,15 @@
           <div class="nav-dropdown-menu esports-nav-menu" id="esports-nav-menu" aria-hidden="true">
             <button type="button" data-esports-view="power"><strong data-i18n="powerRanking">Power rankings</strong><small data-i18n="powerRankingNavNote">Official regional player rankings</small></button>
             <button type="button" data-esports-view="tournaments"><strong data-i18n="tournamentsNav">Tournaments</strong><small data-i18n="tournamentsNavNote">Official and community events</small></button>
+          </div>
+        </div>
+        <div class="nav-dropdown others-nav-dropdown" id="others-nav-dropdown">
+          <button class="nav-dropdown-toggle" id="others-nav-toggle" type="button" aria-expanded="false" aria-haspopup="true"><span>Others</span><b>⌄</b></button>
+          <div class="nav-dropdown-menu others-nav-menu" id="others-nav-menu" aria-hidden="true">
+            <a href="/patch-notes"><strong>Updates &amp; patches</strong><small>Official Brawlhalla patch notes</small></a>
+            <a href="/maps"><strong>Maps</strong><small>Community map mods from GameBanana</small></a>
+            <a href="/guides"><strong>Guides</strong><small>ELO, ranks, IDs and tournaments</small></a>
+            <a href="/brawlhalla-tracker"><strong>Tracker guide</strong><small>Everything PeakHalla tracks</small></a>
           </div>
         </div>
         <a href="/#about" data-i18n="navAbout">About</a>
@@ -693,7 +702,7 @@
           <a href="#home" data-i18n="seoSearchLink">Search a player</a>
           <a href="#leaderboard" data-i18n="seoRankedLink">Ranked leaderboards</a>
           <a href="#clans" data-i18n="seoClansLink">Brawlhalla clans</a>
-          <a href="#esports" data-i18n="seoEsportsLink">Brawlhalla esports</a>
+          <a href="#esports" data-i18n="seoEsportsLink">Brawlhalla esports</a><a href="/patch-notes">Patch notes</a><a href="/maps">Maps</a><a href="/guides">Guides</a>
         </nav>
       </article>
 
@@ -801,14 +810,14 @@
       <div class="footer-legal">
         <p class="footer-copyright">© <span id="copyright-year">2026</span> <strong>PeakHalla</strong>. <span data-i18n="rightsReserved">All rights reserved.</span></p>
         <p data-i18n="disclaimer">Unofficial community project. Not affiliated with Ubisoft or Blue Mammoth Games.</p>
-        <nav class="footer-policy-links" aria-label="Legal"><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
+        <nav class="footer-policy-links" aria-label="PeakHalla links"><a href="/brawlhalla-tracker">Tracker</a><a href="/patch-notes">Patches</a><a href="/maps">Maps</a><a href="/guides">Guides</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
       </div>
       <a class="footer-creator" href="https://www.tiktok.com/@nadbh" target="_blank" rel="noopener noreferrer" aria-label="Nad on TikTok">
         <span data-i18n="footerMade">Made by</span><strong>Nad</strong><small>@nadbh ↗</small>
       </a>
     </div>
   </footer>
-  <script src="/app.js?v=7.80.0" defer></script>
+  <script src="/app.js?v=7.81.0" defer></script>
   <script src="/arena-v72.js?v=7.69.0" defer></script>
   <script src="/arena-account.js?v=7.69.0" defer></script>
 </body>

@@ -178,6 +178,10 @@ function setupThemePicker() {
 }
 const playerPathMatch = location.pathname.match(/^\/player\/(\d+)\/?$/);
 const clanPathMatch = location.pathname.match(/^\/clan\/(\d+)\/?$/);
+const leaderboardPathMatch = location.pathname.match(/^\/leaderboards\/(1v1|2v2|3v3)\/([a-z0-9-]+)\/?$/i);
+const leaderboardRouteRegions = { all:'ALL', me:'ME', eu:'EU', 'us-east':'US-E', 'us-west':'US-W', 'southern-africa':'SA', sea:'SEA', brazil:'BRZ', australia:'AUS', japan:'JPN' };
+const isLeaderboardRoute = Boolean(leaderboardPathMatch);
+const isClansDirectoryPage = /^\/clans\/?$/.test(location.pathname);
 const standalonePlayerId = playerPathMatch ? playerPathMatch[1] : null;
 const standaloneClanId = clanPathMatch ? clanPathMatch[1] : null;
 const isStandalonePlayerPage = Boolean(standalonePlayerId);
@@ -1888,7 +1892,9 @@ function syncLeaderboardUrl(region, mode, page) {
   if (region && region !== 'ALL') params.set('lbRegion', region); else params.delete('lbRegion');
   if (mode && mode !== '1v1') params.set('lbMode', mode); else params.delete('lbMode');
   const query = params.toString();
-  history.replaceState(null, '', `${location.pathname}${query ? `?${query}` : ''}${location.hash}`);
+  const regionSlug = { ALL:'all', ME:'me', EU:'eu', 'US-E':'us-east', 'US-W':'us-west', SA:'southern-africa', SEA:'sea', BRZ:'brazil', AUS:'australia', JPN:'japan' }[region] || 'all';
+  const basePath = isLeaderboardRoute ? `/leaderboards/${mode || '1v1'}/${regionSlug}` : location.pathname;
+  history.replaceState(null, '', `${basePath}${query ? `?${query}` : ''}${location.hash}`);
 }
 
 function scheduleLeaderboardRecovery(options = {}) {
@@ -3549,6 +3555,25 @@ els.refreshPlayerStats?.addEventListener('click', async () => {
   finally { els.refreshPlayerStats.disabled = false; }
 });
 
+
+const othersNav = document.getElementById('others-nav-dropdown');
+const othersToggle = document.getElementById('others-nav-toggle');
+const othersMenu = document.getElementById('others-nav-menu');
+othersToggle?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  const open = !othersNav.classList.contains('open');
+  othersNav.classList.toggle('open', open);
+  othersToggle.setAttribute('aria-expanded', String(open));
+  othersMenu?.setAttribute('aria-hidden', String(!open));
+});
+document.addEventListener('click', (event) => {
+  if (!othersNav?.contains(event.target)) {
+    othersNav?.classList.remove('open');
+    othersToggle?.setAttribute('aria-expanded','false');
+    othersMenu?.setAttribute('aria-hidden','true');
+  }
+});
+
 els.languageToggle.addEventListener('click', () => { state.language = state.language === 'en' ? 'ar' : 'en'; applyLanguage(); });
 els.legendStatsSearch?.addEventListener('input', renderLifetimeLegends);
 els.legendStatsFilter?.addEventListener('change', renderLifetimeLegends);
@@ -3636,12 +3661,16 @@ if (isArenaPage) setupArenaPage();
 if (isClanPage) loadStandaloneClan();
 const initialPageParams = new URLSearchParams(location.search);
 if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage) {
-  const savedRegion = initialPageParams.get('lbRegion');
-  const savedMode = initialPageParams.get('lbMode');
+  const routeMode = leaderboardPathMatch?.[1]?.toLowerCase() || '';
+  const routeRegion = leaderboardRouteRegions[leaderboardPathMatch?.[2]?.toLowerCase()] || '';
+  const savedRegion = routeRegion || initialPageParams.get('lbRegion');
+  const savedMode = routeMode || initialPageParams.get('lbMode');
   const savedPage = Math.max(1, Number(initialPageParams.get('lbPage') || 1));
   if (els.leaderboardRegion && ['ALL','ME','EU','US-E','US-W','SA','SEA','BRZ','AUS','JPN'].includes(savedRegion)) els.leaderboardRegion.value = savedRegion;
   if (els.leaderboardMode && ['1v1','2v2','3v3'].includes(savedMode)) els.leaderboardMode.value = savedMode;
   state.leaderboardPage = savedPage;
+  if (isLeaderboardRoute) window.setTimeout(() => document.querySelector('#leaderboard')?.scrollIntoView({ block: 'start' }), 220);
+  if (isClansDirectoryPage) window.setTimeout(() => document.querySelector('#clans')?.scrollIntoView({ block: 'start' }), 260);
 }
 setupThemePicker();
 applyLanguage();
@@ -3711,7 +3740,12 @@ window.addEventListener('visibilitychange', () => {
 
 const pageParams = initialPageParams;
 const playerFromUrl = pageParams.get('player');
+const searchFromUrl = pageParams.get('q');
 const rankedFromUrl = pageParams.get('ranked');
+if (searchFromUrl && els.name && els.form && !standalonePlayerId && !isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage) {
+  els.name.value = searchFromUrl.slice(0, 40);
+  window.setTimeout(() => els.form.requestSubmit(), 180);
+}
 if (standalonePlayerId) loadPlayer(standalonePlayerId);
 else if (playerFromUrl && /^\d+$/.test(playerFromUrl)) navigateToPlayer(playerFromUrl);
 else if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && ['1v1', '2v2', '3v3'].includes(rankedFromUrl)) window.setTimeout(() => chooseRankedMode(rankedFromUrl), 180);
