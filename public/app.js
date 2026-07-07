@@ -68,7 +68,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRankedController: null, playerAliasController: null, playerLiveBusy: false, playerLiveBusyId: 0, playerRequestSequence: 0, playerRetryCount: 0, playerLastVerifiedAt: 0, playerLastRankedRefreshAt: 0, playerLastAliasRefreshAt: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, leaderboardRequestId: 0, leaderboardRetryCount: 0, leaderboardStaleRetryCount: 0, leaderboardRetryTimer: null, leaderboardWatchdogTimer: null, leaderboardFreshTimer: null, leaderboardAutoTimer: null, leaderboardFreshKey: '', leaderboardSignature: '', leaderboardActiveKey: '', leaderboardLastFetchAt: 0, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, queuePromise: null, queueRequestKey: '', queueRequestId: 0, queueSignature: '', arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRankedController: null, playerAliasController: null, playerLiveBusy: false, playerLiveBusyId: 0, playerRequestSequence: 0, playerRetryCount: 0, playerLastVerifiedAt: 0, playerLastRankedRefreshAt: 0, playerLastAliasRefreshAt: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, leaderboardRequestId: 0, leaderboardRetryCount: 0, leaderboardStaleRetryCount: 0, leaderboardRetryTimer: null, leaderboardWatchdogTimer: null, leaderboardFreshTimer: null, leaderboardAutoTimer: null, leaderboardFreshKey: '', leaderboardSignature: '', leaderboardActiveKey: '', leaderboardLastFetchAt: 0, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, queueHeartbeatTimer: null, queuePromise: null, queueRequestKey: '', queueRequestId: 0, queueSignature: '', queueLastSuccessfulFetchAt: 0, queueLastRequestedScanAt: 0, queueFailureCount: 0, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
 
 
 const PEAKHALLA_THEME_KEY = 'peakhalla-theme';
@@ -2649,14 +2649,42 @@ function writeQueueBrowserCache(data) {
   } catch {}
 }
 
+function queueScanIsDue(data = state.queueData) {
+  if (!data?.last_scan_at) return true;
+  const nextScan = queueTimestampMs(data.next_scan_at || 0);
+  if (nextScan && Date.now() >= nextScan - 500) return true;
+  const scanIntervalMs = Math.max(30_000, Number(data.scan_interval_seconds || 45) * 1000);
+  return Date.now() - queueTimestampMs(data.last_scan_at) >= scanIntervalMs + 2_000;
+}
+
 function scheduleQueuePoll(data = state.queueData) {
   window.clearTimeout(state.queueTimer);
   if (!isLiveQueuePage) return;
   const fast = !data || data.scan_in_progress || data.status === 'warming' || data.status === 'scanning';
-  const untilNextScan = data?.next_scan_at ? queueTimestampMs(data.next_scan_at) - Date.now() + 900 : 0;
-  const liveDelay = untilNextScan > 0 ? Math.max(2_500, Math.min(12_000, untilNextScan)) : (fast ? 2_500 : 8_000);
-  const delay = document.hidden ? 30_000 : liveDelay;
-  state.queueTimer = window.setTimeout(() => loadLiveQueue({ silent: true }), delay);
+  const untilNextScan = data?.next_scan_at ? queueTimestampMs(data.next_scan_at) - Date.now() + 650 : 0;
+  const liveDelay = untilNextScan > 0
+    ? Math.max(2_000, Math.min(5_000, untilNextScan))
+    : (fast ? 2_000 : 5_000);
+  const delay = document.hidden ? 15_000 : liveDelay;
+  state.queueTimer = window.setTimeout(() => {
+    const refresh = queueScanIsDue(state.queueData) && Date.now() - state.queueLastRequestedScanAt > 10_000;
+    if (refresh) state.queueLastRequestedScanAt = Date.now();
+    loadLiveQueue({ silent: true, refresh }).catch(() => null);
+  }, delay);
+}
+
+function startQueueHeartbeat() {
+  window.clearInterval(state.queueHeartbeatTimer);
+  if (!isLiveQueuePage) return;
+  const tick = () => {
+    if (document.hidden || state.queuePromise) return;
+    const age = Date.now() - Number(state.queueLastSuccessfulFetchAt || 0);
+    if (age < 4_500) return;
+    const refresh = queueScanIsDue(state.queueData) && Date.now() - state.queueLastRequestedScanAt > 10_000;
+    if (refresh) state.queueLastRequestedScanAt = Date.now();
+    loadLiveQueue({ silent: true, refresh }).catch(() => null);
+  };
+  state.queueHeartbeatTimer = window.setInterval(tick, 5_000);
 }
 
 function renderLiveQueue(data, options = {}) {
@@ -2725,6 +2753,7 @@ async function loadLiveQueue(options = {}) {
 
   const requestId = ++state.queueRequestId;
   const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 10_000);
   state.queueController = controller;
   state.queueRequestKey = requestKey;
   if (!silent && !state.queueData) {
@@ -2739,16 +2768,19 @@ async function loadLiveQueue(options = {}) {
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || t('queueError'));
       if (requestId !== state.queueRequestId || requestKey !== `${state.queueRegion}:${state.queueMode}`) return data;
+      state.queueLastSuccessfulFetchAt = Date.now();
+      state.queueFailureCount = 0;
       renderLiveQueue(data);
       return data;
     } catch (error) {
-      if (error.name === 'AbortError') return null;
-      if (!silent || !state.queueData) {
+      state.queueFailureCount += 1;
+      if (error.name !== 'AbortError' && (!silent || !state.queueData)) {
         els.queueList.innerHTML = `<div class="queue-live-empty"><span>!</span><strong>${escapeHtml(t('queueError'))}</strong></div>`;
       }
       scheduleQueuePoll(state.queueData);
       return null;
     } finally {
+      window.clearTimeout(timeoutId);
       if (requestId === state.queueRequestId) {
         state.queuePromise = null;
         state.queueRequestKey = '';
@@ -2786,7 +2818,9 @@ function setupLiveQueuePage() {
   setLiveQueueMode(state.queueMode, { skipLoad: true });
   const cachedQueue = readQueueBrowserCache(state.queueRegion, state.queueMode);
   if (cachedQueue) renderLiveQueue({ ...cachedQueue, status: cachedQueue.status || 'stale', __fromBrowserCache: true }, { schedule: false });
-  loadLiveQueue({ silent: Boolean(cachedQueue), refresh: true });
+  state.queueLastRequestedScanAt = Date.now();
+  loadLiveQueue({ silent: Boolean(cachedQueue), refresh: true }).catch(() => null);
+  startQueueHeartbeat();
 }
 
 
@@ -3516,17 +3550,32 @@ window.addEventListener('pageshow', (event) => {
   if (event.persisted && standalonePlayerId && state.currentPlayer) {
     refreshPlayerRankedLive(standalonePlayerId).catch(() => null);
   }
+  if (isLiveQueuePage) {
+    startQueueHeartbeat();
+    window.setTimeout(() => loadLiveQueue({ silent: true, refresh: queueScanIsDue(state.queueData) }).catch(() => null), 120);
+  }
   if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage && (event.persisted || !els.leaderboard?.querySelector('.leader-row'))) {
     window.setTimeout(() => loadLeaderboard({ page: state.leaderboardPage, silent: true }).catch(() => null), event.persisted ? 120 : 450);
   }
 });
 window.addEventListener('popstate', resetBrowserNavigationState);
+window.addEventListener('focus', () => {
+  if (!isLiveQueuePage) return;
+  startQueueHeartbeat();
+  const refresh = queueScanIsDue(state.queueData);
+  if (refresh) state.queueLastRequestedScanAt = Date.now();
+  loadLiveQueue({ silent: true, refresh }).catch(() => null);
+});
 window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && els.clanModal && !els.clanModal.hidden) closeClanModal(); });
 window.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
   resetBrowserNavigationState();
   activateImageFallbacks();
-  if (isLiveQueuePage) loadLiveQueue({ silent: true, refresh: true }).catch(() => null);
+  if (isLiveQueuePage) {
+    startQueueHeartbeat();
+    state.queueLastRequestedScanAt = Date.now();
+    loadLiveQueue({ silent: true, refresh: true }).catch(() => null);
+  }
   if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage) {
     if (!state.leaderboardLastFetchAt || Date.now() - state.leaderboardLastFetchAt > 5 * 60_000) loadLeaderboard({ page: state.leaderboardPage, silent: true }).catch(() => null);
     enrichRenderedPortraits(els.leaderboard, '.leader-person[data-player-id]', '.row-portrait', 4);
