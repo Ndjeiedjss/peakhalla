@@ -2297,6 +2297,7 @@ function openEsportsMenu(options = {}) {
   cancelEsportsMenuClose();
   closeRankedMenu();
   closeQueueMenu();
+  closeOthersMenu();
   if (options.pin) state.esportsMenuPinned = true;
   els.esportsNav.classList.add('open');
   els.esportsNav.classList.toggle('pinned', state.esportsMenuPinned);
@@ -2606,6 +2607,8 @@ function closeRankedMenu() {
 function toggleRankedMenu() {
   if (!els.rankedMenu || !els.rankedToggle) return;
   closeQueueMenu();
+  closeEsportsMenu({ force: true });
+  closeOthersMenu();
   const opening = !els.rankedNav?.classList.contains('open');
   els.rankedToggle.setAttribute('aria-expanded', String(opening));
   els.rankedMenu.setAttribute('aria-hidden', String(!opening));
@@ -2650,6 +2653,8 @@ function toggleQueueMenu() {
   if (!els.queueMenu || !els.queueToggle) return;
   const opening = !els.queueNav?.classList.contains('open');
   closeRankedMenu();
+  closeEsportsMenu({ force: true });
+  closeOthersMenu();
   els.queueToggle.setAttribute('aria-expanded', String(opening));
   els.queueMenu.setAttribute('aria-hidden', String(!opening));
   els.queueNav?.classList.toggle('open', opening);
@@ -3447,10 +3452,6 @@ els.tournamentDirectoryMode?.addEventListener('change', () => {
 });
 els.tournamentDirectoryRefresh?.addEventListener('click', () => loadTournamentDirectory({ refresh: true }));
 els.esportsToggle?.addEventListener('click', (event) => { event.stopPropagation(); toggleEsportsMenu(); });
-els.esportsNav?.addEventListener('mouseenter', () => openEsportsMenu());
-els.esportsNav?.addEventListener('mouseleave', () => scheduleEsportsMenuClose());
-els.esportsMenu?.addEventListener('mouseenter', cancelEsportsMenuClose);
-els.esportsMenu?.addEventListener('mouseleave', () => scheduleEsportsMenuClose());
 els.esportsMenu?.addEventListener('click', (event) => {
   const button = event.target.closest('[data-esports-view]');
   if (button) navigateEsportsView(button.dataset.esportsView);
@@ -3559,19 +3560,33 @@ els.refreshPlayerStats?.addEventListener('click', async () => {
 const othersNav = document.getElementById('others-nav-dropdown');
 const othersToggle = document.getElementById('others-nav-toggle');
 const othersMenu = document.getElementById('others-nav-menu');
+function closeOthersMenu() {
+  othersNav?.classList.remove('open');
+  othersToggle?.setAttribute('aria-expanded', 'false');
+  othersMenu?.setAttribute('aria-hidden', 'true');
+}
 othersToggle?.addEventListener('click', (event) => {
   event.stopPropagation();
-  const open = !othersNav.classList.contains('open');
-  othersNav.classList.toggle('open', open);
-  othersToggle.setAttribute('aria-expanded', String(open));
-  othersMenu?.setAttribute('aria-hidden', String(!open));
+  const opening = !othersNav?.classList.contains('open');
+  closeRankedMenu();
+  closeQueueMenu();
+  closeEsportsMenu({ force: true });
+  closeOthersMenu();
+  if (opening) {
+    othersNav?.classList.add('open');
+    othersToggle.setAttribute('aria-expanded', 'true');
+    othersMenu?.setAttribute('aria-hidden', 'false');
+  }
 });
 document.addEventListener('click', (event) => {
-  if (!othersNav?.contains(event.target)) {
-    othersNav?.classList.remove('open');
-    othersToggle?.setAttribute('aria-expanded','false');
-    othersMenu?.setAttribute('aria-hidden','true');
-  }
+  if (!othersNav?.contains(event.target)) closeOthersMenu();
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return;
+  closeRankedMenu();
+  closeQueueMenu();
+  closeEsportsMenu({ force: true });
+  closeOthersMenu();
 });
 
 els.languageToggle.addEventListener('click', () => { state.language = state.language === 'en' ? 'ar' : 'en'; applyLanguage(); });
