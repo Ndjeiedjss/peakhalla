@@ -15,7 +15,7 @@ const translations = {
     madeBy: 'Made by <strong>Nad</strong>', followText: 'Brawlhalla clips and tracker updates.', disclaimer: 'Unofficial community project. Not affiliated with Ubisoft or Blue Mammoth Games.', footerMade: 'Made by', footerTagline: 'Brawlhalla statistics', rightsReserved: 'All rights reserved.',
     searching: 'Searching all known player profiles…', loadingPlayer: 'Loading player profile…', fetchError: 'Could not load the data right now.',
     noSearchResults: 'No profile matched that name yet. Check the spelling or search by BH ID.', oldNameMatch: 'Old name match', result: 'result', results: 'results', seasonalPeak: 'Season peak', currentElo: 'Current ELO', peakElo: 'Peak ELO', rankedOverview: 'Ranked overview', offPeak: 'off peak', atPeak: 'at season peak', globalRank: 'Global rank', rankedGames: 'Ranked games', rankedWins: 'Ranked wins',
-    accountLevel: 'Account level', accountXP: 'Account XP', xpProgress: 'XP progress', gameTime: 'Online match time', mainWeapons: 'Main weapons', topLegends: 'Main legends', regionRank: 'Region rank', totalGames: 'Total games', totalWins: 'Total wins', overallWinRate: 'Overall win rate', liveOfficialData: 'Live player data', corehallaStats: 'Corehalla-compatible stats', currentAlias: 'Current name', previousAliases: 'Previous names', refreshLiveStats: 'Refresh live stats', refreshingLiveStats: 'Refreshing official stats…', notReported: 'Not reported by API', statsAccuracyNote: 'Account XP and legend levels are checked against fresh Brawlhalla and Corehalla data. PeakHalla keeps the highest reported progression value so older data cannot replace newer levels.', legendLevelLimit: 'Some legend XP and levels may be unavailable if that legend has not been played since Patch 9.07.',
+    accountLevel: 'Account level', accountXP: 'Account XP', xpProgress: 'XP progress', gameTime: 'Online match time', mainWeapons: 'Main weapons', topLegends: 'Main legends', regionRank: 'Region rank', totalGames: 'Total games', totalWins: 'Total wins', overallWinRate: 'Overall win rate', liveOfficialData: 'Live player data', corehallaStats: 'Corehalla-compatible stats', currentAlias: 'Current name', previousAliases: 'Previous names', refreshLiveStats: 'Refresh live stats', refreshingLiveStats: 'Refreshing official stats…', updatingData: 'Updating…', notReported: 'Not reported by API', statsAccuracyNote: 'Account XP and legend levels are checked against fresh Brawlhalla and Corehalla data. PeakHalla keeps the highest reported progression value so older data cannot replace newer levels.', legendLevelLimit: 'Some legend XP and levels may be unavailable if that legend has not been played since Patch 9.07.',
     fullPlayerStats: 'Full player stats', officialLifetimeData: 'Official lifetime data', allLegendStats: 'Every legend · lifetime stats', searchLegends: 'Search legends', legendSearchPlaceholder: 'Legend or weapon', show: 'Show', playedOnly: 'Played only', allLegends: 'All legends', sortBy: 'Sort by', level: 'Level', xp: 'XP', losses: 'Losses', damageDealt: 'Damage dealt', damageTaken: 'Damage taken', kos: 'KOs', falls: 'Falls', kdRatio: 'K/D ratio', damageRatio: 'Damage ratio', suicides: 'Suicides', teamKOs: 'Team KOs', unarmedDamage: 'Unarmed damage', thrownDamage: 'Thrown-item damage', gadgetDamage: 'Gadget damage', gadgetKOs: 'Gadget KOs', unarmedKOs: 'Unarmed KOs', bombDamage: 'Bomb damage', mineDamage: 'Mine damage', spikeballDamage: 'Spikeball damage', sidekickDamage: 'Sidekick damage', snowballHits: 'Snowball hits', bombKOs: 'Bomb KOs', mineKOs: 'Mine KOs', sidekickKOs: 'Sidekick KOs', snowballKOs: 'Snowball KOs', spikeballKOs: 'Spikeball KOs', matchTime: 'Match time', seasonRanked: 'Current season ranked', lifetimeCombat: 'Lifetime combat', weaponBreakdown: 'Weapon breakdown', noLifetimeStats: 'No legends matched these filters.', legendsTotal: 'legends', playedLegends: 'played',
     legendUsed: 'legend used', legendsUsed: 'legends used', noRankedLegends: 'No ranked legend games found.', nameSeen: 'name recorded', namesSeen: 'names recorded', currentName: 'Current', previousName: 'Previous',
     firstSeen: 'First seen', lastSeen: 'Last seen', formerly: 'Formerly', aliasMatch: 'Old-name match', main: 'Main', unknownLegend: 'Main unknown', portraitLoading: 'Loading main legend…', recordSyncing: 'Record not reported by the source', prizePool: 'Prize pool',
@@ -46,7 +46,7 @@ const translations = {
     madeBy: 'من إنشاء <strong>Nad</strong>', followText: 'مقاطع براولهالا وتحديثات التراكر.', disclaimer: 'مشروع جماهيري غير رسمي، وغير تابع لـ Ubisoft أو Blue Mammoth Games.', footerMade: 'من إنشاء', footerTagline: 'إحصائيات براولهالا', rightsReserved: 'جميع الحقوق محفوظة.',
     searching: 'ندور في كل بروفايلات اللاعبين…', loadingPlayer: 'نفتح ملف اللاعب…', fetchError: 'ما قدرنا نجيب البيانات الحين.',
     noSearchResults: 'ما لقينا بروفايل بهذا الاسم للحين. راجع الكتابة أو ابحث بـ BH ID.', result: 'نتيجة', results: 'نتائج', seasonalPeak: 'قمة الموسم', currentElo: 'الإيلو الحالي', peakElo: 'أعلى إيلو', rankedOverview: 'ملخص الرانك', offPeak: 'عن القمة', atPeak: 'على قمة الموسم', globalRank: 'الترتيب العالمي', rankedGames: 'مباريات الرانك', rankedWins: 'فوز الرانك',
-    accountLevel: 'لفل الحساب', accountXP: 'إكس بي الحساب', xpProgress: 'تقدم اللفل', gameTime: 'وقت المباريات الأونلاين', mainWeapons: 'الأسلحة الأساسية', topLegends: 'الشخصيات الأساسية', regionRank: 'ترتيب المنطقة', totalGames: 'كل المباريات', totalWins: 'كل الفوز', overallWinRate: 'نسبة الفوز العامة', liveOfficialData: 'بيانات اللاعب مباشرة', corehallaStats: 'إحصائيات متوافقة مع Corehalla', currentAlias: 'الاسم الحالي', previousAliases: 'الأسماء السابقة', refreshLiveStats: 'حدّث البيانات مباشرة', refreshingLiveStats: 'نحدّث البيانات الرسمية…', notReported: 'غير متوفر من الـAPI', statsAccuracyNote: 'يتم فحص إكس بي الحساب ولفلات الشخصيات من Brawlhalla وCorehalla مباشرة، ويعتمد PeakHalla أعلى قيمة تقدم حتى لا تستبدل البيانات القديمة اللفلات الأحدث.', legendLevelLimit: 'بعض لفلات وإكس بي الشخصيات قد لا تظهر إذا لم تُلعب الشخصية منذ تحديث 9.07.',
+    accountLevel: 'لفل الحساب', accountXP: 'إكس بي الحساب', xpProgress: 'تقدم اللفل', gameTime: 'وقت المباريات الأونلاين', mainWeapons: 'الأسلحة الأساسية', topLegends: 'الشخصيات الأساسية', regionRank: 'ترتيب المنطقة', totalGames: 'كل المباريات', totalWins: 'كل الفوز', overallWinRate: 'نسبة الفوز العامة', liveOfficialData: 'بيانات اللاعب مباشرة', corehallaStats: 'إحصائيات متوافقة مع Corehalla', currentAlias: 'الاسم الحالي', previousAliases: 'الأسماء السابقة', refreshLiveStats: 'حدّث البيانات مباشرة', refreshingLiveStats: 'نحدّث البيانات الرسمية…', updatingData: 'جاري التحديث…', notReported: 'غير متوفر من الـAPI', statsAccuracyNote: 'يتم فحص إكس بي الحساب ولفلات الشخصيات من Brawlhalla وCorehalla مباشرة، ويعتمد PeakHalla أعلى قيمة تقدم حتى لا تستبدل البيانات القديمة اللفلات الأحدث.', legendLevelLimit: 'بعض لفلات وإكس بي الشخصيات قد لا تظهر إذا لم تُلعب الشخصية منذ تحديث 9.07.',
     fullPlayerStats: 'إحصائيات اللاعب كاملة', officialLifetimeData: 'بيانات رسمية طوال عمر الحساب', allLegendStats: 'كل الشخصيات · إحصائيات العمر الكامل', searchLegends: 'ابحث في الشخصيات', legendSearchPlaceholder: 'اسم شخصية أو سلاح', show: 'العرض', playedOnly: 'اللي لعب بها فقط', allLegends: 'كل الشخصيات', sortBy: 'الترتيب حسب', level: 'اللفل', xp: 'الإكس بي', losses: 'الخسائر', damageDealt: 'الضرر المسبب', damageTaken: 'الضرر المستلم', kos: 'الإقصاءات', falls: 'مرات السقوط', kdRatio: 'نسبة K/D', damageRatio: 'نسبة الضرر', suicides: 'سقوط ذاتي', teamKOs: 'إقصاء الزملاء', unarmedDamage: 'ضرر بدون سلاح', thrownDamage: 'ضرر الأدوات المرميّة', gadgetDamage: 'ضرر الأدوات', gadgetKOs: 'إقصاءات الأدوات', unarmedKOs: 'إقصاءات بدون سلاح', bombDamage: 'ضرر القنابل', mineDamage: 'ضرر الألغام', spikeballDamage: 'ضرر الكرة الشائكة', sidekickDamage: 'ضرر المساعد', snowballHits: 'إصابات كرة الثلج', bombKOs: 'إقصاءات القنابل', mineKOs: 'إقصاءات الألغام', sidekickKOs: 'إقصاءات المساعد', snowballKOs: 'إقصاءات كرة الثلج', spikeballKOs: 'إقصاءات الكرة الشائكة', matchTime: 'وقت المباريات', seasonRanked: 'رانك الموسم الحالي', lifetimeCombat: 'قتال العمر الكامل', weaponBreakdown: 'تفاصيل الأسلحة', noLifetimeStats: 'ما فيه شخصيات مطابقة للفلاتر.', legendsTotal: 'شخصية', playedLegends: 'مستخدمة',
     legendUsed: 'شخصية مستخدمة', legendsUsed: 'شخصيات مستخدمة', noRankedLegends: 'ما لقينا مباريات رانك على الشخصيات.', nameSeen: 'اسم مسجل', namesSeen: 'أسماء مسجلة', currentName: 'الحالي', previousName: 'قديم',
     firstSeen: 'أول ظهور', lastSeen: 'آخر ظهور', formerly: 'كان اسمه', aliasMatch: 'تطابق اسم قديم', main: 'الأساسية', unknownLegend: 'الشخصية غير معروفة', portraitLoading: 'نحمّل الشخصية الأساسية…', recordSyncing: 'السجل غير متوفر من المصدر', prizePool: 'مجموع الجوائز',
@@ -948,6 +948,36 @@ function weaponShowcase(weapons = []) {
   return `<article class="showcase-card showcase-weapons"><span class="showcase-label">${escapeHtml(t('mainWeapons'))}</span><div class="weapon-grid">${items.map((weapon) => `<div class="weapon-tile weapon-${escapeHtml(weaponSlug(weapon.name))}"><span class="weapon-glyph">${weaponIconMarkup(weapon.name)}</span><div><strong>${escapeHtml(canonicalWeaponName(weapon.name))}</strong><small>${escapeHtml(weapon.time_held_display || '—')} · ${number(weapon.kos)} ${escapeHtml(t('kos'))}</small></div></div>`).join('')}</div></article>`;
 }
 
+function mergeProfileKeepingUsefulData(incoming, previous) {
+  if (!incoming?.player || !previous?.player) return incoming;
+  const merged = typeof structuredClone === 'function'
+    ? structuredClone(incoming)
+    : JSON.parse(JSON.stringify(incoming));
+  const current = merged.player;
+  const old = previous.player;
+  const keepPositive = (field) => {
+    if (!(Number(current[field]) > 0) && Number(old[field]) > 0) current[field] = old[field];
+  };
+  keepPositive('level');
+  keepPositive('account_xp');
+  keepPositive('game_time_seconds');
+  if (Number(current.game_time_seconds) > 0 && (!current.game_time_display || current.game_time_display === '—')) current.game_time_display = old.game_time_display || current.game_time_display;
+  if (!(Number(current.game_time_seconds) > 0) && Number(old.game_time_seconds) > 0) current.game_time_display = old.game_time_display;
+  if (current.xp_percentage === null || current.xp_percentage === undefined) current.xp_percentage = old.xp_percentage ?? null;
+  for (const field of ['top_legends', 'main_weapons', 'lifetime_legends', 'legends']) {
+    if ((!Array.isArray(current[field]) || !current[field].length) && Array.isArray(old[field]) && old[field].length) current[field] = old[field];
+  }
+  if ((!current.main_legend || !current.main_legend.name) && old.main_legend) current.main_legend = old.main_legend;
+  current.lifetime_totals = { ...(old.lifetime_totals || {}), ...(current.lifetime_totals || {}) };
+  if (!(Number(current.lifetime_totals?.match_time_seconds) > 0) && Number(old.lifetime_totals?.match_time_seconds) > 0) {
+    current.lifetime_totals.match_time_seconds = old.lifetime_totals.match_time_seconds;
+    current.lifetime_totals.match_time_display = old.lifetime_totals.match_time_display;
+  }
+  const oldNames = previous.known_names || [];
+  if ((!Array.isArray(merged.known_names) || !merged.known_names.length) && oldNames.length) merged.known_names = oldNames;
+  return merged;
+}
+
 function renderPlayerClan(guild) {
   if (!els.playerClanCard) return;
   const guildId = Number(guild?.guild_id);
@@ -967,10 +997,12 @@ function renderPlayerClan(guild) {
 
 function renderAccountShowcase(player) {
   const xpPercent = Number.isFinite(Number(player.xp_percentage)) ? Number(player.xp_percentage) : null;
-  const accountLevel = player.level === null || player.level === undefined ? t('notReported') : number(player.level);
-  const xpValue = player.account_xp === null || player.account_xp === undefined ? t('notReported') : number(player.account_xp);
-  const gameTimeValue = player.game_time_seconds > 0 ? player.game_time_display : t('notReported');
-  const sourceNote = player.data_quality?.corehalla_enriched ? t('corehallaStats') : t('liveOfficialData');
+  const pending = Boolean(player.data_quality?.partial || player.data_quality?.api_unavailable);
+  const missingLabel = pending ? t('updatingData') : t('notReported');
+  const accountLevel = player.level === null || player.level === undefined ? missingLabel : number(player.level);
+  const xpValue = player.account_xp === null || player.account_xp === undefined ? missingLabel : number(player.account_xp);
+  const gameTimeValue = player.game_time_seconds > 0 ? player.game_time_display : missingLabel;
+  const sourceNote = pending ? t('refreshingLiveStats') : (player.data_quality?.corehalla_enriched ? t('corehallaStats') : t('liveOfficialData'));
   els.accountShowcase.innerHTML = [
     showcaseMetric(t('accountLevel'), accountLevel, sourceNote),
     showcaseMetric(t('accountXP'), xpValue, sourceNote),
@@ -1595,7 +1627,9 @@ async function loadPlayer(id, options = {}) {
     if (requestSequence !== state.playerRequestSequence) return data;
 
     const currentPreview = currentRenderedPlayerId() === playerId ? state.currentPlayer : null;
+    const cachedSnapshot = currentPreview || readPlayerBrowserCache(playerId);
     data = mergeRankedPreview(data, currentPreview);
+    data = mergeProfileKeepingUsefulData(data, cachedSnapshot);
     const partial = playerResponseIsPartial(data);
     if (data?.player) writePlayerBrowserCache(playerId, data);
 
@@ -1905,6 +1939,7 @@ async function loadLeaderboard(options = {}) {
       : { region, mode, page: String(page), page_size: String(LEADERBOARD_PAGE_SIZE) });
     params.set('_', String(Date.now()));
     if (options.refresh) params.set('refresh', '1');
+  if (options.wait || options.refresh) params.set('wait', '1');
     const endpoint = query.length >= 2 ? '/api/search' : '/api/leaderboard';
     const data = await getJson(`${endpoint}?${params}`, { signal: controller.signal, timeoutMs: options.refresh ? 32000 : 18000 });
     if (requestId !== state.leaderboardRequestId) return;
@@ -2625,7 +2660,7 @@ function queueEntryCard(entry, index) {
 }
 
 function queueBrowserCacheKey(region = state.queueRegion, mode = state.queueMode) {
-  return `peakhalla-queue-v2:${region}:${mode}`;
+  return `peakhalla-queue-v3:${region}:${mode}`;
 }
 
 function readQueueBrowserCache(region = state.queueRegion, mode = state.queueMode) {
@@ -2663,8 +2698,8 @@ function scheduleQueuePoll(data = state.queueData) {
   const fast = !data || data.scan_in_progress || data.status === 'warming' || data.status === 'scanning';
   const untilNextScan = data?.next_scan_at ? queueTimestampMs(data.next_scan_at) - Date.now() + 650 : 0;
   const liveDelay = untilNextScan > 0
-    ? Math.max(2_000, Math.min(5_000, untilNextScan))
-    : (fast ? 2_000 : 5_000);
+    ? Math.max(1_250, Math.min(4_000, untilNextScan))
+    : (fast ? 1_500 : 4_000);
   const delay = document.hidden ? 15_000 : liveDelay;
   state.queueTimer = window.setTimeout(() => {
     const refresh = queueScanIsDue(state.queueData) && Date.now() - state.queueLastRequestedScanAt > 10_000;
@@ -2684,7 +2719,7 @@ function startQueueHeartbeat() {
     if (refresh) state.queueLastRequestedScanAt = Date.now();
     loadLiveQueue({ silent: true, refresh }).catch(() => null);
   };
-  state.queueHeartbeatTimer = window.setInterval(tick, 5_000);
+  state.queueHeartbeatTimer = window.setInterval(tick, 4_000);
 }
 
 function renderLiveQueue(data, options = {}) {
@@ -2753,7 +2788,7 @@ async function loadLiveQueue(options = {}) {
 
   const requestId = ++state.queueRequestId;
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), 10_000);
+  const timeoutId = window.setTimeout(() => controller.abort(), options.wait || options.refresh ? 30_000 : 12_000);
   state.queueController = controller;
   state.queueRequestKey = requestKey;
   if (!silent && !state.queueData) {
@@ -2818,8 +2853,8 @@ function setupLiveQueuePage() {
   setLiveQueueMode(state.queueMode, { skipLoad: true });
   const cachedQueue = readQueueBrowserCache(state.queueRegion, state.queueMode);
   if (cachedQueue) renderLiveQueue({ ...cachedQueue, status: cachedQueue.status || 'stale', __fromBrowserCache: true }, { schedule: false });
-  state.queueLastRequestedScanAt = Date.now();
-  loadLiveQueue({ silent: Boolean(cachedQueue), refresh: true }).catch(() => null);
+  state.queueLastRequestedScanAt = 0;
+  loadLiveQueue({ silent: Boolean(cachedQueue), refresh: true, wait: true }).catch(() => null);
   startQueueHeartbeat();
 }
 
@@ -3574,7 +3609,7 @@ window.addEventListener('visibilitychange', () => {
   if (isLiveQueuePage) {
     startQueueHeartbeat();
     state.queueLastRequestedScanAt = Date.now();
-    loadLiveQueue({ silent: true, refresh: true }).catch(() => null);
+    loadLiveQueue({ silent: true, refresh: true, wait: true }).catch(() => null);
   }
   if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage) {
     if (!state.leaderboardLastFetchAt || Date.now() - state.leaderboardLastFetchAt > 5 * 60_000) loadLeaderboard({ page: state.leaderboardPage, silent: true }).catch(() => null);
