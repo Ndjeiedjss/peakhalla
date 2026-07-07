@@ -4492,6 +4492,40 @@ function isAllowedOthersImageUrl(value = '') {
   } catch { return false; }
 }
 
+function upgradeGameBananaImageUrl(value = '') {
+  try {
+    const url = new URL(String(value || ''));
+    const host = url.hostname.toLowerCase();
+    if (!(host === 'gamebanana.com' || host.endsWith('.gamebanana.com') || host === 'gb-cdn.net' || host.endsWith('.gb-cdn.net'))) return url.href;
+    if (!/\/img\/ss\//i.test(url.pathname)) return url.href;
+    const parts = url.pathname.split('/');
+    const filename = parts.pop() || '';
+    // GameBanana thumbnail names commonly look like 220-124_hash.jpg or
+    // 530-90_hash.jpg. Removing the size prefix requests the original upload.
+    const originalFilename = filename.replace(/^\d{2,4}(?:-\d{2,4})?_/, '');
+    if (originalFilename && originalFilename !== filename) {
+      parts.push(originalFilename);
+      url.pathname = parts.join('/');
+    }
+    return url.href;
+  } catch { return String(value || ''); }
+}
+
+function preferHighResolutionImages(values = []) {
+  const ordered = [];
+  const seen = new Set();
+  for (const value of values) {
+    if (!isAllowedOthersImageUrl(value)) continue;
+    const upgraded = upgradeGameBananaImageUrl(value);
+    for (const candidate of [upgraded, value]) {
+      if (!isAllowedOthersImageUrl(candidate) || seen.has(candidate)) continue;
+      seen.add(candidate);
+      ordered.push(candidate);
+    }
+  }
+  return ordered;
+}
+
 function collectExternalImageUrls(value, baseUrl = '', output = [], seen = new Set()) {
   if (output.length >= 12 || value == null) return output;
   if (typeof value === 'string') {
@@ -4499,11 +4533,15 @@ function collectExternalImageUrls(value, baseUrl = '', output = [], seen = new S
     const matches = decoded.match(/(?:https?:)?\/\/[^\s"'<>]+|\/[^\s"'<>]+/g) || [decoded];
     for (const candidate of matches) {
       const absolute = absoluteExternalUrl(candidate, baseUrl);
-      if (!absolute || seen.has(absolute) || !isAllowedOthersImageUrl(absolute)) continue;
+      if (!absolute || !isAllowedOthersImageUrl(absolute)) continue;
       if (!/\.(?:avif|gif|jpe?g|png|webp)(?:[?#]|$)/i.test(absolute) &&
           !/\/img\/(?:ss|embeddables|Webpage)\//i.test(absolute)) continue;
-      seen.add(absolute);
-      output.push(absolute);
+      for (const imageUrl of preferHighResolutionImages([absolute])) {
+        if (seen.has(imageUrl)) continue;
+        seen.add(imageUrl);
+        output.push(imageUrl);
+        if (output.length >= 12) break;
+      }
       if (output.length >= 12) break;
     }
     return output;
@@ -4537,7 +4575,7 @@ async function fetchExternalPreviewImage(pageUrl = '') {
   try {
     const response = await limitedFetch(normalized, {
       signal: controller.signal,
-      headers: { accept: 'text/html,application/xhtml+xml', 'user-agent': 'PeakHalla/7.83 (+https://peakhalla.com)' }
+      headers: { accept: 'text/html,application/xhtml+xml', 'user-agent': 'PeakHalla/7.84 (+https://peakhalla.com)' }
     });
     if (response.ok) {
       const html = await response.text();
@@ -4573,10 +4611,12 @@ function publicOthersPayload(value = {}) {
   return {
     ...value,
     items: (Array.isArray(value.items) ? value.items : []).map((item) => {
-      const sourceImages = [item.image, ...(Array.isArray(item.images) ? item.images : [])]
-        .filter(isAllowedOthersImageUrl);
+      const sourceImages = preferHighResolutionImages([
+        item.image,
+        ...(Array.isArray(item.images) ? item.images : [])
+      ].filter(isAllowedOthersImageUrl));
       const images = [...new Set(sourceImages)]
-        .slice(0, 6)
+        .slice(0, 8)
         .map((image) => `/api/others/image?url=${encodeURIComponent(image)}`);
       return {
         ...item,
@@ -4607,7 +4647,7 @@ async function fetchOfficialPatchFeed(force = false) {
   if (!force && cached && cached.expiresAt > Date.now()) return cached.value;
   let items = [];
   try {
-    const response = await limitedFetch(OFFICIAL_PATCH_NOTES_URL, { headers: { accept: 'text/html', 'user-agent': 'PeakHalla/7.83 (+https://peakhalla.com)' } });
+    const response = await limitedFetch(OFFICIAL_PATCH_NOTES_URL, { headers: { accept: 'text/html', 'user-agent': 'PeakHalla/7.84 (+https://peakhalla.com)' } });
     if (!response.ok) { await discardLimitedResponse(response); throw new Error(`Official patch page returned ${response.status}`); }
     const html = await response.text();
     const seen = new Set();
@@ -4644,7 +4684,7 @@ async function fetchOfficialPatchFeed(force = false) {
 }
 async function fetchGameBananaItemFields(id, fields) {
   const url = `${GAMEBANANA_API_BASE}/Core/Item/Data?itemtype=Mod&itemid=${encodeURIComponent(id)}&fields=${encodeURIComponent(fields.join(','))}&return_keys=1&format=json_min`;
-  const response = await limitedFetch(url, { headers: { accept: 'application/json', 'user-agent': 'PeakHalla/7.83 (+https://peakhalla.com)' } });
+  const response = await limitedFetch(url, { headers: { accept: 'application/json', 'user-agent': 'PeakHalla/7.84 (+https://peakhalla.com)' } });
   if (!response.ok) {
     await discardLimitedResponse(response);
     const error = new Error(`GameBanana item ${id} returned ${response.status}`);
@@ -4674,11 +4714,11 @@ async function gameBananaModData(id) {
   const category = cleanExternalText(value['Category().name'] || '');
   if (!/(map|realm|stage|brawlhaven|fortress|temple|dome|falls|stadium|grove)/i.test(`${title} ${category}`)) return null;
   const profileUrl = absoluteExternalUrl(value['Url().sProfileUrl()'] || `https://gamebanana.com/mods/${id}`, 'https://gamebanana.com/');
-  const images = collectExternalImageUrls([
-    value.screenshots,
+  const images = preferHighResolutionImages(collectExternalImageUrls([
     value['Preview().sStructuredDataFullsizeUrl()'],
+    value.screenshots,
     value['Preview().sSubFeedImageUrl()']
-  ], profileUrl).slice(0, 8);
+  ], profileUrl)).slice(0, 8);
   return {
     id: Number(id), title, category: category || 'Brawlhalla map',
     date: value.mdate || value.date || '',
@@ -4694,7 +4734,7 @@ async function fetchGameBananaMaps(force = false) {
   let items = [];
   try {
     const listUrl = `${GAMEBANANA_API_BASE}/Core/List/New?page=1&itemtype=Mod&gameid=5704&include_updated=1&format=json_min`;
-    const response = await limitedFetch(listUrl, { headers: { accept: 'application/json', 'user-agent': 'PeakHalla/7.83 (+https://peakhalla.com)' } });
+    const response = await limitedFetch(listUrl, { headers: { accept: 'application/json', 'user-agent': 'PeakHalla/7.84 (+https://peakhalla.com)' } });
     if (!response.ok) { await discardLimitedResponse(response); throw new Error(`GameBanana list returned ${response.status}`); }
     const list = await response.json();
     const ids = (Array.isArray(list) ? list : []).filter((entry) => Array.isArray(entry) && entry[0] === 'Mod').map((entry) => Number(entry[1])).filter(Boolean).slice(0, 24);
@@ -4743,7 +4783,7 @@ app.get('/api/others/image', async (req, res) => {
       signal: controller.signal,
       headers: {
         accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-        'user-agent': 'Mozilla/5.0 (compatible; PeakHalla/7.83; +https://peakhalla.com)',
+        'user-agent': 'Mozilla/5.0 (compatible; PeakHalla/7.84; +https://peakhalla.com)',
         referer: source.includes('gamebanana.com') ? 'https://gamebanana.com/' : 'https://www.brawlhalla.com/'
       }
     });
@@ -4793,7 +4833,7 @@ app.get('/api/legend-image/:name', async (req, res) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, service: 'PeakHalla', version: '7.81.0' });
+  res.json({ ok: true, service: 'PeakHalla', version: '7.84.0' });
 });
 
 app.get('/api/suggestions', async (req, res, next) => {
