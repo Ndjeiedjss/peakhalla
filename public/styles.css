@@ -4511,3 +4511,74 @@ body.esports-page-mode .ph-ad-home { display: none !important; }
     width: min(320px, calc(100vw - 24px));
   }
 }
+
+
+/* PeakHalla v7.83 — Esports click-only menu and GameBanana screenshot galleries */
+.esports-nav-dropdown:not(.open):hover > .nav-dropdown-menu,
+.esports-nav-dropdown:not(.open):focus-within > .nav-dropdown-menu {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translateX(-50%) translateY(-10px) scale(.97) !important;
+}
+.esports-nav-dropdown:not(.open):hover > .nav-dropdown-toggle b,
+.esports-nav-dropdown:not(.open):focus-within > .nav-dropdown-toggle b {
+  transform: none !important;
+}
+.esports-nav-dropdown:not(.open):hover::after,
+.esports-nav-dropdown:not(.open):focus-within::after {
+  pointer-events: none !important;
+}
+.esports-nav-dropdown.open > .nav-dropdown-menu {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  transform: translateX(-50%) translateY(0) scale(1) !important;
+}
+
+.map-content-card .content-card-media {
+  min-height: 230px;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 56px;
+  background: #11101a;
+}
+.map-content-card .content-card-hero {
+  width: 100%;
+  height: 100%;
+  min-height: 174px;
+  object-fit: cover;
+  object-position: center;
+}
+.content-card-thumbnails {
+  min-height: 56px;
+  padding: 6px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,.07);
+  background: rgba(8,6,13,.96);
+}
+.content-card-thumbnails img {
+  width: 100%;
+  height: 44px;
+  min-height: 0;
+  display: block;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 5px;
+  opacity: .84;
+}
+.map-content-card:hover .content-card-thumbnails img { opacity: 1; }
+.map-content-card .content-card-media.is-fallback {
+  display: grid;
+  grid-template-rows: 1fr;
+  place-items: center;
+}
+.map-content-card .content-card-media.is-fallback .content-card-thumbnails { display: none; }
+.content-card-media.is-fallback .content-card-hero { display: none; }
+
+@media (max-width: 620px) {
+  .map-content-card .content-card-media { min-height: 210px; }
+  .map-content-card .content-card-hero { min-height: 154px; }
+}

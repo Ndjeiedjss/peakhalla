@@ -33,18 +33,28 @@
     const label = maps ? (item.category || 'Map mod') : (item.source || 'Official patch');
     const patchNumber = String(item.title || '').match(/Patch\s*([0-9.]+)/i)?.[1];
     const itemFallback = maps ? 'MAP' : (patchNumber || fallbackLabel);
-    const media = item.image
-      ? `<img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title || itemFallback)}" loading="lazy" decoding="async">`
-      : '';
+    const images = [...new Set([item.image, ...(Array.isArray(item.images) ? item.images : [])].filter(Boolean))].slice(0, 5);
+    let media = '';
+    if (images.length) {
+      const hero = `<img class="content-card-hero" src="${escapeHtml(images[0])}" alt="${escapeHtml(item.title || itemFallback)}" loading="lazy" decoding="async">`;
+      const thumbs = maps && images.length > 1
+        ? `<div class="content-card-thumbnails" aria-hidden="true">${images.slice(1, 5).map((image) => `<img src="${escapeHtml(image)}" alt="" loading="lazy" decoding="async">`).join('')}</div>`
+        : '';
+      media = `${hero}${thumbs}`;
+    }
     const date = dateLabel(item.date);
-    return `<a class="content-card" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer"><div class="content-card-media${media ? '' : ' is-fallback'}" data-fallback-label="${escapeHtml(itemFallback)}">${media}</div><div class="content-card-body"><small>${escapeHtml(label)}</small><h3>${escapeHtml(item.title)}</h3>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}<span>${date ? `${escapeHtml(date)} · ` : ''}Open source ↗</span></div></a>`;
+    return `<a class="content-card${maps ? ' map-content-card' : ''}" href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer"><div class="content-card-media${media ? '' : ' is-fallback'}" data-fallback-label="${escapeHtml(itemFallback)}">${media}</div><div class="content-card-body"><small>${escapeHtml(label)}</small><h3>${escapeHtml(item.title)}</h3>${item.description ? `<p>${escapeHtml(item.description)}</p>` : ''}<span>${date ? `${escapeHtml(date)} · ` : ''}Open source ↗</span></div></a>`;
   }
 
   function activateImageFallbacks() {
-    list.querySelectorAll('.content-card-media img').forEach((image) => {
-      const showFallback = () => image.closest('.content-card-media')?.classList.add('is-fallback');
-      image.addEventListener('error', showFallback, { once: true });
-      if (image.complete && image.naturalWidth === 0) showFallback();
+    list.querySelectorAll('.content-card-media').forEach((media) => {
+      const hero = media.querySelector('.content-card-hero');
+      const thumbnails = [...media.querySelectorAll('.content-card-thumbnails img')];
+      thumbnails.forEach((image) => image.addEventListener('error', () => image.remove(), { once: true }));
+      if (!hero) return;
+      const showFallback = () => media.classList.add('is-fallback');
+      hero.addEventListener('error', showFallback, { once: true });
+      if (hero.complete && hero.naturalWidth === 0) showFallback();
     });
   }
 
