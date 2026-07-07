@@ -18,7 +18,7 @@ const translations = {
     accountLevel: 'Account level', accountXP: 'Account XP', xpProgress: 'XP progress', gameTime: 'Online match time', mainWeapons: 'Main weapons', topLegends: 'Main legends', regionRank: 'Region rank', totalGames: 'Total games', totalWins: 'Total wins', overallWinRate: 'Overall win rate', liveOfficialData: 'Live player data', corehallaStats: 'Corehalla-compatible stats', currentAlias: 'Current name', previousAliases: 'Previous names', refreshLiveStats: 'Refresh live stats', refreshingLiveStats: 'Refreshing official stats…', updatingData: 'Updating…', notReported: 'Not reported by API', statsAccuracyNote: 'Account XP and legend levels are checked against fresh Brawlhalla and Corehalla data. PeakHalla keeps the highest reported progression value so older data cannot replace newer levels.', legendLevelLimit: 'Some legend XP and levels may be unavailable if that legend has not been played since Patch 9.07.',
     fullPlayerStats: 'Full player stats', officialLifetimeData: 'Official lifetime data', allLegendStats: 'Every legend · lifetime stats', searchLegends: 'Search legends', legendSearchPlaceholder: 'Legend or weapon', show: 'Show', playedOnly: 'Played only', allLegends: 'All legends', sortBy: 'Sort by', level: 'Level', xp: 'XP', losses: 'Losses', damageDealt: 'Damage dealt', damageTaken: 'Damage taken', kos: 'KOs', falls: 'Falls', kdRatio: 'K/D ratio', damageRatio: 'Damage ratio', suicides: 'Suicides', teamKOs: 'Team KOs', unarmedDamage: 'Unarmed damage', thrownDamage: 'Thrown-item damage', gadgetDamage: 'Gadget damage', gadgetKOs: 'Gadget KOs', unarmedKOs: 'Unarmed KOs', bombDamage: 'Bomb damage', mineDamage: 'Mine damage', spikeballDamage: 'Spikeball damage', sidekickDamage: 'Sidekick damage', snowballHits: 'Snowball hits', bombKOs: 'Bomb KOs', mineKOs: 'Mine KOs', sidekickKOs: 'Sidekick KOs', snowballKOs: 'Snowball KOs', spikeballKOs: 'Spikeball KOs', matchTime: 'Match time', seasonRanked: 'Current season ranked', lifetimeCombat: 'Lifetime combat', weaponBreakdown: 'Weapon breakdown', noLifetimeStats: 'No legends matched these filters.', legendsTotal: 'legends', playedLegends: 'played',
     legendUsed: 'legend used', legendsUsed: 'legends used', noRankedLegends: 'No ranked legend games found.', nameSeen: 'name recorded', namesSeen: 'names recorded', currentName: 'Current', previousName: 'Previous',
-    firstSeen: 'First seen', lastSeen: 'Last seen', formerly: 'Formerly', aliasMatch: 'Old-name match', main: 'Main', unknownLegend: 'Main unknown', portraitLoading: 'Loading main legend…', recordSyncing: 'Record not reported by the source', prizePool: 'Prize pool',
+    firstSeen: 'First seen', lastSeen: 'Last seen', formerly: 'Formerly', aliasMatch: 'Old-name match', main: 'Main', unknownLegend: 'Main unknown', portraitLoading: 'Loading main legend…', recordSyncing: 'Record not reported by the source', prizePool: 'Prize pool', tournamentUpcoming: 'Upcoming', tournamentLive: 'Live now', tournamentCompleted: 'Completed', tournamentAnnounced: 'Announced',
     leaderboardPrefix: 'Top players ·', leaderboardSearch: 'Find a rank', leaderboardSearchPlaceholder: 'Search a player', leaderboardSearchTitle: 'Ranking search', emptyData: 'No data available right now.', allRegions: 'All regions', loadMorePlayers: 'Load next 50 players', loadingMorePlayers: 'Loading page…', playersShown: 'players shown', pageTop: 'Top', pagePrevious: 'Previous', pageNext: 'Next', pageLabel: 'Page', loadingPage: 'Loading page…',
     clansTitle: 'Top clans by lifetime XP', clansText: 'Browse the highest-XP Brawlhalla clans, then open a dedicated roster page for every clan.', clanSearch: 'Find a clan', clanSearchPlaceholder: 'Clan name or guild ID', clanRank: 'XP rank', clanTier: 'Tier', clanMembers: 'Members', clanPoints: 'Weekly points', clanXp: 'Lifetime XP', clanRecruiting: 'Recruiting', clanClosed: 'Closed', clanOpen: 'Open clan', clanDetails: 'Clan profile', clanRoster: 'Clan roster', clanRole: 'Role', clanJoined: 'Joined', clanMemberXp: 'Member XP', clanNoData: 'No clan data is available right now. Refresh in a moment.', clanLoading: 'Loading top clans by XP…', clanUpdated: 'Updated', clanDiscoveryNote: 'Top clans are ordered by lifetime XP.', clanView: 'View clan', clanBack: 'Back to clans', clanRoleOrder: 'Role hierarchy', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'Members are ordered from Recruit to Leader.', playerClan: 'PLAYER CLAN', viewClanProfile: 'Open clan profile', noClan: 'No clan',
     MiddleEast: 'Middle East', Europe: 'Europe', USEast: 'US East', USWest: 'US West', SouthernAfrica: 'Southern Africa', SoutheastAsia: 'Southeast Asia', Brazil: 'Brazil', Australia: 'Australia', Japan: 'Japan',
@@ -49,7 +49,7 @@ const translations = {
     accountLevel: 'لفل الحساب', accountXP: 'إكس بي الحساب', xpProgress: 'تقدم اللفل', gameTime: 'وقت المباريات الأونلاين', mainWeapons: 'الأسلحة الأساسية', topLegends: 'الشخصيات الأساسية', regionRank: 'ترتيب المنطقة', totalGames: 'كل المباريات', totalWins: 'كل الفوز', overallWinRate: 'نسبة الفوز العامة', liveOfficialData: 'بيانات اللاعب مباشرة', corehallaStats: 'إحصائيات متوافقة مع Corehalla', currentAlias: 'الاسم الحالي', previousAliases: 'الأسماء السابقة', refreshLiveStats: 'حدّث البيانات مباشرة', refreshingLiveStats: 'نحدّث البيانات الرسمية…', updatingData: 'جاري التحديث…', notReported: 'غير متوفر من الـAPI', statsAccuracyNote: 'يتم فحص إكس بي الحساب ولفلات الشخصيات من Brawlhalla وCorehalla مباشرة، ويعتمد PeakHalla أعلى قيمة تقدم حتى لا تستبدل البيانات القديمة اللفلات الأحدث.', legendLevelLimit: 'بعض لفلات وإكس بي الشخصيات قد لا تظهر إذا لم تُلعب الشخصية منذ تحديث 9.07.',
     fullPlayerStats: 'إحصائيات اللاعب كاملة', officialLifetimeData: 'بيانات رسمية طوال عمر الحساب', allLegendStats: 'كل الشخصيات · إحصائيات العمر الكامل', searchLegends: 'ابحث في الشخصيات', legendSearchPlaceholder: 'اسم شخصية أو سلاح', show: 'العرض', playedOnly: 'اللي لعب بها فقط', allLegends: 'كل الشخصيات', sortBy: 'الترتيب حسب', level: 'اللفل', xp: 'الإكس بي', losses: 'الخسائر', damageDealt: 'الضرر المسبب', damageTaken: 'الضرر المستلم', kos: 'الإقصاءات', falls: 'مرات السقوط', kdRatio: 'نسبة K/D', damageRatio: 'نسبة الضرر', suicides: 'سقوط ذاتي', teamKOs: 'إقصاء الزملاء', unarmedDamage: 'ضرر بدون سلاح', thrownDamage: 'ضرر الأدوات المرميّة', gadgetDamage: 'ضرر الأدوات', gadgetKOs: 'إقصاءات الأدوات', unarmedKOs: 'إقصاءات بدون سلاح', bombDamage: 'ضرر القنابل', mineDamage: 'ضرر الألغام', spikeballDamage: 'ضرر الكرة الشائكة', sidekickDamage: 'ضرر المساعد', snowballHits: 'إصابات كرة الثلج', bombKOs: 'إقصاءات القنابل', mineKOs: 'إقصاءات الألغام', sidekickKOs: 'إقصاءات المساعد', snowballKOs: 'إقصاءات كرة الثلج', spikeballKOs: 'إقصاءات الكرة الشائكة', matchTime: 'وقت المباريات', seasonRanked: 'رانك الموسم الحالي', lifetimeCombat: 'قتال العمر الكامل', weaponBreakdown: 'تفاصيل الأسلحة', noLifetimeStats: 'ما فيه شخصيات مطابقة للفلاتر.', legendsTotal: 'شخصية', playedLegends: 'مستخدمة',
     legendUsed: 'شخصية مستخدمة', legendsUsed: 'شخصيات مستخدمة', noRankedLegends: 'ما لقينا مباريات رانك على الشخصيات.', nameSeen: 'اسم مسجل', namesSeen: 'أسماء مسجلة', currentName: 'الحالي', previousName: 'قديم',
-    firstSeen: 'أول ظهور', lastSeen: 'آخر ظهور', formerly: 'كان اسمه', aliasMatch: 'تطابق اسم قديم', main: 'الأساسية', unknownLegend: 'الشخصية غير معروفة', portraitLoading: 'نحمّل الشخصية الأساسية…', recordSyncing: 'السجل غير متوفر من المصدر', prizePool: 'مجموع الجوائز',
+    firstSeen: 'أول ظهور', lastSeen: 'آخر ظهور', formerly: 'كان اسمه', aliasMatch: 'تطابق اسم قديم', main: 'الأساسية', unknownLegend: 'الشخصية غير معروفة', portraitLoading: 'نحمّل الشخصية الأساسية…', recordSyncing: 'السجل غير متوفر من المصدر', prizePool: 'مجموع الجوائز', tournamentUpcoming: 'قادمة', tournamentLive: 'مباشرة الآن', tournamentCompleted: 'انتهت', tournamentAnnounced: 'معلنة',
     leaderboardPrefix: 'المتصدرين ·', leaderboardSearch: 'ابحث في الترتيب', leaderboardSearchPlaceholder: 'اكتب اسم اللاعب', leaderboardSearchTitle: 'نتيجة الترتيب', emptyData: 'ما فيه بيانات الحين.', allRegions: 'كل المناطق', loadMorePlayers: 'اعرض 50 لاعب إضافي', loadingMorePlayers: 'نحمّل الصفحة…', playersShown: 'لاعب معروض', pageTop: 'الأول', pagePrevious: 'السابق', pageNext: 'التالي', pageLabel: 'صفحة', loadingPage: 'نحمّل الصفحة…',
     clansTitle: 'أفضل الكلانات حسب الخبرة', clansText: 'تصفح كلانات براولهالا الأعلى في Lifetime XP وافتح صفحة مستقلة ومنظمة لكل كلان.', clanSearch: 'ابحث عن كلان', clanSearchPlaceholder: 'اسم الكلان أو رقم Guild ID', clanRank: 'ترتيب الخبرة', clanTier: 'المستوى', clanMembers: 'الأعضاء', clanPoints: 'نقاط الأسبوع', clanXp: 'Lifetime XP', clanRecruiting: 'يقبل أعضاء', clanClosed: 'مغلق', clanOpen: 'كلان مفتوح', clanDetails: 'صفحة الكلان', clanRoster: 'أعضاء الكلان', clanRole: 'الرتبة', clanJoined: 'تاريخ الانضمام', clanMemberXp: 'خبرة العضو', clanNoData: 'بيانات الكلانات غير متاحة الآن، جرّب التحديث بعد قليل.', clanLoading: 'نحمّل أفضل الكلانات حسب الخبرة…', clanUpdated: 'آخر تحديث', clanDiscoveryNote: 'الكلانات مرتبة حسب Lifetime XP.', clanView: 'افتح الكلان', clanBack: 'الرجوع للكلانات', clanRoleOrder: 'تسلسل الرتب', clanRecruit: 'Recruit', clanMember: 'Member', clanOfficer: 'Officer', clanLeader: 'Leader', clanProfileNote: 'الأعضاء مرتبون من Recruit إلى Leader.', playerClan: 'كلان اللاعب', viewClanProfile: 'افتح صفحة الكلان', noClan: 'بدون كلان',
     MiddleEast: 'الشرق الأوسط', Europe: 'أوروبا', USEast: 'شرق أمريكا', USWest: 'غرب أمريكا', SouthernAfrica: 'جنوب أفريقيا', SoutheastAsia: 'جنوب شرق آسيا', Brazil: 'البرازيل', Australia: 'أستراليا', Japan: 'اليابان',
@@ -68,7 +68,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRankedController: null, playerAliasController: null, playerLiveBusy: false, playerLiveBusyId: 0, playerRequestSequence: 0, playerRetryCount: 0, playerLastVerifiedAt: 0, playerLastRankedRefreshAt: 0, playerLastAliasRefreshAt: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, leaderboardRequestId: 0, leaderboardRetryCount: 0, leaderboardStaleRetryCount: 0, leaderboardRetryTimer: null, leaderboardWatchdogTimer: null, leaderboardFreshTimer: null, leaderboardAutoTimer: null, leaderboardFreshKey: '', leaderboardSignature: '', leaderboardActiveKey: '', leaderboardLastFetchAt: 0, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, queueHeartbeatTimer: null, queuePromise: null, queueRequestKey: '', queueRequestId: 0, queueSignature: '', queueLastSuccessfulFetchAt: 0, queueLastRequestedScanAt: 0, queueFailureCount: 0, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRankedController: null, playerAliasController: null, playerGuildController: null, playerLiveBusy: false, playerLiveBusyId: 0, playerRequestSequence: 0, playerRetryCount: 0, playerLastVerifiedAt: 0, playerLastRankedRefreshAt: 0, playerLastAliasRefreshAt: 0, playerLastGuildRefreshAt: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, leaderboardRequestId: 0, leaderboardRetryCount: 0, leaderboardStaleRetryCount: 0, leaderboardRetryTimer: null, leaderboardWatchdogTimer: null, leaderboardFreshTimer: null, leaderboardAutoTimer: null, leaderboardFreshKey: '', leaderboardSignature: '', leaderboardActiveKey: '', leaderboardLastFetchAt: 0, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, queueHeartbeatTimer: null, queuePromise: null, queueRequestKey: '', queueRequestId: 0, queueRequestStartedAt: 0, queueSignature: '', queueLastSuccessfulFetchAt: 0, queueLastRequestedScanAt: 0, queueFailureCount: 0, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
 
 
 const PEAKHALLA_THEME_KEY = 'peakhalla-theme';
@@ -485,7 +485,7 @@ function playerPayloadSignature(data = {}) {
   ]);
 }
 
-const PLAYER_BROWSER_CACHE_KEY = 'peakhalla-player-cache-v6';
+const PLAYER_BROWSER_CACHE_KEY = 'peakhalla-player-cache-v7';
 const PLAYER_BROWSER_CACHE_MAX_AGE_MS = 24 * 60 * 60_000;
 
 function profileCompletenessScore(data = {}) {
@@ -510,7 +510,7 @@ function profileCompletenessScore(data = {}) {
 
 function readPlayerBrowserCache(id) {
   try {
-    const rawCache = localStorage.getItem(PLAYER_BROWSER_CACHE_KEY) || localStorage.getItem('peakhalla-player-cache-v5') || '{}';
+    const rawCache = localStorage.getItem(PLAYER_BROWSER_CACHE_KEY) || localStorage.getItem('peakhalla-player-cache-v6') || localStorage.getItem('peakhalla-player-cache-v5') || '{}';
     const all = JSON.parse(rawCache);
     const entry = all[String(id)];
     const age = Date.now() - Number(entry?.saved_at || 0);
@@ -519,11 +519,25 @@ function readPlayerBrowserCache(id) {
       ? structuredClone(entry.data)
       : JSON.parse(JSON.stringify(entry.data));
     if (data?.player) {
-      data.player.guild = null;
       data.player.data_quality = { ...(data.player.data_quality || {}), browser_snapshot: true };
     }
     return data;
   } catch { return null; }
+}
+
+function readPlayerBootstrap(id) {
+  const node = document.getElementById('peakhalla-player-bootstrap');
+  if (!node || node.dataset.consumed === '1') return null;
+  try {
+    const data = JSON.parse(node.textContent || 'null');
+    if (!data?.player || Number(data.player.brawlhalla_id) !== Number(id)) return null;
+    node.dataset.consumed = '1';
+    writePlayerBrowserCache(id, data);
+    return data;
+  } catch {
+    node.dataset.consumed = '1';
+    return null;
+  }
 }
 
 function writePlayerBrowserCache(id, data) {
@@ -646,6 +660,7 @@ function setupPlayerPrefetch(container, selector, datasetKey) {
   for (const button of buttons) {
     button.dataset.prefetchBound = '1';
     button.addEventListener('pointerenter', () => warm(button), { once: true, passive: true });
+    button.addEventListener('pointerdown', () => warm(button), { once: true, passive: true });
     button.addEventListener('focus', () => warm(button), { once: true });
     button.addEventListener('touchstart', () => warm(button), { once: true, passive: true });
   }
@@ -1180,7 +1195,7 @@ function navigateToPlayer(id, seed = null) {
     if (data?.player) writePlayerNavigationSeed(data);
     location.href = `/player/${encodeURIComponent(playerId)}`;
   };
-  const fallbackTimer = window.setTimeout(() => go(), 260);
+  const fallbackTimer = window.setTimeout(() => go(preparedSeed), 780);
   prefetchPlayerProfile(playerId).then((data) => {
     if (navigated) return;
     window.clearTimeout(fallbackTimer);
@@ -1560,6 +1575,40 @@ async function refreshPlayerAliasesLive(id) {
   }
 }
 
+async function refreshPlayerGuildLive(id) {
+  const playerId = Number(id);
+  if (!Number.isSafeInteger(playerId) || playerId <= 0 || currentRenderedPlayerId() !== playerId) return null;
+  state.playerGuildController?.abort();
+  const controller = new AbortController();
+  state.playerGuildController = controller;
+  try {
+    const data = await getJson(`/api/player/${encodeURIComponent(playerId)}/guild-live?_=${Date.now()}`, {
+      signal: controller.signal,
+      timeoutMs: 9000,
+      retries: 0
+    });
+    if (controller.signal.aborted || currentRenderedPlayerId() !== playerId || !data?.verified) return null;
+    if (state.currentPlayer?.player) {
+      state.currentPlayer.player.guild = data.guild || null;
+      state.currentPlayer.player.data_quality = {
+        ...(state.currentPlayer.player.data_quality || {}),
+        official_guild_ok: true,
+        guild_roster_checked: Boolean(data.roster_checked),
+        guild_checked_at: data.updated_at || new Date().toISOString()
+      };
+      renderPlayerClan(data.guild || null);
+      writePlayerBrowserCache(playerId, state.currentPlayer);
+      state.playerSignature = playerPayloadSignature(state.currentPlayer);
+    }
+    state.playerLastGuildRefreshAt = Date.now();
+    return data.guild || null;
+  } catch (error) {
+    return null;
+  } finally {
+    if (state.playerGuildController === controller) state.playerGuildController = null;
+  }
+}
+
 function schedulePlayerLiveRefresh(id, delayMs = 700) {
   window.clearTimeout(state.playerAutoRefreshTimer);
   state.playerAutoRefreshTimer = window.setTimeout(() => {
@@ -1575,6 +1624,7 @@ function schedulePlayerLivePoll(id) {
     const activePlayerId = currentRenderedPlayerId() || Number(standalonePlayerId || 0);
     if (document.visibilityState !== 'visible' || activePlayerId !== Number(id)) return;
     await refreshPlayerRankedLive(id).catch(() => null);
+    if (Date.now() - Number(state.playerLastGuildRefreshAt || 0) > 3 * 60_000) refreshPlayerGuildLive(id).catch(() => null);
     if (Date.now() - Number(state.playerLastAliasRefreshAt || 0) > 10 * 60_000) refreshPlayerAliasesLive(id).catch(() => null);
     schedulePlayerLivePoll(id);
   }, 2 * 60_000);
@@ -1597,7 +1647,12 @@ async function loadPlayer(id, options = {}) {
       state.playerRetryCount = 0;
       window.clearTimeout(state.playerAutoRefreshTimer);
       window.clearTimeout(state.playerLivePollTimer);
-      const cached = readPlayerBrowserCache(playerId) || readPlayerNavigationSeed(playerId);
+      const candidates = [
+        readPlayerBootstrap(playerId),
+        readPlayerBrowserCache(playerId),
+        readPlayerNavigationSeed(playerId)
+      ].filter(Boolean);
+      const cached = candidates.sort((left, right) => profileCompletenessScore(right) - profileCompletenessScore(left))[0] || null;
       if (cached) {
         renderedSeedOnly = Boolean(cached.seed_only);
         renderPlayer(cached, options.shouldScroll !== false, { refreshSecondary: !renderedSeedOnly });
@@ -1649,9 +1704,13 @@ async function loadPlayer(id, options = {}) {
     history.replaceState(null, '', `/player/${encodeURIComponent(playerId)}`);
 
     if (!backgroundRefresh && !manualRefresh) {
-      window.setTimeout(() => refreshPlayerRankedLive(playerId).catch(() => null), 60);
-      window.setTimeout(() => refreshPlayerAliasesLive(playerId).catch(() => null), 650);
-      schedulePlayerLiveRefresh(playerId, Math.max(900, Number(data?.retry_after_ms || 900)));
+      // The complete saved profile is already visible. Only patch the fields
+      // that can change quickly; do not rebuild the whole page after opening.
+      window.setTimeout(() => refreshPlayerRankedLive(playerId).catch(() => null), 80);
+      window.setTimeout(() => refreshPlayerGuildLive(playerId).catch(() => null), 180);
+      window.setTimeout(() => refreshPlayerAliasesLive(playerId).catch(() => null), 500);
+      if (partial) schedulePlayerLiveRefresh(playerId, Math.max(2500, Number(data?.retry_after_ms || 2500)));
+      else schedulePlayerLivePoll(playerId);
     } else if (backgroundRefresh) {
       state.playerLastVerifiedAt = Date.now();
       if (partial && state.playerRetryCount < 2) {
@@ -1756,6 +1815,7 @@ function renderLeaderboardRows(rankings = [], options = {}) {
     });
   });
   setupPlayerPrefetch(els.leaderboard, '[data-leader-id]', 'leaderId');
+  warmVisiblePlayerProfiles(els.leaderboard, 10);
   activateImageFallbacks();
   enrichRenderedPortraits(els.leaderboard, '.leader-person[data-player-id]', '.row-portrait', 5);
   if (!append && options.animate !== false) {
@@ -2315,16 +2375,25 @@ function tournamentCard(event, index) {
   const date = event.date ? shortDate(event.date) : '';
   const category = event.category === 'community' ? t('communityTournaments') : t('officialTournaments');
   const prize = String(event.prize_pool || event.prize || '').trim();
+  const status = ['live', 'upcoming', 'completed', 'announced'].includes(String(event.status || '').toLowerCase())
+    ? String(event.status).toLowerCase()
+    : 'announced';
+  const statusLabel = {
+    live: t('tournamentLive'),
+    upcoming: t('tournamentUpcoming'),
+    completed: t('tournamentCompleted'),
+    announced: t('tournamentAnnounced')
+  }[status];
   const sourceHost = (() => { try { return new URL(event.source_url).hostname.replace(/^www\./, ''); } catch { return ''; } })();
   const linkStart = event.source_url ? `<a href="${escapeHtml(event.source_url)}" target="_blank" rel="noopener noreferrer" class="tournament-directory-card">` : '<article class="tournament-directory-card">';
   const linkEnd = event.source_url ? '</a>' : '</article>';
   const posterStyle = event.image_url ? ` style="--tournament-image:url('${escapeHtml(event.image_url)}')"` : '';
   const posterClass = event.image_url ? ' has-image' : '';
-  return `${linkStart}<div class="tournament-card-art${posterClass}" data-region="${escapeHtml(primaryRegion)}"${posterStyle}><span>BRAWLHALLA</span><strong>${escapeHtml((event.series || event.name || 'TOURNAMENT').replace(/\s+20\d{2}.*/i, '').slice(0, 28))}</strong><b>${escapeHtml(primaryMode)}</b><small>${escapeHtml(primaryRegion)}</small></div><div class="tournament-card-copy"><div class="tournament-card-badges"><b class="event-region">${escapeHtml(tournamentRegionName(primaryRegion))}</b>${modes.map((mode) => `<em class="tournament-mode-badge">${escapeHtml(mode)}</em>`).join('')}<em>${escapeHtml(category)}</em></div><h4>${escapeHtml(event.name || 'Brawlhalla Tournament')}</h4><p>${escapeHtml(event.note || event.description || '')}</p>${prize ? `<div class="tournament-prize"><span>${escapeHtml(t('prizePool'))}</span><strong>${escapeHtml(prize)}</strong></div>` : ''}<div class="tournament-card-meta">${date ? `<span>${escapeHtml(t('announced'))}: ${escapeHtml(date)}</span>` : ''}${sourceHost ? `<span>${escapeHtml(sourceHost)}</span>` : ''}</div></div><span class="tournament-card-arrow">↗</span>${linkEnd}`;
+  return `${linkStart}<div class="tournament-card-art${posterClass}" data-region="${escapeHtml(primaryRegion)}"${posterStyle}><span>BRAWLHALLA</span><strong>${escapeHtml((event.series || event.name || 'TOURNAMENT').replace(/\s+20\d{2}.*/i, '').slice(0, 28))}</strong><b>${escapeHtml(primaryMode)}</b><small>${escapeHtml(primaryRegion)}</small></div><div class="tournament-card-copy"><div class="tournament-card-badges"><b class="event-region">${escapeHtml(tournamentRegionName(primaryRegion))}</b><em class="tournament-status ${escapeHtml(status)}">${escapeHtml(statusLabel)}</em>${modes.map((mode) => `<em class="tournament-mode-badge">${escapeHtml(mode)}</em>`).join('')}<em>${escapeHtml(category)}</em></div><h4>${escapeHtml(event.name || 'Brawlhalla Tournament')}</h4><p>${escapeHtml(event.note || event.description || '')}</p>${prize ? `<div class="tournament-prize"><span>${escapeHtml(t('prizePool'))}</span><strong>${escapeHtml(prize)}</strong></div>` : ''}<div class="tournament-card-meta">${date ? `<span>${escapeHtml(status === 'completed' ? t('tournamentCompleted') : t('tournamentUpcoming'))}: ${escapeHtml(date)}</span>` : ''}${sourceHost ? `<span>${escapeHtml(sourceHost)}</span>` : ''}</div></div><span class="tournament-card-arrow">↗</span>${linkEnd}`;
 }
 
 function tournamentDirectoryCacheKey(type, region, mode) {
-  return `peakhalla-tournaments-v3:${type}:${region}:${mode}`;
+  return `peakhalla-tournaments-v4:${type}:${region}:${mode}`;
 }
 
 function readTournamentDirectoryCache(type, region, mode) {
@@ -2347,7 +2416,7 @@ function tournamentModeSection(mode, events = []) {
 }
 
 function tournamentDirectorySignature(data = {}) {
-  return JSON.stringify((data.events || []).map((event) => [event.id, event.name, event.date, event.prize_pool, event.image_url, event.source_url]));
+  return JSON.stringify((data.events || []).map((event) => [event.id, event.name, event.date, event.status, event.prize_pool, event.image_url, event.source_url]));
 }
 
 function renderTournamentDirectory(data = {}) {
@@ -2660,7 +2729,7 @@ function queueEntryCard(entry, index) {
 }
 
 function queueBrowserCacheKey(region = state.queueRegion, mode = state.queueMode) {
-  return `peakhalla-queue-v3:${region}:${mode}`;
+  return `peakhalla-queue-v4:${region}:${mode}`;
 }
 
 function readQueueBrowserCache(region = state.queueRegion, mode = state.queueMode) {
@@ -2704,7 +2773,7 @@ function scheduleQueuePoll(data = state.queueData) {
   state.queueTimer = window.setTimeout(() => {
     const refresh = queueScanIsDue(state.queueData) && Date.now() - state.queueLastRequestedScanAt > 10_000;
     if (refresh) state.queueLastRequestedScanAt = Date.now();
-    loadLiveQueue({ silent: true, refresh }).catch(() => null);
+    loadLiveQueue({ silent: true, refresh, wait: true }).catch(() => null);
   }, delay);
 }
 
@@ -2717,7 +2786,7 @@ function startQueueHeartbeat() {
     if (age < 4_500) return;
     const refresh = queueScanIsDue(state.queueData) && Date.now() - state.queueLastRequestedScanAt > 10_000;
     if (refresh) state.queueLastRequestedScanAt = Date.now();
-    loadLiveQueue({ silent: true, refresh }).catch(() => null);
+    loadLiveQueue({ silent: true, refresh, wait: true }).catch(() => null);
   };
   state.queueHeartbeatTimer = window.setInterval(tick, 4_000);
 }
@@ -2782,13 +2851,16 @@ async function loadLiveQueue(options = {}) {
   if (!isLiveQueuePage || !els.queueList) return null;
   const silent = Boolean(options.silent);
   const requestKey = `${state.queueRegion}:${state.queueMode}`;
-  if (state.queuePromise && state.queueRequestKey === requestKey) return state.queuePromise;
+  const activeRequestAge = Date.now() - Number(state.queueRequestStartedAt || 0);
+  const replaceStuckRequest = Boolean(options.refresh || options.wait) && activeRequestAge > 8_000;
+  if (state.queuePromise && state.queueRequestKey === requestKey && !replaceStuckRequest) return state.queuePromise;
   window.clearTimeout(state.queueTimer);
-  if (state.queuePromise && state.queueRequestKey !== requestKey) state.queueController?.abort();
+  if (state.queuePromise && (state.queueRequestKey !== requestKey || replaceStuckRequest)) state.queueController?.abort();
 
   const requestId = ++state.queueRequestId;
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), options.wait || options.refresh ? 30_000 : 12_000);
+  state.queueRequestStartedAt = Date.now();
+  const timeoutId = window.setTimeout(() => controller.abort(), options.wait || options.refresh ? 32_000 : 14_000);
   state.queueController = controller;
   state.queueRequestKey = requestKey;
   if (!silent && !state.queueData) {
@@ -2796,6 +2868,7 @@ async function loadLiveQueue(options = {}) {
   }
   const params = new URLSearchParams({ region: state.queueRegion, mode: state.queueMode, _: String(Date.now()) });
   if (options.refresh) params.set('refresh', '1');
+  if (options.wait || options.refresh) params.set('wait', '1');
 
   const promise = (async () => {
     try {
@@ -2819,6 +2892,7 @@ async function loadLiveQueue(options = {}) {
       if (requestId === state.queueRequestId) {
         state.queuePromise = null;
         state.queueRequestKey = '';
+        state.queueRequestStartedAt = 0;
       }
     }
   })();
@@ -2835,7 +2909,14 @@ function setLiveQueueMode(mode, options = {}) {
   params.set('mode', mode);
   params.set('region', state.queueRegion);
   history.replaceState(null, '', `/queue?${params}`);
-  if (!options.skipLoad) loadLiveQueue();
+  if (!options.skipLoad) {
+    state.queueController?.abort();
+    state.queueData = null;
+    state.queueSignature = '';
+    const cached = readQueueBrowserCache(state.queueRegion, state.queueMode);
+    if (cached) renderLiveQueue({ ...cached, status: cached.status || 'stale', __fromBrowserCache: true }, { schedule: false });
+    loadLiveQueue({ silent: Boolean(cached), refresh: true, wait: true }).catch(() => null);
+  }
 }
 
 function setupLiveQueuePage() {
@@ -3411,9 +3492,14 @@ els.queueRegion?.addEventListener('change', () => {
   params.set('mode', state.queueMode);
   params.set('region', state.queueRegion);
   history.replaceState(null, '', `/queue?${params}`);
-  loadLiveQueue();
+  state.queueController?.abort();
+  state.queueData = null;
+  state.queueSignature = '';
+  const cached = readQueueBrowserCache(state.queueRegion, state.queueMode);
+  if (cached) renderLiveQueue({ ...cached, status: cached.status || 'stale', __fromBrowserCache: true }, { schedule: false });
+  loadLiveQueue({ silent: Boolean(cached), refresh: true, wait: true }).catch(() => null);
 });
-els.queueRefresh?.addEventListener('click', () => loadLiveQueue({ refresh: true }));
+els.queueRefresh?.addEventListener('click', () => loadLiveQueue({ refresh: true, wait: true }));
 document.addEventListener('click', (event) => {
   if (els.rankedNav && !els.rankedNav.contains(event.target)) closeRankedMenu();
   if (els.queueNav && !els.queueNav.contains(event.target)) closeQueueMenu();
@@ -3587,7 +3673,7 @@ window.addEventListener('pageshow', (event) => {
   }
   if (isLiveQueuePage) {
     startQueueHeartbeat();
-    window.setTimeout(() => loadLiveQueue({ silent: true, refresh: queueScanIsDue(state.queueData) }).catch(() => null), 120);
+    window.setTimeout(() => loadLiveQueue({ silent: true, refresh: queueScanIsDue(state.queueData), wait: true }).catch(() => null), 120);
   }
   if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage && (event.persisted || !els.leaderboard?.querySelector('.leader-row'))) {
     window.setTimeout(() => loadLeaderboard({ page: state.leaderboardPage, silent: true }).catch(() => null), event.persisted ? 120 : 450);
@@ -3599,7 +3685,7 @@ window.addEventListener('focus', () => {
   startQueueHeartbeat();
   const refresh = queueScanIsDue(state.queueData);
   if (refresh) state.queueLastRequestedScanAt = Date.now();
-  loadLiveQueue({ silent: true, refresh }).catch(() => null);
+  loadLiveQueue({ silent: true, refresh, wait: true }).catch(() => null);
 });
 window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && els.clanModal && !els.clanModal.hidden) closeClanModal(); });
 window.addEventListener('visibilitychange', () => {

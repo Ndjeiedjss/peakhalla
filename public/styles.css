@@ -4284,3 +4284,31 @@ body.esports-page-mode .ph-ad-home { display: none !important; }
   .simple-page-cta { align-items: stretch; flex-direction: column; }
   .simple-page-cta a { text-align: center; }
 }
+
+/* PeakHalla v7.80 — tournament lifecycle badges */
+.tournament-card-badges .tournament-status {
+  font-weight: 900;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+}
+.tournament-card-badges .tournament-status.live {
+  color: #9ff0c5;
+  border-color: rgba(76, 220, 145, .34);
+  background: rgba(76, 220, 145, .10);
+  box-shadow: 0 0 16px rgba(76, 220, 145, .08);
+}
+.tournament-card-badges .tournament-status.upcoming {
+  color: var(--accent-pale);
+  border-color: rgba(var(--accent-rgb), .32);
+  background: rgba(var(--accent-rgb), .12);
+}
+.tournament-card-badges .tournament-status.completed {
+  color: var(--muted);
+  border-color: var(--line);
+  background: rgba(var(--panel-rgb), .42);
+}
+.tournament-card-badges .tournament-status.announced {
+  color: var(--text-secondary);
+  border-color: rgba(var(--accent-2-rgb), .18);
+  background: rgba(var(--accent-2-rgb), .06);
+}
