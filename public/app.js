@@ -29,7 +29,7 @@ const translations = {
     allModes: 'All', top8Only: 'Top 8', careerEvents: 'Events', careerTitles: 'Titles', careerPodiums: 'Podiums', careerTop8: 'Top 8', bestFinish: 'Best finish',
     noPlacements: 'No official tournament placements were found for this player yet.', careerSource: 'Tournament data source ↗', officialEventsOnly: 'Official events only',
     onlineEvent: 'Online', offlineEvent: 'LAN', playerCareerNotFound: 'No tournament profile was found for this player.', placementLabel: 'Placement',
-    twoVTwoPartners: 'Ranked 2v2 teammates', twoVTwoPartnersNote: 'Official current-season teams from the player teams endpoint.', teammateElo: 'Player ELO', teamElo: 'Team ELO', teamRank: 'Team rank', teamRecord: 'W / L', noTeammates: 'No current-season 2v2 teammate was found for this account.', loadingTeammates: 'Loading 2v2 teammates…', backToTracker: 'Back to tracker', queueLiveTracking: 'LIVE ACTIVITY TRACKING', queueEyebrowLive: 'RANKED ACTIVITY', queueTitleLive: 'Who is playing ranked right now?', queueIntroLive: 'Tracks the top 500 leaderboard entries and shows players whose ranked games changed during the last 10 minutes.', queueActiveNow: 'ACTIVE NOW', queueDisclaimerLive: "Activity means leaderboard stats changed recently. It cannot see Brawlhalla's private matchmaking screen.", queueWarming: 'Building the first leaderboard snapshot. Active players appear after the next scan.', queueNoActivity: 'No ranked activity was detected in the top 500 during the last 10 minutes.', queueTrackedTop: 'Top entries tracked', queueLastScan: 'Last scan', queueNextScan: 'Next scan', queueGameDetected: 'game detected', queueGamesDetected: 'games detected', queueEloChange: 'ELO change', queueWatching: 'Watching the leaderboard live', queueError: 'Could not refresh live activity right now.',
+    twoVTwoPartners: 'Ranked 2v2 teammates', twoVTwoPartnersNote: 'Official current-season teams from the player teams endpoint.', teammateElo: 'Player ELO', teamElo: 'Team ELO', teamRank: 'Team rank', teamRecord: 'W / L', noTeammates: 'No current-season 2v2 teammate was found for this account.', loadingTeammates: 'Loading 2v2 teammates…', backToTracker: 'Back to tracker', queueLiveTracking: 'LIVE ACTIVITY TRACKING', queueEyebrowLive: 'RANKED ACTIVITY', queueTitleLive: 'Who is playing ranked right now?', queueIntroLive: 'Tracks the top 500 leaderboard entries and shows players whose ranked totals changed during the last 2 minutes.', queueActiveNow: 'ACTIVE NOW', queueDisclaimerLive: "Active means a ranked result changed in the last 2 minutes. Brawlhalla does not expose private live-match presence.", queueWarming: 'Building the first leaderboard snapshot. Active players appear after the next scan.', queueNoActivity: 'No recent ranked activity was detected in the top 500 during the last 2 minutes.', queueTrackedTop: 'Top entries tracked', queueLastScan: 'Last scan', queueNextScan: 'Next scan', queueGameDetected: 'game detected', queueGamesDetected: 'games detected', queueEloChange: 'ELO change', queueWatching: 'Watching the leaderboard live', queueError: 'Could not refresh live activity right now.',
     arenaCommunity: 'COMMUNITY SCREENSHOTS', arenaEyebrow: 'COMMUNITY', arenaTitle: 'Arena Wall', arenaIntro: 'Share Brawlhalla screenshots, add a caption, and talk with other players through comments and replies.', arenaWhat: 'What is Arena Wall?', arenaWhatText: 'A community gallery for match screenshots, rank moments, funny clips captured as images, tournament results, and anything worth sharing from Brawlhalla. Create an account using only a username and password—no email or verification code.', arenaCreateAccount: 'Create account', arenaSignIn: 'Sign in', arenaNoEmail: 'NO EMAIL NEEDED', arenaJoinTitle: 'Join the wall', arenaJoinText: 'Choose a username and password. No email, verification code, or social login.', arenaUsername: 'Username', arenaPassword: 'Password', arenaPostingAs: 'Posting as', arenaLogout: 'Log out', arenaChooseScreenshot: 'Choose a screenshot', arenaImageLimit: 'PNG, JPG, or WebP · up to 5 MB', arenaCaption: 'Caption', arenaCaptionPlaceholder: 'What happened in this match?', arenaPublish: 'Publish screenshot', arenaLatest: 'LATEST DROPS', arenaFeed: 'Community feed', arenaLoading: 'Loading the wall…', arenaComments: 'Comments', arenaReply: 'Reply', arenaReplyingTo: 'Replying to', arenaCancelReply: 'Cancel', arenaWriteComment: 'Write a comment…', arenaSend: 'Send', arenaSignInToComment: 'Sign in to comment or reply.', arenaNoPosts: 'No screenshots yet. Be the first to post.', arenaChooseImageFirst: 'Choose a screenshot first.', arenaPosted: 'Screenshot published.', arenaAccountReady: 'Account created. Welcome to Arena Wall.', arenaSignedIn: 'Signed in.', arenaAuthError: 'Could not complete that request.', arenaPostError: 'Could not publish the screenshot.', friendlyProblem: 'Couldn’t reach Brawlhalla right now. Try again in a moment.'
   },
   ar: {
@@ -60,7 +60,7 @@ const translations = {
     allModes: 'الكل', top8Only: 'توب 8', careerEvents: 'بطولات', careerTitles: 'بطولات فاز فيها', careerPodiums: 'منصات', careerTop8: 'توب 8', bestFinish: 'أفضل مركز',
     noPlacements: 'ما لقينا نتائج بطولات رسمية لهذا اللاعب للحين.', careerSource: 'مصدر بيانات البطولات ↗', officialEventsOnly: 'بطولات رسمية فقط',
     onlineEvent: 'أونلاين', offlineEvent: 'حضوري', playerCareerNotFound: 'ما لقينا ملف بطولات لهذا اللاعب.', placementLabel: 'المركز',
-    twoVTwoPartners: 'شركاء رانك 2v2', twoVTwoPartnersNote: 'الفرق الرسمية للموسم الحالي من بيانات اللاعب.', teammateElo: 'إيلو اللاعب', teamElo: 'إيلو الفريق', teamRank: 'رتبة الفريق', teamRecord: 'فوز / خسارة', noTeammates: 'ما لقينا شريك 2v2 لهذا الحساب في الموسم الحالي.', loadingTeammates: 'نجيب شركاء 2v2…', backToTracker: 'ارجع للتراكر', queueLiveTracking: 'تتبّع النشاط المباشر', queueEyebrowLive: 'نشاط الرانك', queueTitleLive: 'مين قاعد يلعب رانك الحين؟', queueIntroLive: 'نتابع أعلى 500 نتيجة في الترتيب ونظهر اللاعبين اللي تغيّرت مبارياتهم خلال آخر 10 دقائق.', queueActiveNow: 'نشط الحين', queueDisclaimerLive: 'النشاط يعني أن بيانات الرانك تغيّرت مؤخرًا، وليس وصولًا إلى شاشة المطابقة الخاصة داخل اللعبة.', queueWarming: 'نبني أول لقطة للترتيب. اللاعبين النشطين يظهرون بعد الفحص الجاي.', queueNoActivity: 'ما رصدنا نشاط رانك ضمن أعلى 500 خلال آخر 10 دقائق.', queueTrackedTop: 'نتيجة نتابعها', queueLastScan: 'آخر فحص', queueNextScan: 'الفحص الجاي', queueGameDetected: 'مباراة مرصودة', queueGamesDetected: 'مباريات مرصودة', queueEloChange: 'تغيّر الإيلو', queueWatching: 'متابعة الترتيب مباشرة', queueError: 'ما قدرنا نحدّث النشاط المباشر الحين.',
+    twoVTwoPartners: 'شركاء رانك 2v2', twoVTwoPartnersNote: 'الفرق الرسمية للموسم الحالي من بيانات اللاعب.', teammateElo: 'إيلو اللاعب', teamElo: 'إيلو الفريق', teamRank: 'رتبة الفريق', teamRecord: 'فوز / خسارة', noTeammates: 'ما لقينا شريك 2v2 لهذا الحساب في الموسم الحالي.', loadingTeammates: 'نجيب شركاء 2v2…', backToTracker: 'ارجع للتراكر', queueLiveTracking: 'تتبّع النشاط المباشر', queueEyebrowLive: 'نشاط الرانك', queueTitleLive: 'مين قاعد يلعب رانك الحين؟', queueIntroLive: 'نتابع أعلى 500 نتيجة ونظهر فقط اللاعبين اللي تغيّرت نتائج رانكهم خلال آخر دقيقتين.', queueActiveNow: 'نشط الحين', queueDisclaimerLive: 'نشط يعني أن نتيجة رانك تغيّرت خلال آخر دقيقتين؛ اللعبة لا توفر حالة المباراة الخاصة مباشرة.', queueWarming: 'نبني أول لقطة للترتيب. اللاعبين النشطين يظهرون بعد الفحص الجاي.', queueNoActivity: 'ما رصدنا نشاط رانك حديث ضمن أعلى 500 خلال آخر دقيقتين.', queueTrackedTop: 'نتيجة نتابعها', queueLastScan: 'آخر فحص', queueNextScan: 'الفحص الجاي', queueGameDetected: 'مباراة مرصودة', queueGamesDetected: 'مباريات مرصودة', queueEloChange: 'تغيّر الإيلو', queueWatching: 'متابعة الترتيب مباشرة', queueError: 'ما قدرنا نحدّث النشاط المباشر الحين.',
     arenaCommunity: 'صور المجتمع', arenaEyebrow: 'المجتمع', arenaTitle: 'ساحة الصور', arenaIntro: 'شارك لقطات براولهالا، اكتب تعليقك، وتكلم مع اللاعبين من خلال التعليقات والردود.', arenaWhat: 'وش هي ساحة الصور؟', arenaWhatText: 'معرض مجتمعي للقطات المباريات، لحظات الرانك، النتائج واللقطات المضحكة. الحساب يحتاج يوزر وباسورد فقط، بدون إيميل أو رمز تحقق.', arenaCreateAccount: 'إنشاء حساب', arenaSignIn: 'تسجيل الدخول', arenaNoEmail: 'بدون إيميل', arenaJoinTitle: 'ادخل الساحة', arenaJoinText: 'اختر يوزر وباسورد فقط، بدون إيميل أو رمز تحقق أو تسجيل اجتماعي.', arenaUsername: 'اسم المستخدم', arenaPassword: 'كلمة المرور', arenaPostingAs: 'تنشر باسم', arenaLogout: 'تسجيل الخروج', arenaChooseScreenshot: 'اختر سكرين شوت', arenaImageLimit: 'PNG أو JPG أو WebP · حتى 5 ميجا', arenaCaption: 'وصف الصورة', arenaCaptionPlaceholder: 'وش صار في المباراة؟', arenaPublish: 'انشر الصورة', arenaLatest: 'أحدث الصور', arenaFeed: 'صور المجتمع', arenaLoading: 'نحمّل الساحة…', arenaComments: 'التعليقات', arenaReply: 'رد', arenaReplyingTo: 'ترد على', arenaCancelReply: 'إلغاء', arenaWriteComment: 'اكتب تعليق…', arenaSend: 'إرسال', arenaSignInToComment: 'سجل دخول عشان تعلق أو ترد.', arenaNoPosts: 'ما فيه صور للحين، كن أول واحد ينشر.', arenaChooseImageFirst: 'اختر صورة أول.', arenaPosted: 'تم نشر الصورة.', arenaAccountReady: 'تم إنشاء الحساب، حيّاك في الساحة.', arenaSignedIn: 'تم تسجيل الدخول.', arenaAuthError: 'ما قدرنا نكمل الطلب.', arenaPostError: 'ما قدرنا ننشر الصورة.', friendlyProblem: 'براولهالا ما ردت الحين، جرّب بعد شوي.'
   }
 };
@@ -68,7 +68,7 @@ const translations = {
 const copyrightYear = document.querySelector('#copyright-year');
 if (copyrightYear) copyrightYear.textContent = String(new Date().getFullYear());
 
-const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRankedController: null, playerAliasController: null, playerLiveBusy: false, playerLiveBusyId: 0, playerRequestSequence: 0, playerRetryCount: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, leaderboardRequestId: 0, leaderboardRetryCount: 0, leaderboardStaleRetryCount: 0, leaderboardRetryTimer: null, leaderboardWatchdogTimer: null, leaderboardFreshTimer: null, leaderboardAutoTimer: null, leaderboardFreshKey: '', leaderboardSignature: '', leaderboardActiveKey: '', leaderboardLastFetchAt: 0, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, queuePromise: null, queueRequestKey: '', queueRequestId: 0, arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
+const state = { language: localStorage.getItem('nad-bh-language') || 'en', currentPlayer: null, playerSignature: '', playerAutoRefreshTimer: null, playerLivePollTimer: null, playerRefreshController: null, playerRankedController: null, playerAliasController: null, playerLiveBusy: false, playerLiveBusyId: 0, playerRequestSequence: 0, playerRetryCount: 0, playerPrefetches: new Map(), playerSeeds: new Map(), esportsData: null, esportsCareer: null, esportsView: 'power', powerPage: 1, powerHasMore: false, powerLoadingMore: false, powerSearchTimer: null, esportsMenuPinned: false, esportsMenuTimer: null, tournamentType: 'official', tournamentMode: 'ALL', tournamentData: null, tournamentRefreshTimer: null, careerFilter: 'all', suggestionItems: [], suggestionIndex: -1, suggestionTimer: null, suggestionController: null, suggestionRequestId: 0, leaderboardSearchTimer: null, leaderboardSearchController: null, leaderboardPage: 1, leaderboardTotalPages: 1, leaderboardLoadingMore: false, leaderboardRequestId: 0, leaderboardRetryCount: 0, leaderboardStaleRetryCount: 0, leaderboardRetryTimer: null, leaderboardWatchdogTimer: null, leaderboardFreshTimer: null, leaderboardAutoTimer: null, leaderboardFreshKey: '', leaderboardSignature: '', leaderboardActiveKey: '', leaderboardLastFetchAt: 0, queueMode: '1v1', queueRegion: 'EU', queueData: null, queueController: null, queueTimer: null, queuePromise: null, queueRequestKey: '', queueRequestId: 0, queueSignature: '', arenaUser: null, arenaPosts: [], arenaAuthMode: 'register', arenaImageData: null, arenaReplyTarget: null, clansData: null, clansSearchTimer: null, clansController: null, clansObserver: null, clansLoadStarted: false, selectedClan: null };
 
 
 const PEAKHALLA_THEME_KEY = 'peakhalla-theme';
@@ -2459,8 +2459,16 @@ function chooseQueueMode(mode) {
   navigateToQueue(mode, state.queueRegion || 'EU');
 }
 
+function queueTimestampMs(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  const numeric = Number(value);
+  if (Number.isFinite(numeric) && numeric > 0) return numeric;
+  const parsed = Date.parse(String(value || ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 function queueRelativeTime(timestamp) {
-  const seconds = Math.max(0, Math.floor((Date.now() - Number(timestamp || 0)) / 1000));
+  const seconds = Math.max(0, Math.floor((Date.now() - queueTimestampMs(timestamp)) / 1000));
   if (seconds < 15) return state.language === 'ar' ? 'الآن' : 'just now';
   if (seconds < 60) return state.language === 'ar' ? `قبل ${seconds} ثانية` : `${seconds}s ago`;
   const minutes = Math.floor(seconds / 60);
@@ -2469,12 +2477,12 @@ function queueRelativeTime(timestamp) {
 
 function queueScanTime(timestamp) {
   if (!timestamp) return '—';
-  return new Date(timestamp).toLocaleTimeString(state.language === 'ar' ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+  return new Date(queueTimestampMs(timestamp)).toLocaleTimeString(state.language === 'ar' ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' });
 }
 
 function queueNextTime(timestamp) {
   if (!timestamp) return '—';
-  const seconds = Math.max(0, Math.ceil((Number(timestamp) - Date.now()) / 1000));
+  const seconds = Math.max(0, Math.ceil((queueTimestampMs(timestamp) - Date.now()) / 1000));
   if (seconds <= 1) return state.language === 'ar' ? 'الآن' : 'now';
   if (seconds < 60) return state.language === 'ar' ? `خلال ${seconds} ث` : `in ${seconds}s`;
   const minutes = Math.ceil(seconds / 60);
@@ -2519,14 +2527,19 @@ function queueEntryCard(entry, index) {
 }
 
 function queueBrowserCacheKey(region = state.queueRegion, mode = state.queueMode) {
-  return `peakhalla-queue:${region}:${mode}`;
+  return `peakhalla-queue-v2:${region}:${mode}`;
 }
 
 function readQueueBrowserCache(region = state.queueRegion, mode = state.queueMode) {
   try {
     const cached = JSON.parse(localStorage.getItem(queueBrowserCacheKey(region, mode)) || 'null');
-    if (!cached?.data || Date.now() - Number(cached.savedAt || 0) > 15 * 60_000) return null;
-    return cached.data;
+    if (!cached?.data || Date.now() - Number(cached.savedAt || 0) > 2 * 60_000) return null;
+    const windowMs = Number(cached.data.activity_window_ms || 2 * 60_000);
+    const players = (cached.data.players || []).filter((entry) => {
+      const age = Date.now() - queueTimestampMs(entry.last_activity_at);
+      return age >= -30_000 && age <= windowMs;
+    });
+    return { ...cached.data, players, active_count: players.length };
   } catch {
     return null;
   }
@@ -2542,7 +2555,9 @@ function scheduleQueuePoll(data = state.queueData) {
   window.clearTimeout(state.queueTimer);
   if (!isLiveQueuePage) return;
   const fast = !data || data.scan_in_progress || data.status === 'warming' || data.status === 'scanning';
-  const delay = document.hidden ? 30_000 : (fast ? 2_500 : 9_000);
+  const untilNextScan = data?.next_scan_at ? queueTimestampMs(data.next_scan_at) - Date.now() + 900 : 0;
+  const liveDelay = untilNextScan > 0 ? Math.max(2_500, Math.min(12_000, untilNextScan)) : (fast ? 2_500 : 8_000);
+  const delay = document.hidden ? 30_000 : liveDelay;
   state.queueTimer = window.setTimeout(() => loadLiveQueue({ silent: true }), delay);
 }
 
@@ -2570,11 +2585,21 @@ function renderLiveQueue(data, options = {}) {
       els.queueStatus.innerHTML = `<i></i><span>${escapeHtml(t('queueWatching'))} · ${escapeHtml(regionLabel(data.region))} · ${escapeHtml(data.mode)}</span>`;
     }
   }
-  const players = [...(data.players || [])].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0) || Number(a.rank || Infinity) - Number(b.rank || Infinity));
+  const activityWindowMs = Number(data.activity_window_ms || Math.max(60_000, Number(data.activity_window_minutes || 2) * 60_000));
+  const players = [...(data.players || [])]
+    .filter((entry) => {
+      const age = Date.now() - queueTimestampMs(entry.last_activity_at);
+      return age >= -30_000 && age <= activityWindowMs;
+    })
+    .sort((a, b) => queueTimestampMs(b.last_activity_at) - queueTimestampMs(a.last_activity_at) || Number(b.rating || 0) - Number(a.rating || 0) || Number(a.rank || Infinity) - Number(b.rank || Infinity));
+  data = { ...data, players, active_count: players.length };
+  state.queueData = data;
+  if (els.queueActiveCount) els.queueActiveCount.textContent = number(players.length, '0');
+  const queueSignature = players.map((entry) => `${entry.key || (entry.players || []).map((player) => player.id || player.username).join('-')}:${queueTimestampMs(entry.last_activity_at)}:${entry.rating}:${entry.delta_games}`).join('|');
   if (!players.length) {
     const firstBaseline = data.last_scan_at && Number(data.tracked_count || 0) > 0;
     els.queueList.innerHTML = `<div class="queue-live-empty"><span>${firstBaseline ? '⌁' : '…'}</span><strong>${escapeHtml(firstBaseline ? t('queueNoActivity') : t('queueWarming'))}</strong><small>${escapeHtml(t('queueDisclaimerLive'))}</small></div>`;
-  } else {
+  } else if (queueSignature !== state.queueSignature || !els.queueList.querySelector('.queue-live-card')) {
     els.queueList.innerHTML = players.map(queueEntryCard).join('');
     els.queueList.querySelectorAll('[data-queue-player-id]').forEach((button) => button.addEventListener('click', () => {
       const id = button.dataset.queuePlayerId;
@@ -2582,7 +2607,12 @@ function renderLiveQueue(data, options = {}) {
     }));
     activateImageFallbacks();
     enrichRenderedPortraits(els.queueList, '.queue-live-player[data-player-id]', '.queue-live-portrait', 6);
+  } else {
+    els.queueList.querySelectorAll('.queue-card-time span').forEach((node, index) => {
+      if (players[index]) node.textContent = queueRelativeTime(players[index].last_activity_at);
+    });
   }
+  state.queueSignature = queueSignature;
   if (!data.__fromBrowserCache) writeQueueBrowserCache(data);
   if (options.schedule !== false) scheduleQueuePoll(data);
 }
@@ -3398,7 +3428,7 @@ window.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
   resetBrowserNavigationState();
   activateImageFallbacks();
-  if (isLiveQueuePage) loadLiveQueue({ silent: true }).catch(() => null);
+  if (isLiveQueuePage) loadLiveQueue({ silent: true, refresh: true }).catch(() => null);
   if (!isLiveQueuePage && !isClanPage && !isArenaPage && !isEsportsPage && !isStandalonePlayerPage) {
     if (!state.leaderboardLastFetchAt || Date.now() - state.leaderboardLastFetchAt > 5 * 60_000) loadLeaderboard({ page: state.leaderboardPage, silent: true }).catch(() => null);
     enrichRenderedPortraits(els.leaderboard, '.leader-person[data-player-id]', '.row-portrait', 4);
