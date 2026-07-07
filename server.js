@@ -4047,12 +4047,37 @@ async function wallRequireUser(req, res) {
 const QUEUE_REGIONS = ['US-E', 'EU', 'SEA', 'BRZ', 'AUS', 'US-W', 'JPN', 'SA', 'ME'];
 const QUEUE_MODES = ['1v1', '2v2', '3v3'];
 const QUEUE_TOP_LIMIT = 500;
-const QUEUE_ACTIVITY_WINDOW_MS = 10 * 60_000;
-const QUEUE_SCAN_INTERVAL_MS = 60_000;
-const QUEUE_TRACKER_IDLE_MS = 30 * 60_000;
+// The public API exposes ranked totals, not private live matchmaking presence.
+// Keep the detection window intentionally short so 'active' never means hours-old activity.
+const QUEUE_ACTIVITY_SCHEMA_VERSION = 2;
+const QUEUE_ACTIVITY_WINDOW_MS = Math.max(90_000, Math.min(5 * 60_000, Number(process.env.QUEUE_ACTIVITY_WINDOW_MS || 2 * 60_000)));
+const QUEUE_SCAN_INTERVAL_MS = Math.max(30_000, Math.min(2 * 60_000, Number(process.env.QUEUE_SCAN_INTERVAL_MS || 45_000)));
+const QUEUE_TRACKER_IDLE_MS = Math.max(2 * 60_000, Math.min(15 * 60_000, Number(process.env.QUEUE_TRACKER_IDLE_MS || 5 * 60_000)));
 
 function queueComboKey(region, mode) {
   return `${region}:${mode}`;
+}
+
+function queueTimestampMs(value) {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  const numeric = Number(value);
+  if (Number.isFinite(numeric) && numeric > 0) return numeric;
+  const parsed = Date.parse(String(value || ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function pruneQueueActivity(activity, now = Date.now()) {
+  if (!(activity instanceof Map)) return activity;
+  for (const [key, entry] of activity) {
+    const lastActivityAt = queueTimestampMs(entry?.last_activity_at || entry?.detected_at);
+    const age = now - lastActivityAt;
+    if (!lastActivityAt || age < -30_000 || age > QUEUE_ACTIVITY_WINDOW_MS) {
+      activity.delete(key);
+      continue;
+    }
+    if (entry.last_activity_at !== lastActivityAt) activity.set(key, { ...entry, last_activity_at: lastActivityAt });
+  }
+  return activity;
 }
 
 function queueEntryKey(ranking = {}) {
@@ -4123,15 +4148,22 @@ async function loadPersistedQueueTracker(region, mode) {
     const data = await readJson(QUEUE_ACTIVITY_FILE, {});
     stored = data[key] || {};
   }
+  const snapshot = new Map((stored.snapshot || []).map((entry) => [entry.key, entry]));
+  const activity = Number(stored.schema_version || 0) === QUEUE_ACTIVITY_SCHEMA_VERSION
+    ? new Map((stored.activity || []).map((entry) => [entry.key, entry]))
+    : new Map();
+  pruneQueueActivity(activity);
   return {
-    snapshot: new Map((stored.snapshot || []).map((entry) => [entry.key, entry])),
-    activity: new Map((stored.activity || []).map((entry) => [entry.key, entry])),
-    last_scan_at: stored.last_scan_at || null
+    snapshot,
+    activity,
+    last_scan_at: queueTimestampMs(stored.last_scan_at) || null
   };
 }
 
 async function persistQueueTracker(tracker) {
+  pruneQueueActivity(tracker.activity);
   const payload = {
+    schema_version: QUEUE_ACTIVITY_SCHEMA_VERSION,
     snapshot: [...tracker.snapshot.values()],
     activity: [...tracker.activity.values()],
     last_scan_at: tracker.last_scan_at
@@ -4151,7 +4183,11 @@ function queueHasRankedActivity(previous, current) {
   const gamesDelta = Number(current.games || 0) - Number(previous.games || 0);
   const winsDelta = Number(current.wins || 0) - Number(previous.wins || 0);
   const lossesDelta = Number(current.losses || 0) - Number(previous.losses || 0);
-  return gamesDelta > 0 || winsDelta > 0 || lossesDelta > 0;
+  // A real player cannot finish dozens of ranked games between two short scans.
+  // Reject season resets, upstream glitches, and stale snapshot jumps.
+  if (gamesDelta < 0 || winsDelta < 0 || lossesDelta < 0) return false;
+  if (gamesDelta > 12 || winsDelta > 12 || lossesDelta > 12) return false;
+  return gamesDelta > 0 && (winsDelta > 0 || lossesDelta > 0);
 }
 
 function queueActivityRecord(previous, current, now) {
@@ -4159,6 +4195,7 @@ function queueActivityRecord(previous, current, now) {
     ...current,
     detected_at: now,
     last_activity_at: now,
+    expires_at: now + QUEUE_ACTIVITY_WINDOW_MS,
     delta_games: Math.max(0, Number(current.games || 0) - Number(previous.games || 0)),
     delta_wins: Math.max(0, Number(current.wins || 0) - Number(previous.wins || 0)),
     delta_losses: Math.max(0, Number(current.losses || 0) - Number(previous.losses || 0)),
@@ -4174,6 +4211,7 @@ async function scanQueueTracker(tracker) {
     const now = Date.now();
     try {
       const hadBaseline = tracker.snapshot.size > 0;
+      pruneQueueActivity(tracker.activity, now);
       const currentEntries = await fetchQueueLeaderboard(tracker.region, tracker.mode);
       const currentSnapshot = new Map(currentEntries.map((entry) => [entry.key, entry]));
       for (const current of currentEntries) {
@@ -4184,11 +4222,7 @@ async function scanQueueTracker(tracker) {
           tracker.activity.set(current.key, { ...tracker.activity.get(current.key), ...current });
         }
       }
-      for (const [key, activity] of tracker.activity) {
-        if ((now - Number(activity.last_activity_at || 0)) > QUEUE_ACTIVITY_WINDOW_MS) {
-          tracker.activity.delete(key);
-        }
-      }
+      pruneQueueActivity(tracker.activity, now);
       tracker.snapshot = currentSnapshot;
       tracker.last_scan_at = now;
       tracker.refresh_delay_ms = hadBaseline ? QUEUE_SCAN_INTERVAL_MS : 15_000;
@@ -4234,6 +4268,7 @@ async function ensureQueueTracker(region, mode) {
       scanPromise: null,
       refresh_delay_ms: QUEUE_SCAN_INTERVAL_MS
     };
+    pruneQueueActivity(tracker.activity);
     queueTrackers.set(key, tracker);
   }
   tracker.last_requested_at = Date.now();
@@ -4811,11 +4846,9 @@ app.get('/api/queue/activity', async (req, res, next) => {
     const tracker = await ensureQueueTracker(region, mode);
     if (String(req.query.refresh || '') === '1' && !tracker.scanPromise) scanQueueTracker(tracker).catch(() => null);
     const now = Date.now();
-    for (const [key, activity] of tracker.activity) {
-      if ((now - Number(activity.last_activity_at || 0)) > QUEUE_ACTIVITY_WINDOW_MS) tracker.activity.delete(key);
-    }
+    pruneQueueActivity(tracker.activity, now);
     const rawPlayers = [...tracker.activity.values()]
-      .sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0) || Number(a.rank || Infinity) - Number(b.rank || Infinity) || Number(b.last_activity_at || 0) - Number(a.last_activity_at || 0))
+      .sort((a, b) => queueTimestampMs(b.last_activity_at) - queueTimestampMs(a.last_activity_at) || Number(b.rating || 0) - Number(a.rating || 0) || Number(a.rank || Infinity) - Number(b.rank || Infinity))
       .slice(0, 100);
     const players = await hydrateQueueActivity(rawPlayers);
     res.setHeader('Cache-Control', 'no-store');
@@ -4826,6 +4859,9 @@ app.get('/api/queue/activity', async (req, res, next) => {
       error: tracker.error,
       top_limit: QUEUE_TOP_LIMIT,
       activity_window_minutes: QUEUE_ACTIVITY_WINDOW_MS / 60_000,
+      activity_window_ms: QUEUE_ACTIVITY_WINDOW_MS,
+      scan_interval_seconds: Math.round(QUEUE_SCAN_INTERVAL_MS / 1000),
+      detection_method: 'recent-ranked-stat-change',
       tracked_count: tracker.snapshot.size,
       active_count: players.length,
       last_scan_at: tracker.last_scan_at,
