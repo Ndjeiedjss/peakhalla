@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <!-- Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-9FCQP3J4XH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-9FCQP3J4XH');
+  </script>
+  <!-- Google AdSense site verification -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7303521190072465" crossorigin="anonymous"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="PeakHalla is a free Brawlhalla tracker for live player stats, current and peak ELO, ranked leaderboards, legend levels, clans, old names, 2v2 teams, and esports rankings.">
+  <meta name="author" content="PeakHalla">
+  <meta name="application-name" content="PeakHalla">
+  <meta name="theme-color" content="#0c0714">
+  <script>
+    (() => {
+      const key = 'peakhalla-theme';
+      const themes = new Set(['purple', 'crimson', 'graphite', 'ice']);
+      let selected = '';
+      try { selected = localStorage.getItem(key) || ''; } catch (_) {}
+      if (!themes.has(selected)) {
+        const prefix = `${key}=`;
+        const cookie = document.cookie.split(';').map((part) => part.trim()).find((part) => part.startsWith(prefix));
+        if (cookie) {
+          try { selected = decodeURIComponent(cookie.slice(prefix.length)); } catch (_) { selected = cookie.slice(prefix.length); }
+        }
+      }
+      if (!themes.has(selected)) selected = 'purple';
+      document.documentElement.dataset.theme = selected;
+      document.documentElement.style.colorScheme = 'dark';
+      const meta = document.querySelector('meta[name="theme-color"]');
+      const colors = { purple: '#0c0714', crimson: '#100609', graphite: '#0b0d10', ice: '#061017' };
+      if (meta) meta.content = colors[selected];
+    })();
+  </script>
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <link rel="canonical" href="https://peakhalla.com/">
+  <link rel="icon" href="/peakhalla-mark.svg" type="image/svg+xml">
+  <link rel="sitemap" type="application/xml" title="Sitemap" href="/sitemap.xml">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="PeakHalla">
+  <meta property="og:title" content="Brawlhalla Tracker — Player Stats, ELO & Rankings | PeakHalla">
+  <meta property="og:description" content="Free Brawlhalla tracker with live player stats, current and peak ELO, ranked leaderboards, legend levels, clans, old-name search, 2v2 teams, and esports rankings.">
+  <meta property="og:url" content="https://peakhalla.com/">
+  <meta property="og:image" content="https://peakhalla.com/peakhalla-mark.svg">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="ar_SA">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Brawlhalla Tracker — Player Stats, ELO & Rankings | PeakHalla">
+  <meta name="twitter:description" content="Track Brawlhalla players with live stats, current and peak ELO, ranked leaderboards, legends, clans, old names, 2v2 teams, and esports rankings.">
+  <meta name="twitter:image" content="https://peakhalla.com/peakhalla-mark.svg">
+
+  <title>Brawlhalla Tracker – Player Stats, ELO, Rankings & Clans | PeakHalla</title>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://peakhalla.com/#website",
+        "url": "https://peakhalla.com/",
+        "name": "PeakHalla",
+        "alternateName": "Brawlhalla Tracker by PeakHalla",
+        "description": "Free Brawlhalla tracker for live player stats, current and peak ELO, ranked leaderboards, legend levels, clans, old names, 2v2 teams, and esports rankings.",
+        "inLanguage": ["en", "ar"],
+        "publisher": { "@id": "https://peakhalla.com/#organization" }
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "https://peakhalla.com/#app",
+        "name": "PeakHalla Brawlhalla Tracker",
+        "url": "https://peakhalla.com/",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript",
+        "description": "Track Brawlhalla player stats, ELO, rankings, legends, clans, aliases, 2v2 teams, and esports results.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "publisher": { "@id": "https://peakhalla.com/#organization" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://peakhalla.com/#organization",
+        "name": "PeakHalla",
+        "url": "https://peakhalla.com/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://peakhalla.com/peakhalla-mark.svg"
+        },
+        "sameAs": [
+          "https://discord.gg/tCcSDAHKuf",
+          "https://www.tiktok.com/@nadbh",
+          "https://paypal.me/Nadherr"
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "@id": "https://peakhalla.com/#faq",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How do I track a Brawlhalla player?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Search PeakHalla by current player name, previous name, or Brawlhalla ID to open live player stats and ranked information."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does PeakHalla show current and peak ELO?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. PeakHalla shows current ELO, season peak ELO, ranked tier, regional rank, wins, losses, and ranked legend performance when available."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I search a Brawlhalla player by an old name?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. PeakHalla can search current names, known previous names, and Brawlhalla IDs."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I view Brawlhalla clans and 2v2 teammates?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. PeakHalla includes clan profiles and rosters, lifetime clan XP, and current-season ranked 2v2 teammates when official data is available."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="preload" href="/styles.css?v=7.84.0" as="style">
+  <link rel="stylesheet" href="/styles.css?v=7.84.0">
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="#home" aria-label="PeakHalla home">
+        <span class="brand-mark-wrap" aria-hidden="true">
+          <svg class="brand-logo" aria-hidden="true" focusable="false" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="panel" x1="10" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="var(--logo-panel-start)"/>
+      <stop offset="1" stop-color="var(--logo-panel-end)"/>
+    </linearGradient>
+    <linearGradient id="stroke" x1="14" y1="10" x2="50" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="var(--logo-pale)"/>
+      <stop offset="0.52" stop-color="var(--logo-accent-2)"/>
+      <stop offset="1" stop-color="var(--accent-3)"/>
+    </linearGradient>
+    <linearGradient id="pFill" x1="22" y1="18" x2="42" y2="46" gradientUnits="userSpaceOnUse">
+      <stop stop-color="var(--logo-white)"/>
+      <stop offset="0.58" stop-color="var(--logo-pale)"/>
+      <stop offset="1" stop-color="var(--accent-soft)"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="34" y1="18" x2="48" y2="33" gradientUnits="userSpaceOnUse">
+      <stop stop-color="var(--accent-pale)"/>
+      <stop offset="1" stop-color="var(--accent)"/>
+    </linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#05030A" flood-opacity="0.34"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <rect x="8.5" y="8.5" width="47" height="47" rx="16" fill="url(#panel)"/>
+    <rect x="8.5" y="8.5" width="47" height="47" rx="16" stroke="url(#stroke)" stroke-width="1.5"/>
+    <path d="M24 18.5V45.5" stroke="url(#pFill)" stroke-width="5.6" stroke-linecap="round"/>
+    <path d="M24 19.5H35.2C40.95 19.5 45 23.06 45 28.15C45 33.24 40.95 36.8 35.2 36.8H24" stroke="url(#pFill)" stroke-width="5.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M37.6 19.6C43.2 19.6 47 23.16 47 28.03C47 31.24 45.46 34.02 42.74 35.67" stroke="url(#accent)" stroke-width="2.8" stroke-linecap="round"/>
+    <circle cx="43.8" cy="20.3" r="2.35" fill="var(--accent-pale)"/>
+    <path d="M18 48H45.5" stroke="var(--logo-base-line)" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+  </g>
+</svg>
+          <i class="brand-sheen"></i>
+        </span>
+        <span class="brand-wordmark"><strong>Peak<span>Halla</span></strong><small>BRAWLHALLA TRACKER</small></span>
+      </a>
+      <nav>
+        <div class="nav-dropdown" id="ranked-nav-dropdown">
+          <button class="nav-dropdown-toggle" id="ranked-nav-toggle" type="button" aria-expanded="false" aria-haspopup="true">
+            <span data-i18n="navLeaderboard">Ranked</span><em id="ranked-mode-label">1v1</em><b>⌄</b>
+          </button>
+          <div class="nav-dropdown-menu" id="ranked-nav-menu" aria-hidden="true">
+            <button type="button" data-ranked-mode="1v1"><strong>Ranked 1v1</strong><small data-i18n="rankedSolo">Solo ranked search</small></button>
+            <button type="button" data-ranked-mode="2v2"><strong>Ranked 2v2</strong><small data-i18n="rankedDoubles">Team ranked search</small></button>
+            <button type="button" data-ranked-mode="3v3"><strong>Ranked 3v3</strong><small data-i18n="rankedThrees">3-player team search</small></button>
+          </div>
+        </div>
+        <div class="nav-dropdown queue-nav-dropdown" id="queue-nav-dropdown">
+          <button class="nav-dropdown-toggle" id="queue-nav-toggle" type="button" aria-expanded="false" aria-haspopup="true">
+            <span data-i18n="navQueue">Queue</span><em id="queue-mode-label">1v1</em><b>⌄</b>
+          </button>
+          <div class="nav-dropdown-menu" id="queue-nav-menu" aria-hidden="true">
+            <button type="button" data-queue-mode="1v1"><strong>Queue 1v1</strong><small data-i18n="queueSoloLive">Solo ranked activity</small></button>
+            <button type="button" data-queue-mode="2v2"><strong>Queue 2v2</strong><small data-i18n="queueDoublesLive">Team ranked activity</small></button>
+            <button type="button" data-queue-mode="3v3"><strong>Queue 3v3</strong><small data-i18n="queueThreesLive">3-player ranked activity</small></button>
+          </div>
+        </div>
+        <a href="/arena" id="arena-nav-link" data-i18n="navArena">Arena Wall</a>
+        <a href="/clans" data-i18n="navClans">Clans</a>
+        <div class="nav-dropdown esports-nav-dropdown" id="esports-nav-dropdown">
+          <button class="nav-dropdown-toggle" id="esports-nav-toggle" type="button" aria-expanded="false" aria-haspopup="true">
+            <span data-i18n="navEsports">Esports</span><b>⌄</b>
+          </button>
+          <div class="nav-dropdown-menu esports-nav-menu" id="esports-nav-menu" aria-hidden="true">
+            <button type="button" data-esports-view="power"><strong data-i18n="powerRanking">Power rankings</strong><small data-i18n="powerRankingNavNote">Official regional player rankings</small></button>
+            <button type="button" data-esports-view="tournaments"><strong data-i18n="tournamentsNav">Tournaments</strong><small data-i18n="tournamentsNavNote">Official and community events</small></button>
+          </div>
+        </div>
+        <div class="nav-dropdown others-nav-dropdown" id="others-nav-dropdown">
+          <button class="nav-dropdown-toggle" id="others-nav-toggle" type="button" aria-expanded="false" aria-haspopup="true"><span>Others</span><b>⌄</b></button>
+          <div class="nav-dropdown-menu others-nav-menu" id="others-nav-menu" aria-hidden="true">
+            <a href="/patch-notes"><strong>Updates &amp; patches</strong><small>Official Brawlhalla patch notes</small></a>
+            <a href="/maps"><strong>Maps</strong><small>Community map mods from GameBanana</small></a>
+            <a href="/guides"><strong>Guides</strong><small>ELO, ranks, IDs and tournaments</small></a>
+            <a href="/brawlhalla-tracker"><strong>Tracker guide</strong><small>Everything PeakHalla tracks</small></a>
+          </div>
+        </div>
+        <a href="/#about" data-i18n="navAbout">About</a>
+      </nav>
+      <div class="header-actions">
+        <div id="arena-global-account" class="arena-global-account" hidden>
+          <a id="arena-global-login" class="arena-global-login" href="/arena" aria-label="Sign in to Arena Wall" hidden>
+            <span aria-hidden="true">◎</span><b>ARENA</b>
+          </a>
+          <div id="arena-global-user" class="arena-global-user" hidden>
+            <button id="arena-notification-button" class="arena-notification-button" type="button" aria-expanded="false" aria-label="Arena notifications">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+              <span id="arena-notification-count" hidden>0</span>
+            </button>
+            <a id="arena-global-profile" class="arena-global-profile" href="/arena">
+              <span id="arena-global-avatar" class="arena-global-avatar"><span>P</span></span>
+              <strong id="arena-global-username">Player</strong>
+            </a>
+            <div id="arena-notification-panel" class="arena-notification-panel" hidden>
+              <header><div><span>ARENA WALL</span><strong>Notifications</strong></div><button id="arena-notification-read-all" type="button">Mark all read</button></header>
+              <div id="arena-notification-list" class="arena-notification-list"></div>
+              <footer><a href="/arena">Open Arena Wall</a><button id="arena-global-logout" type="button">Log out</button></footer>
+            </div>
+          </div>
+        </div>
+        <a class="discord-link" href="https://discord.gg/tCcSDAHKuf" target="_blank" rel="noopener noreferrer" aria-label="Join the PeakHalla Discord server" data-i18n-aria-label="discordAria">
+          <span class="discord-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false"><path fill="currentColor" d="M19.5 5.34A16.3 16.3 0 0 0 15.44 4l-.5 1.03a15.1 15.1 0 0 0-5.87 0L8.55 4A16.4 16.4 0 0 0 4.5 5.35C1.94 9.16 1.25 12.88 1.6 16.54a16.5 16.5 0 0 0 4.98 2.5l1.2-1.64a10.5 10.5 0 0 1-1.89-.9l.46-.36c3.65 1.69 7.61 1.69 11.22 0l.47.36c-.61.36-1.25.66-1.9.9l1.2 1.64a16.4 16.4 0 0 0 4.98-2.5c.42-4.24-.72-7.93-2.82-11.2ZM8.83 14.26c-1.1 0-2-1.01-2-2.25s.88-2.25 2-2.25c1.12 0 2.02 1.02 2 2.25 0 1.24-.88 2.25-2 2.25Zm6.34 0c-1.1 0-2-1.01-2-2.25s.88-2.25 2-2.25c1.12 0 2.02 1.02 2 2.25 0 1.24-.88 2.25-2 2.25Z"/></svg>
+          </span>
+          <span class="discord-text" data-i18n="navDiscord">Join Discord</span>
+          <span class="discord-arrow" aria-hidden="true">↗</span>
+        </a>
+        <a class="donation-link" href="https://paypal.me/Nadherr" target="_blank" rel="noopener noreferrer" aria-label="Support PeakHalla via PayPal">
+          <span class="donation-heart" aria-hidden="true">♥</span>
+          <span data-i18n="navDonation">Donation</span>
+          <i aria-hidden="true">↗</i>
+        </a>
+        <span class="live-pill"><i></i><span data-i18n="liveData">LIVE DATA</span></span>
+        <div class="theme-picker" id="theme-picker">
+          <button id="theme-picker-toggle" class="theme-picker-toggle" type="button" aria-expanded="false" aria-haspopup="true" aria-label="Choose website theme">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.2a2.3 2.3 0 0 0 0-4.6h-.8a1.45 1.45 0 0 1 0-2.9H15A6 6 0 0 0 15 3h-3Z"/><circle cx="7.8" cy="10" r="1"/><circle cx="10" cy="6.9" r="1"/><circle cx="14" cy="6.7" r="1"/><circle cx="17" cy="9.4" r="1"/></svg>
+            <span id="theme-current-swatch" class="theme-current-swatch" aria-hidden="true"></span>
+          </button>
+          <div id="theme-picker-menu" class="theme-picker-menu" aria-hidden="true">
+            <header><span id="theme-picker-title">Theme</span><small id="theme-picker-subtitle">Choose your style</small></header>
+            <div class="theme-picker-options">
+              <button type="button" data-theme-option="purple"><i class="theme-swatch theme-swatch-purple"></i><span><strong data-theme-name>Royal Purple</strong><small data-theme-description>Original PeakHalla</small></span><b>✓</b></button>
+              <button type="button" data-theme-option="crimson"><i class="theme-swatch theme-swatch-crimson"></i><span><strong data-theme-name>Dark Crimson</strong><small data-theme-description>Deep red glow</small></span><b>✓</b></button>
+              <button type="button" data-theme-option="graphite"><i class="theme-swatch theme-swatch-graphite"></i><span><strong data-theme-name>Dark Gray</strong><small data-theme-description>Clean graphite</small></span><b>✓</b></button>
+              <button type="button" data-theme-option="ice"><i class="theme-swatch theme-swatch-ice"></i><span><strong data-theme-name>Ice Blue</strong><small data-theme-description>Cool light blue</small></span><b>✓</b></button>
+            </div>
+          </div>
+        </div>
+        <button id="language-toggle" class="language-toggle" type="button" aria-label="Switch language"><b>EN</b><span>AR</span></button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="clan-page" class="shell clan-page" hidden>
+      <div class="clan-page-toolbar">
+        <a href="/#clans">← <span data-i18n="clanBack">Back to clans</span></a>
+        <span class="clan-page-live-pill"><i></i><b data-i18n="clanXp">Lifetime XP</b></span>
+      </div>
+
+      <header class="clan-page-hero">
+        <div class="clan-page-title">
+          <span class="eyebrow" data-i18n="clanDetails">Clan profile</span>
+          <h1 id="clan-page-name">Clan</h1>
+          <p id="clan-page-meta">—</p>
+        </div>
+      </header>
+
+      <div id="clan-page-status" class="clan-page-status"></div>
+      <div id="clan-page-stats" class="clan-page-stats"></div>
+
+      <section class="clan-role-panel panel">
+        <div class="panel-heading">
+          <div><span class="eyebrow" data-i18n="clanRoleOrder">Role hierarchy</span><h2 data-i18n="clanProfileNote">Members are ordered from Recruit to Leader.</h2></div>
+        </div>
+        <div id="clan-page-roles" class="clan-role-steps"></div>
+      </section>
+
+      <section class="clan-roster-page panel">
+        <div class="panel-heading clan-roster-page-heading">
+          <div><span class="eyebrow">ROSTER</span><h2 data-i18n="clanRoster">Clan roster</h2></div>
+          <span id="clan-page-member-count" class="muted"></span>
+        </div>
+        <div class="clan-member-head" aria-hidden="true">
+          <span>PLAYER</span><span data-i18n="clanRole">ROLE</span><span data-i18n="clanMemberXp">MEMBER XP</span><span data-i18n="clanPoints">WEEKLY POINTS</span><span data-i18n="clanJoined">JOINED</span>
+        </div>
+        <div id="clan-page-members" class="clan-page-members"></div>
+      </section>
+    </section>
+
+    <section id="live-queue-page" class="shell live-queue-page" hidden>
+      <div class="queue-page-toolbar">
+        <a href="/" id="queue-back-link">← <span data-i18n="backToTracker">Back to tracker</span></a>
+        <span class="queue-live-pill"><i></i><b data-i18n="queueLiveTracking">LIVE ACTIVITY TRACKING</b></span>
+      </div>
+
+      <div class="queue-hero-live">
+        <div>
+          <span class="eyebrow" data-i18n="queueEyebrowLive">RANKED ACTIVITY</span>
+          <h1 data-i18n="queueTitleLive">Who is playing ranked right now?</h1>
+          <p data-i18n="queueIntroLive">Tracks the top 500 leaderboard entries and shows players whose ranked games changed during the last 10 minutes.</p>
+        </div>
+        <div class="queue-scan-card">
+          <span data-i18n="queueActiveNow">ACTIVE NOW</span>
+          <strong id="queue-active-count">0</strong>
+          <small id="queue-scan-meta">—</small>
+        </div>
+      </div>
+
+      <div class="queue-control-panel panel">
+        <div class="queue-mode-tabs" role="tablist" aria-label="Queue mode">
+          <button type="button" data-live-queue-mode="1v1" class="active">1v1</button>
+          <button type="button" data-live-queue-mode="2v2">2v2</button>
+          <button type="button" data-live-queue-mode="3v3">3v3</button>
+        </div>
+        <label class="compact-field queue-region-field">
+          <span data-i18n="region">Region</span>
+          <select id="queue-region">
+            <option value="EU" selected>Europe · EU</option>
+            <option value="ME">Middle East · ME</option>
+            <option value="US-E">US East · US-E</option>
+            <option value="US-W">US West · US-W</option>
+            <option value="SEA">Southeast Asia · SEA</option>
+            <option value="BRZ">Brazil · BRZ</option>
+            <option value="AUS">Australia · AUS</option>
+            <option value="JPN">Japan · JPN</option>
+            <option value="SA">Southern Africa · SA</option>
+          </select>
+        </label>
+        <button id="queue-refresh" class="secondary-button queue-refresh" type="button"><span data-i18n="refresh">Refresh</span><b>↻</b></button>
+      </div>
+
+      <div id="queue-status" class="queue-status" hidden></div>
+      <div id="queue-activity-list" class="queue-activity-list"></div>
+      <p class="queue-disclaimer" data-i18n="queueDisclaimerLive">Activity means leaderboard stats changed recently. It cannot see Brawlhalla's private matchmaking screen.</p>
+    </section>
+
+
+
+    <section id="arena-page" class="shell arena-page" hidden>
+      <div class="arena-page-toolbar">
+        <a href="/" id="arena-back-link">← <span data-i18n="backToTracker">Back to tracker</span></a>
+        <span class="arena-community-pill"><i></i><b data-i18n="arenaCommunity">COMMUNITY SCREENSHOTS</b></span>
+      </div>
+
+      <div class="arena-hero">
+        <div>
+          <span class="eyebrow" data-i18n="arenaEyebrow">COMMUNITY</span>
+          <h1 data-i18n="arenaTitle">Arena Wall</h1>
+          <p data-i18n="arenaIntro">Share Brawlhalla screenshots, add a caption, and talk with other players through comments and replies.</p>
+        </div>
+        <details class="arena-about panel">
+          <summary><span data-i18n="arenaWhat">What is Arena Wall?</span><b>+</b></summary>
+          <p data-i18n="arenaWhatText">A community gallery for match screenshots, rank moments, funny clips captured as images, tournament results, and anything worth sharing from Brawlhalla. Create an account using only a username and password—no email or verification code.</p>
+        </details>
+      </div>
+
+      <div class="arena-account-grid">
+        <article id="arena-auth-panel" class="panel arena-auth-panel">
+          <div class="arena-auth-tabs">
+            <button type="button" class="active" data-arena-auth-mode="register" data-i18n="arenaCreateAccount">Create account</button>
+            <button type="button" data-arena-auth-mode="login" data-i18n="arenaSignIn">Sign in</button>
+          </div>
+          <div class="arena-auth-copy">
+            <span class="eyebrow" data-i18n="arenaNoEmail">NO EMAIL NEEDED</span>
+            <h2 id="arena-auth-title" data-i18n="arenaJoinTitle">Join the wall</h2>
+            <p data-i18n="arenaJoinText">Choose a username and password. No email, verification code, or social login.</p>
+          </div>
+          <form id="arena-auth-form" class="arena-auth-form">
+            <label><span data-i18n="arenaUsername">Username</span><input id="arena-username" type="text" minlength="3" maxlength="24" autocomplete="username" required placeholder="nadbh"></label>
+            <label><span data-i18n="arenaPassword">Password</span><input id="arena-password" type="password" minlength="6" maxlength="72" autocomplete="new-password" required placeholder="••••••••"></label>
+            <button id="arena-auth-submit" class="primary-button" type="submit"><span data-i18n="arenaCreateAccount">Create account</span><b>→</b></button>
+          </form>
+          <p id="arena-auth-status" class="arena-form-status" hidden></p>
+        </article>
+
+        <article id="arena-composer" class="panel arena-composer" hidden>
+          <header class="arena-composer-header">
+            <div><span class="arena-avatar" id="arena-user-avatar">N</span><div><small data-i18n="arenaPostingAs">Posting as</small><strong id="arena-current-user">—</strong></div></div>
+            <div class="arena-account-actions">
+              <button id="arena-profile-button" class="arena-ghost-button arena-profile-button" type="button" data-i18n="arenaMyProfile">My profile</button>
+              <button id="arena-logout" class="arena-ghost-button" type="button" data-i18n="arenaLogout">Log out</button>
+            </div>
+          </header>
+          <form id="arena-post-form">
+            <label class="arena-upload-zone" id="arena-upload-zone">
+              <input id="arena-image-input" type="file" accept="image/png,image/jpeg,image/webp" hidden required>
+              <img id="arena-image-preview" alt="Screenshot preview" hidden>
+              <span id="arena-upload-prompt"><b>＋</b><strong data-i18n="arenaChooseScreenshot">Choose a screenshot</strong><small data-i18n="arenaImageLimit">PNG, JPG, or WebP · up to 5 MB</small></span>
+            </label>
+            <label class="arena-caption-field"><span data-i18n="arenaCaption">Caption</span><textarea id="arena-caption" maxlength="500" rows="3" data-i18n-placeholder="arenaCaptionPlaceholder" placeholder="What happened in this match?"></textarea></label>
+            <button id="arena-post-submit" class="primary-button" type="submit"><span data-i18n="arenaPublish">Publish screenshot</span><b>↑</b></button>
+          </form>
+          <p id="arena-post-status" class="arena-form-status" hidden></p>
+        </article>
+      </div>
+
+      <div class="arena-feed-heading">
+        <div><span class="eyebrow" data-i18n="arenaLatest">LATEST DROPS</span><h2 data-i18n="arenaFeed">Community feed</h2></div>
+        <button id="arena-refresh" class="secondary-button" type="button"><span data-i18n="refresh">Refresh</span><b>↻</b></button>
+      </div>
+      <div id="arena-feed" class="arena-feed"><div class="arena-feed-loading"><span></span><strong data-i18n="arenaLoading">Loading the wall…</strong></div></div>
+    </section>
+
+    <div id="arena-profile-modal" class="arena-profile-modal" hidden>
+      <button class="arena-profile-backdrop" type="button" data-arena-profile-close aria-label="Close profile"></button>
+      <article class="arena-profile-card panel" role="dialog" aria-modal="true" aria-labelledby="arena-profile-name">
+        <button class="arena-profile-close" type="button" data-arena-profile-close aria-label="Close">×</button>
+        <header class="arena-profile-head">
+          <div id="arena-profile-avatar" class="arena-profile-avatar"><span>N</span></div>
+          <div>
+            <span class="eyebrow" data-i18n="arenaProfileEyebrow">PLAYER PROFILE</span>
+            <h2 id="arena-profile-name">—</h2>
+            <p id="arena-profile-bio" data-i18n="arenaNoBio">No bio yet.</p>
+          </div>
+        </header>
+        <div id="arena-profile-stats" class="arena-profile-stats"></div>
+        <form id="arena-profile-form" class="arena-profile-form" hidden>
+          <div class="arena-profile-editor-heading">
+            <div><span class="eyebrow" data-i18n="arenaEditProfile">EDIT PROFILE</span><h3 data-i18n="arenaProfileCustomize">Make it yours</h3></div>
+          </div>
+          <label class="arena-profile-photo-picker">
+            <input id="arena-profile-avatar-input" type="file" accept="image/png,image/jpeg,image/webp" hidden>
+            <span id="arena-profile-photo-preview" class="arena-profile-photo-preview"><b>＋</b></span>
+            <div><strong data-i18n="arenaChangePhoto">Change profile photo</strong><small data-i18n="arenaAvatarLimit">PNG, JPG, or WebP · up to 2 MB</small></div>
+          </label>
+          <label class="arena-profile-bio-field"><span data-i18n="arenaBio">Bio</span><textarea id="arena-profile-bio-input" maxlength="160" rows="4" data-i18n-placeholder="arenaBioPlaceholder" placeholder="Tell the arena who you are..."></textarea></label>
+          <div class="arena-profile-form-actions">
+            <button id="arena-profile-remove-avatar" class="arena-ghost-button" type="button" data-i18n="arenaRemovePhoto">Remove photo</button>
+            <button id="arena-profile-save" class="primary-button" type="submit"><span data-i18n="arenaSaveProfile">Save profile</span><b>✓</b></button>
+          </div>
+          <p id="arena-profile-status" class="arena-form-status" hidden></p>
+        </form>
+      </article>
+    </div>
+
+    <section id="home" class="hero shell hero-intro">
+      <div class="hero-copy">
+        <span class="eyebrow">PLAYER DATABASE · BRAWLHALLA</span>
+        <h1 data-i18n-html="heroTitle">Brawlhalla Tracker.<br><em>Live stats, ELO &amp; rankings.</em></h1>
+        <p data-i18n="heroText">PeakHalla is a fast, free Brawlhalla tracker for live player stats, current and peak ELO, legends, clans, 2v2 teams, and competitive rankings.</p>
+        <div class="hero-tags">
+          <span data-i18n="mainLegendFeature">Main legend</span>
+          <span data-i18n="boardsFeature">All regions</span>
+          <span data-i18n="esportsFeature">Esports power rankings</span>
+        </div>
+      </div>
+
+      <form id="search-form" class="search-card">
+        <div class="card-kicker"><span data-i18n="findPlayer">Find a player</span><b>01</b></div>
+        <label class="field main-field">
+          <span data-i18n="playerName">Player name</span>
+          <input id="player-name" type="search" minlength="2" maxlength="40" placeholder="Sandstorm" autocomplete="off" required data-i18n-placeholder="playerPlaceholder" aria-autocomplete="list" aria-controls="search-suggestions" aria-expanded="false">
+          <div id="search-suggestions" class="search-suggestions" role="listbox" hidden></div>
+        </label>
+        <button type="submit" class="primary-button"><span data-i18n="searchButton">Search player</span><b>→</b></button>
+        <p class="form-note" data-i18n="searchNote">Search the official ranked database by player name.</p>
+      </form>
+    </section>
+
+    <section id="status" class="status shell" hidden></section>
+
+    <section id="search-results" class="shell section" hidden>
+      <div class="section-heading">
+        <div><span class="eyebrow">SEARCH</span><h2 data-i18n="searchResults">Search results</h2></div>
+        <span id="result-count" class="muted"></span>
+      </div>
+      <div id="results-grid" class="results-grid"></div>
+    </section>
+
+    <section id="player-profile" class="shell section" hidden>
+      <div class="player-page-toolbar"><a href="/" id="back-to-tracker">← <span>Back to tracker</span></a><span>PLAYER PROFILE</span></div>
+      <article class="profile-hero panel">
+        <div class="profile-portrait" id="player-avatar"><span>BH</span></div>
+        <div class="profile-identity">
+          <div class="identity-meta"><span id="player-region" class="region-tag">—</span><span id="main-legend-label">MAIN: —</span></div>
+          <h2 id="player-title">PLAYER NAME</h2>
+          <p><span data-i18n="playerIdLabel">BH ID</span> <b id="player-id">—</b><span class="dot">•</span><span data-i18n="updatedLabel">Updated</span> <b id="updated-at">—</b></p>
+          <div id="player-aliases" class="profile-aliases" hidden></div>
+          <button id="player-clan-card" class="player-clan-card" type="button" hidden>
+            <span class="player-clan-copy"><small data-i18n="playerClan">PLAYER CLAN</small><strong id="player-clan-name">—</strong><em id="player-clan-role">—</em></span>
+            <span class="player-clan-arrow" aria-hidden="true">→</span>
+          </button>
+        </div>
+        <div class="rank-block">
+          <div class="rank-block-top"><small data-i18n="rankedOverview">Ranked overview</small><span id="elo-gap">—</span></div>
+          <strong id="player-tier">UNRANKED</strong>
+          <div class="rank-elo-grid">
+            <div class="current-elo-card"><small data-i18n="currentElo">Current ELO</small><b id="player-rating">—</b></div>
+            <div class="season-peak-card"><span class="peak-mark">◆</span><small data-i18n="peakElo">Season peak</small><b id="player-peak-rating">—</b></div>
+          </div>
+          <div class="rank-progress" aria-hidden="true"><i id="rank-progress-fill"></i></div>
+        </div>
+      </article>
+
+      <div id="account-showcase" class="account-showcase"></div>
+      <div id="stats-grid" class="stats-grid"></div>
+
+      <article class="panel lifetime-summary-panel">
+        <div class="panel-heading lifetime-source-heading">
+          <div><span class="eyebrow">LIFETIME</span><h3 data-i18n="fullPlayerStats">Full player stats</h3></div>
+          <div class="live-source-actions"><span id="stats-source-note" class="live-source-note"><i></i><span data-i18n="liveOfficialData">Live official data</span></span><button id="refresh-player-stats" class="secondary-button refresh-stats-button" type="button" data-i18n="refreshLiveStats">Refresh live stats</button></div>
+        </div>
+        <p id="stats-accuracy-note" class="stats-accuracy-note"></p>
+        <div id="lifetime-summary-grid" class="lifetime-summary-grid"></div>
+      </article>
+
+      <div class="profile-layout">
+        <article class="panel progress-panel">
+          <div class="panel-heading"><div><span class="eyebrow">TRACKER</span><h3 data-i18n="eloProgress">Elo progress</h3></div><span class="muted" data-i18n="last120">120 days</span></div>
+          <div id="history-chart" class="history-chart"></div>
+          <p id="history-empty" class="empty-copy" hidden data-i18n="firstSnapshot">First snapshot saved. The chart grows when the tracker sees this account again.</p>
+        </article>
+        <article class="panel summary-panel">
+          <div class="panel-heading"><div><span class="eyebrow">ACCOUNT</span><h3 data-i18n="playerSummary">Player summary</h3></div></div>
+          <dl id="player-summary"></dl>
+        </article>
+      </div>
+
+      <article class="panel teammates-panel" id="teammates-panel">
+        <div class="panel-heading">
+          <div><span class="eyebrow">RANKED 2V2</span><h3 data-i18n="twoVTwoPartners">Ranked 2v2 partners</h3></div>
+          <span id="teammates-count" class="muted"></span>
+        </div>
+        <p class="teammates-note" data-i18n="twoVTwoPartnersNote">Current-season 2v2 teams found in official ranked data.</p>
+        <div id="teammates-grid" class="teammates-grid"><div class="teammates-loading"></div></div>
+      </article>
+
+      <article class="panel lifetime-legends-panel">
+        <div class="panel-heading lifetime-heading">
+          <div><span class="eyebrow">ALL LEGENDS</span><h3 data-i18n="allLegendStats">Every legend · lifetime stats</h3></div>
+          <span id="lifetime-legends-count" class="muted"></span>
+        </div>
+        <div class="legend-tools">
+          <label class="legend-search"><span data-i18n="searchLegends">Search legends</span><input id="legend-stats-search" type="search" data-i18n-placeholder="legendSearchPlaceholder" placeholder="Legend or weapon"></label>
+          <label class="compact-field"><span data-i18n="show">Show</span><select id="legend-stats-filter"><option value="played" data-i18n="playedOnly" selected>Played only</option><option value="all" data-i18n="allLegends">All legends</option></select></label>
+          <label class="compact-field"><span data-i18n="sortBy">Sort by</span><select id="legend-stats-sort"><option value="games" data-i18n="games">Games</option><option value="wins" data-i18n="wins">Wins</option><option value="level" data-i18n="level">Level</option><option value="xp" data-i18n="xp">XP</option><option value="time" data-i18n="gameTime">Game time</option><option value="damage" data-i18n="damageDealt">Damage dealt</option><option value="kos" data-i18n="kos">KOs</option></select></label>
+        </div>
+        <div id="lifetime-legends-grid" class="lifetime-legends-grid"></div>
+      </article>
+
+      <article class="panel legends-panel">
+        <div class="panel-heading"><div><span class="eyebrow">RANKED</span><h3 data-i18n="bestLegends">Current season ranked legends</h3></div><span id="legends-count" class="muted"></span></div>
+        <div class="table-wrap"><table><thead><tr><th data-i18n="legend">Legend</th><th data-i18n="weapons">Weapons</th><th data-i18n="games">Games</th><th data-i18n="wins">Wins</th><th data-i18n="winRate">Win rate</th><th>ELO</th><th data-i18n="peak">Peak</th></tr></thead><tbody id="legends-body"></tbody></table></div>
+      </article>
+    </section>
+
+    <section id="leaderboard" class="shell section">
+      <div class="section-heading stacked-mobile">
+        <div><span class="eyebrow">RANKED LADDER</span><h2 id="leaderboard-title">Top players · All regions</h2></div>
+        <div class="toolbar leaderboard-toolbar">
+          <label class="compact-field leaderboard-search-field"><span data-i18n="leaderboardSearch">Find a rank</span><span class="leaderboard-search-box"><i>⌕</i><input id="leaderboard-search" type="search" autocomplete="off" data-i18n-placeholder="leaderboardSearchPlaceholder" placeholder="Search a player"></span></label>
+          <label class="compact-field"><span data-i18n="region">Region</span><select id="leaderboard-region"><option value="ALL">All regions</option><option value="ME">Middle East · ME</option><option value="EU">Europe · EU</option><option value="US-E">US East · US-E</option><option value="US-W">US West · US-W</option><option value="SA">Southern Africa · SA</option><option value="SEA">Southeast Asia · SEA</option><option value="BRZ">Brazil · BRZ</option><option value="AUS">Australia · AUS</option><option value="JPN">Japan · JPN</option></select></label>
+          <label class="compact-field"><span data-i18n="gameMode">Mode</span><select id="leaderboard-mode"><option value="1v1">1v1</option><option value="2v2">2v2</option><option value="3v3">3v3</option></select></label>
+          <button id="refresh-leaderboard" class="secondary-button" data-i18n="refresh">Refresh</button>
+        </div>
+      </div>
+      <div id="leaderboard-list" class="leaderboard-list panel"><div class="skeleton-row"></div><div class="skeleton-row"></div><div class="skeleton-row"></div></div>
+      <div class="leaderboard-pagination" aria-label="Leaderboard pages">
+        <button id="leaderboard-page-top" class="leaderboard-page-button" type="button" hidden><span data-i18n="pageTop">Top</span></button>
+        <button id="leaderboard-page-previous" class="leaderboard-page-button" type="button" hidden><b>←</b><span data-i18n="pagePrevious">Previous</span></button>
+        <span id="leaderboard-page-status" class="leaderboard-page-status" aria-live="polite"></span>
+        <button id="leaderboard-page-next" class="leaderboard-page-button primary" type="button" hidden><span data-i18n="pageNext">Next</span><b>→</b></button>
+        <button id="leaderboard-load-more" class="leaderboard-load-more" type="button" hidden aria-hidden="true"><span data-i18n="loadMorePlayers">Load next 50 players</span><b>↓</b></button>
+      </div>
+    </section>
+
+    <section id="clans" class="shell section clans-section">
+      <div class="section-heading stacked-mobile">
+        <div><span class="eyebrow">OFFICIAL GUILDS</span><h2 data-i18n="clansTitle">Top clans by lifetime XP</h2><p class="section-copy" data-i18n="clansText">Browse the highest-XP Brawlhalla clans, then open a dedicated roster page for every clan.</p></div>
+        <div class="toolbar clans-toolbar">
+          <label class="compact-field clans-search-field"><span data-i18n="clanSearch">Find a clan</span><span class="leaderboard-search-box"><i>⌕</i><input id="clans-search" type="search" autocomplete="off" data-i18n-placeholder="clanSearchPlaceholder" placeholder="Clan name or guild ID"></span></label>
+          <button id="clans-refresh" class="secondary-button" type="button"><span data-i18n="refresh">Refresh</span><b>↻</b></button>
+        </div>
+      </div>
+      <div class="clans-meta-line"><span id="clans-updated" class="muted"></span><small data-i18n="clanDiscoveryNote">Top clans are ordered by lifetime XP.</small></div>
+      <div id="clans-grid" class="clans-grid panel"><div class="clans-loading"><span></span><strong data-i18n="clanLoading">Loading top clans by XP…</strong></div></div>
+    </section>
+
+    <section id="esports" class="shell section esports-section">
+      <div class="section-heading stacked-mobile esports-main-heading">
+        <div><span class="eyebrow">COMPETITIVE</span><h2 data-i18n="esportsHubTitle">PeakHalla Esports</h2><p class="section-copy" data-i18n="esportsHubText">Official power rankings and a live tournament directory for Brawlhalla esports.</p></div>
+        <div class="esports-view-switch" role="tablist" aria-label="Esports views">
+          <button class="active" type="button" data-esports-tab="power" role="tab" aria-selected="true">
+            <span class="esports-switch-icon" aria-hidden="true">↗</span>
+            <span class="esports-switch-copy"><small>RANKINGS</small><strong data-i18n="powerRanking">Power rankings</strong></span>
+            <i aria-hidden="true">01</i>
+          </button>
+          <button type="button" data-esports-tab="tournaments" role="tab" aria-selected="false">
+            <span class="esports-switch-icon" aria-hidden="true">◆</span>
+            <span class="esports-switch-copy"><small>EVENTS</small><strong data-i18n="tournamentsNav">Tournaments</strong></span>
+            <i aria-hidden="true">02</i>
+          </button>
+        </div>
+      </div>
+
+      <div id="esports-power-view" class="esports-view-panel">
+        <div class="esports-subheading stacked-mobile">
+          <div><span class="eyebrow">OFFICIAL TABLE</span><h3 data-i18n="esportsTitle">Esports power rankings</h3><p class="section-copy" data-i18n="esportsText">Official competitive names, medals, earnings, and major tournament results.</p></div>
+          <div class="toolbar esports-power-toolbar">
+            <label class="compact-field power-search-field"><span data-i18n="powerSearch">Find a player</span><span class="leaderboard-search-box"><i>⌕</i><input id="power-ranking-search" type="search" autocomplete="off" data-i18n-placeholder="powerSearchPlaceholder" placeholder="Search the power ranking"></span></label>
+            <label class="compact-field"><span data-i18n="region">Region</span><select id="esports-region"><option value="NA">North America</option><option value="EU">Europe</option><option value="SA">South America</option><option value="SEA">Southeast Asia</option><option value="MENA">MENA</option></select></label>
+            <label class="compact-field"><span data-i18n="gameMode">Mode</span><select id="esports-mode"><option value="1v1">1v1</option><option value="2v2">2v2</option></select></label>
+          </div>
+        </div>
+        <article class="panel power-panel esports-power-card">
+          <div class="panel-heading"><div><span class="eyebrow">POWER RANK</span><h3 data-i18n="powerRanking">Power ranking</h3></div><span id="esports-updated" class="muted"></span></div>
+          <div class="table-wrap"><table class="power-table"><thead><tr><th>#</th><th data-i18n="player">Player</th><th data-i18n="earnings">Earnings</th><th>TOP 8</th><th>🥇</th><th>🥈</th><th>🥉</th></tr></thead><tbody id="power-ranking-body"></tbody></table></div>
+          <div class="power-pagination">
+            <span id="power-ranking-page-status" class="muted"></span>
+            <button id="power-ranking-load-more" class="secondary-button power-load-more" type="button" hidden><span data-i18n="loadMorePowerPlayers">Load 20 more players</span><b>↓</b></button>
+          </div>
+          <a id="esports-source" class="source-link" href="https://www.brawlhalla.com/rankings/esports" target="_blank" rel="noopener noreferrer" data-i18n="officialSource">Open official rankings ↗</a>
+        </article>
+        <article class="panel champions-panel">
+          <div class="panel-heading"><div><span class="eyebrow">HALL OF WINS</span><h3 data-i18n="proWinners">Pro players & major titles</h3></div><span class="muted" data-i18n="notExhaustive">Featured titles, not a complete career list</span></div>
+          <div id="champions-grid" class="champions-grid"></div>
+        </article>
+      </div>
+
+      <div id="esports-tournaments-view" class="esports-view-panel" hidden>
+        <div class="tournament-directory-hero panel">
+          <div><span class="eyebrow" data-i18n="liveTournamentFeed">LIVE TOURNAMENT FEED</span><h3 data-i18n="tournamentDirectory">Tournament directory</h3><p data-i18n="tournamentDirectoryText">New Brawlhalla tournament announcements are checked automatically and added here.</p></div>
+          <span class="tournament-live-badge"><i></i><b data-i18n="autoUpdating">AUTO UPDATING</b></span>
+        </div>
+        <div class="tournament-controls panel">
+          <div class="tournament-type-tabs" role="tablist">
+            <button class="active" type="button" data-tournament-type="official" aria-selected="true"><span>★</span><strong data-i18n="officialTournaments">Official tournaments</strong></button>
+            <button type="button" data-tournament-type="community" aria-selected="false"><span>◎</span><strong data-i18n="communityTournaments">Community tournaments</strong></button>
+          </div>
+          <div class="tournament-filter-actions">
+            <label class="compact-field tournament-region-field"><span data-i18n="tournamentRegion">Tournament region</span><select id="tournament-directory-region"><option value="ALL">All regions</option><option value="NA">North America</option><option value="EU">Europe</option><option value="SA">South America</option><option value="SEA">Southeast Asia</option><option value="MENA">MENA</option><option value="AUS">Australia</option><option value="JPN">Japan</option></select></label>
+            <label class="compact-field tournament-mode-field"><span data-i18n="tournamentMode">Tournament mode</span><select id="tournament-directory-mode"><option value="ALL" data-i18n="allTournamentModes">All modes</option><option value="1v1">1v1</option><option value="2v2">2v2</option></select></label>
+            <button id="tournament-directory-refresh" class="secondary-button tournament-refresh-button" type="button"><span data-i18n="refresh">Refresh</span><b>↻</b></button>
+          </div>
+        </div>
+        <div class="tournament-directory-meta"><span id="tournament-directory-updated" class="muted"></span><small id="tournament-directory-count"></small></div>
+        <div id="tournament-directory-list" class="tournament-directory-grid"><div class="tournament-directory-loading"><span></span><strong data-i18n="loadingTournaments">Loading tournaments…</strong></div></div>
+      </div>
+    </section>
+
+
+    <section id="about" class="shell about-strip">
+      <div><span class="eyebrow">NAD PROJECT</span><h2 data-i18n="aboutTitle">Built like a real stats site.</h2></div>
+      <p data-i18n="aboutText">Official ranked data, main legends based on lifetime games, daily Elo snapshots, and a competitive section for esports fans.</p>
+    </section>
+
+    <section id="brawlhalla-tracker" class="shell section seo-tracker-section" aria-labelledby="seo-tracker-title">
+      <article class="panel seo-tracker-panel">
+        <div class="seo-tracker-heading">
+          <span class="eyebrow">BRAWLHALLA TRACKER</span>
+          <h2 id="seo-tracker-title" data-i18n="seoTitle">Free Brawlhalla tracker for player stats, ELO and rankings</h2>
+          <p data-i18n="seoIntro">Search any known Brawlhalla player by current name, old name, or Brawlhalla ID. PeakHalla combines live ranked data, lifetime account progression, legend performance, clans, 2v2 teammates, leaderboards, and esports rankings in one place.</p>
+        </div>
+        <div class="seo-feature-grid">
+          <article><span>01</span><h3 data-i18n="seoPlayerTitle">Live player statistics</h3><p data-i18n="seoPlayerText">View current ELO, season peak, ranked tier, wins, losses, account XP, legend levels, match time, weapons, and lifetime combat data.</p></article>
+          <article><span>02</span><h3 data-i18n="seoSearchTitle">Current and previous names</h3><p data-i18n="seoSearchText">Find profiles using a current name, a known old name, or a Brawlhalla ID without needing the player to be currently ranked.</p></article>
+          <article><span>03</span><h3 data-i18n="seoRankingsTitle">Rankings, clans and esports</h3><p data-i18n="seoRankingsText">Browse regional ranked leaderboards, top clans by lifetime XP, clan rosters, 2v2 teammates, esports power rankings, and tournaments.</p></article>
+        </div>
+        <nav class="seo-links" aria-label="Brawlhalla tracker sections">
+          <a href="#home" data-i18n="seoSearchLink">Search a player</a>
+          <a href="#leaderboard" data-i18n="seoRankedLink">Ranked leaderboards</a>
+          <a href="#clans" data-i18n="seoClansLink">Brawlhalla clans</a>
+          <a href="#esports" data-i18n="seoEsportsLink">Brawlhalla esports</a><a href="/patch-notes">Patch notes</a><a href="/maps">Maps</a><a href="/guides">Guides</a>
+        </nav>
+      </article>
+
+      <div class="seo-faq" aria-labelledby="seo-faq-title">
+        <div class="seo-faq-heading"><span class="eyebrow">FAQ</span><h2 id="seo-faq-title" data-i18n="seoFaqTitle">Brawlhalla tracker questions</h2></div>
+        <div class="seo-faq-list">
+          <details><summary data-i18n="seoFaqQ1">How do I track a Brawlhalla player?</summary><p data-i18n="seoFaqA1">Enter the player’s current name, previous name, or Brawlhalla ID in the search box. PeakHalla opens the matching profile and refreshes official data automatically.</p></details>
+          <details><summary data-i18n="seoFaqQ2">Does PeakHalla show current and peak ELO?</summary><p data-i18n="seoFaqA2">Yes. Player profiles show current ELO, season peak ELO, ranked tier, regional rank, wins, losses, and ranked legend performance when available.</p></details>
+          <details><summary data-i18n="seoFaqQ3">Can I search by an old Brawlhalla name?</summary><p data-i18n="seoFaqA3">Yes. PeakHalla searches known aliases as well as current names and Brawlhalla IDs.</p></details>
+          <details><summary data-i18n="seoFaqQ4">Can I view clans and ranked 2v2 teammates?</summary><p data-i18n="seoFaqA4">Yes. PeakHalla includes clan profiles and rosters, lifetime clan XP, and current-season ranked 2v2 teammates when official data is available.</p></details>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="contact" class="shell contact-strip">
+      <div><span class="eyebrow">CREATOR</span><h2 data-i18n-html="madeBy">Made by <strong>Nad</strong></h2><p data-i18n="followText">Brawlhalla clips and tracker updates.</p></div>
+      <a class="tiktok-link" href="https://www.tiktok.com/@nadbh" target="_blank" rel="noopener noreferrer"><span>TIKTOK</span><strong>@nadbh</strong><b>↗</b></a>
+    </section>
+  </main>
+
+  <div id="clan-modal" class="clan-modal" hidden>
+    <button class="clan-modal-backdrop" type="button" data-clan-close aria-label="Close clan details"></button>
+    <section class="clan-dialog" role="dialog" aria-modal="true" aria-labelledby="clan-modal-name">
+      <header class="clan-dialog-header">
+        <div><span class="eyebrow" data-i18n="clanDetails">Clan details</span><h2 id="clan-modal-name">Clan</h2><p id="clan-modal-meta"></p></div>
+        <button class="clan-modal-close" type="button" data-clan-close aria-label="Close">×</button>
+      </header>
+      <div id="clan-modal-status" class="clan-modal-status" hidden></div>
+      <div id="clan-modal-stats" class="clan-modal-stats"></div>
+      <div class="clan-roster-heading"><div><span class="eyebrow">ROSTER</span><h3 data-i18n="clanRoster">Clan roster</h3></div><span id="clan-member-count" class="muted"></span></div>
+      <div class="table-wrap clan-table-wrap"><table class="clan-members-table"><thead><tr><th data-i18n="player">Player</th><th data-i18n="clanRole">Role</th><th data-i18n="clanPoints">Weekly points</th><th data-i18n="clanMemberXp">Member XP</th><th data-i18n="clanJoined">Joined</th></tr></thead><tbody id="clan-members-body"></tbody></table></div>
+    </section>
+  </div>
+
+  <div id="esports-player-modal" class="career-modal" hidden>
+    <button class="career-backdrop" type="button" data-career-close aria-label="Close tournament history"></button>
+    <section class="career-dialog" role="dialog" aria-modal="true" aria-labelledby="career-player-name">
+      <header class="career-header">
+        <div>
+          <span class="eyebrow" data-i18n="tournamentCareer">TOURNAMENT CAREER</span>
+          <h2 id="career-player-name">Player</h2>
+          <p id="career-player-meta" class="muted"></p>
+        </div>
+        <button class="career-close" type="button" data-career-close aria-label="Close">×</button>
+      </header>
+      <div id="career-status" class="career-status"></div>
+      <div id="career-content" hidden>
+        <div id="career-summary" class="career-summary"></div>
+        <div class="career-toolbar">
+          <div class="career-filters" role="group" aria-label="Tournament mode filter">
+            <button type="button" class="active" data-career-filter="all" data-i18n="allModes">All</button>
+            <button type="button" data-career-filter="1v1">1v1</button>
+            <button type="button" data-career-filter="2v2">2v2</button>
+            <button type="button" data-career-filter="top8" data-i18n="top8Only">Top 8</button>
+          </div>
+          <span id="career-count" class="muted"></span>
+        </div>
+        <div id="career-placement-list" class="career-placement-list"></div>
+        <a id="career-source" class="source-link career-source" href="https://www.docs.brawltools.com/v2/requests/player/placement/" target="_blank" rel="noopener noreferrer" data-i18n="careerSource">Tournament data source ↗</a>
+      </div>
+    </section>
+  </div>
+
+  <footer class="site-footer">
+    <div class="shell site-footer-inner">
+      <a class="footer-brand" href="/" aria-label="PeakHalla home">
+        <svg class="footer-logo" aria-hidden="true" focusable="false" width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="panel" x1="10" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="var(--logo-panel-start)"/>
+      <stop offset="1" stop-color="var(--logo-panel-end)"/>
+    </linearGradient>
+    <linearGradient id="stroke" x1="14" y1="10" x2="50" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="var(--logo-pale)"/>
+      <stop offset="0.52" stop-color="var(--logo-accent-2)"/>
+      <stop offset="1" stop-color="var(--accent-3)"/>
+    </linearGradient>
+    <linearGradient id="pFill" x1="22" y1="18" x2="42" y2="46" gradientUnits="userSpaceOnUse">
+      <stop stop-color="var(--logo-white)"/>
+      <stop offset="0.58" stop-color="var(--logo-pale)"/>
+      <stop offset="1" stop-color="var(--accent-soft)"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="34" y1="18" x2="48" y2="33" gradientUnits="userSpaceOnUse">
+      <stop stop-color="var(--accent-pale)"/>
+      <stop offset="1" stop-color="var(--accent)"/>
+    </linearGradient>
+    <filter id="shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#05030A" flood-opacity="0.34"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)">
+    <rect x="8.5" y="8.5" width="47" height="47" rx="16" fill="url(#panel)"/>
+    <rect x="8.5" y="8.5" width="47" height="47" rx="16" stroke="url(#stroke)" stroke-width="1.5"/>
+    <path d="M24 18.5V45.5" stroke="url(#pFill)" stroke-width="5.6" stroke-linecap="round"/>
+    <path d="M24 19.5H35.2C40.95 19.5 45 23.06 45 28.15C45 33.24 40.95 36.8 35.2 36.8H24" stroke="url(#pFill)" stroke-width="5.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M37.6 19.6C43.2 19.6 47 23.16 47 28.03C47 31.24 45.46 34.02 42.74 35.67" stroke="url(#accent)" stroke-width="2.8" stroke-linecap="round"/>
+    <circle cx="43.8" cy="20.3" r="2.35" fill="var(--accent-pale)"/>
+    <path d="M18 48H45.5" stroke="var(--logo-base-line)" stroke-width="2" stroke-linecap="round" opacity="0.9"/>
+  </g>
+</svg>
+        <span><strong>Peak<span>Halla</span></strong><small data-i18n="footerTagline">Brawlhalla statistics</small></span>
+      </a>
+      <div class="footer-legal">
+        <p class="footer-copyright">© <span id="copyright-year">2026</span> <strong>PeakHalla</strong>. <span data-i18n="rightsReserved">All rights reserved.</span></p>
+        <p data-i18n="disclaimer">Unofficial community project. Not affiliated with Ubisoft or Blue Mammoth Games.</p>
+        <nav class="footer-policy-links" aria-label="PeakHalla links"><a href="/">Tracker</a><a href="/patch-notes">Patches</a><a href="/maps">Maps</a><a href="/guides">Guides</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></nav>
+      </div>
+      <a class="footer-creator" href="https://www.tiktok.com/@nadbh" target="_blank" rel="noopener noreferrer" aria-label="Nad on TikTok">
+        <span data-i18n="footerMade">Made by</span><strong>Nad</strong><small>@nadbh ↗</small>
+      </a>
+    </div>
+  </footer>
+  <script src="/app.js?v=7.86.0" defer></script>
+  <script src="/arena-v72.js?v=7.69.0" defer></script>
+  <script src="/arena-account.js?v=7.69.0" defer></script>
+</body>
+</html>
