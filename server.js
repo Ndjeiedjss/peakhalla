@@ -5156,7 +5156,7 @@ app.get('/api/clans/:id', async (req, res, next) => {
 const LEADERBOARD_PAGE_SIZE = 50;
 
 function leaderboardStateKey({ region, mode, page, orderBy }) {
-  return `leaderboard:v2:${LEADERBOARD_PAGE_SIZE}:${region}:${mode}:${page}:${orderBy}`;
+  return `leaderboard:v3-official-only:${LEADERBOARD_PAGE_SIZE}:${region}:${mode}:${page}:${orderBy}`;
 }
 
 function rememberLeaderboardPayload(key, payload, savedAt = Date.now()) {
@@ -5318,38 +5318,45 @@ app.get('/api/leaderboard', async (req, res, next) => {
     const context = { page, region, mode, orderBy };
     const key = leaderboardStateKey(context);
     const cached = await readLeaderboardPayload(key);
-    const cacheAge = cached ? Date.now() - Number(cached.savedAt || 0) : Infinity;
+    const cachedIsOfficial = cached?.payload?.source === 'official' && Array.isArray(cached.payload.rankings);
+    const officialCached = cachedIsOfficial ? cached : null;
+    const cacheAge = officialCached ? Date.now() - Number(officialCached.savedAt || 0) : Infinity;
 
-    if (cached?.payload?.rankings?.length && !force) {
+    if (officialCached?.payload?.rankings?.length && !force) {
       const stale = cacheAge > LEADERBOARD_FAST_TTL_MS;
       if (stale) refreshLeaderboardPayload(context).catch((error) => {
-        console.warn(`Could not refresh cached leaderboard ${region} ${mode} page ${page}:`, error.message);
+        console.warn(`Could not refresh cached official leaderboard ${region} ${mode} page ${page}:`, error.message);
       });
       res.setHeader('Cache-Control', 'private, max-age=10, stale-while-revalidate=120');
-      return res.json({ ...cached.payload, cached: true, stale, refreshing: stale, cache_age_ms: cacheAge, page_size: LEADERBOARD_PAGE_SIZE });
+      return res.json({ ...officialCached.payload, cached: true, stale, refreshing: stale, cache_age_ms: cacheAge, page_size: LEADERBOARD_PAGE_SIZE, official_only: true });
     }
 
-    if (!force) {
-      const fallback = await settleWithin(databaseLeaderboardFallback(context), 900, null);
-      if (fallback?.rankings?.length) {
-        refreshLeaderboardPayload(context).catch((error) => {
-          console.warn(`Could not refresh database leaderboard fallback ${region} ${mode} page ${page}:`, error.message);
-        });
-        res.setHeader('Cache-Control', 'private, max-age=5, stale-while-revalidate=60');
-        return res.json({ ...fallback, stale: true, refreshing: true, cache_age_ms: null, page_size: LEADERBOARD_PAGE_SIZE, updated_at: new Date().toISOString() });
-      }
-    }
-
+    // Never build a public "Top players" table from the local players database.
+    // That table contains profiles discovered through searches and recent visits,
+    // so sorting it by ELO would incorrectly rank PeakHalla users as regional tops.
     try {
       const payload = await refreshLeaderboardPayload(context);
       res.setHeader('Cache-Control', 'private, max-age=15, stale-while-revalidate=60');
-      return res.json({ ...payload, cached: false, stale: false, refreshing: false, cache_age_ms: 0, page_size: LEADERBOARD_PAGE_SIZE });
+      return res.json({ ...payload, cached: false, stale: false, refreshing: false, cache_age_ms: 0, page_size: LEADERBOARD_PAGE_SIZE, official_only: true });
     } catch (error) {
-      if (cached?.payload?.rankings?.length && cacheAge <= LEADERBOARD_STALE_MAX_AGE_MS) {
+      if (officialCached?.payload?.rankings?.length && cacheAge <= LEADERBOARD_STALE_MAX_AGE_MS) {
         res.setHeader('Cache-Control', 'private, max-age=5, stale-while-revalidate=60');
-        return res.json({ ...cached.payload, cached: true, stale: true, refreshing: false, cache_age_ms: cacheAge, page_size: LEADERBOARD_PAGE_SIZE, upstream_error: error.message });
+        return res.json({ ...officialCached.payload, cached: true, stale: true, refreshing: false, cache_age_ms: cacheAge, page_size: LEADERBOARD_PAGE_SIZE, upstream_error: error.message, official_only: true });
       }
-      throw error;
+
+      console.warn(`Official leaderboard unavailable for ${region} ${mode} page ${page}:`, error.message);
+      res.setHeader('Cache-Control', 'no-store');
+      return res.json({
+        rankings: [],
+        total_pages: 0,
+        source: 'official-unavailable',
+        official_only: true,
+        stale: false,
+        refreshing: false,
+        page_size: LEADERBOARD_PAGE_SIZE,
+        updated_at: new Date().toISOString(),
+        message: 'Official Brawlhalla leaderboard data is temporarily unavailable.'
+      });
     }
   } catch (error) {
     next(error);
